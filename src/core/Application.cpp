@@ -1,0 +1,251 @@
+#include "Application.h"
+
+#include "Platform.h"
+
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
+
+
+namespace core
+{
+	static Application* thiz = nullptr;
+
+
+	void Application::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+	{
+		if (action == GLFW_PRESS)
+			thiz->OnKeyPress(key);
+		if (action == GLFW_REPEAT)
+			thiz->OnKeyRepeat(key);
+		if (action == GLFW_RELEASE)
+			thiz->OnKeyRelease(key);
+	}
+
+
+	void Application::MouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
+	{
+		thiz->OnMouseMove(xpos, ypos);
+	}
+
+
+	void Application::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+	{
+		double xpos, ypos;
+		glfwGetCursorPos(window, &xpos, &ypos);
+
+		if (action == GLFW_PRESS)
+		{
+			if (button == GLFW_MOUSE_BUTTON_LEFT)
+			{
+				thiz->OnMouseLeftDown(xpos, ypos);
+			}
+			else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+			{
+				thiz->OnMouseRightDown(xpos, ypos);
+			}
+			else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+			{
+				thiz->OnMouseMiddleDown(xpos, ypos);
+			}
+		}
+		else if (action == GLFW_RELEASE)
+		{
+			if (button == GLFW_MOUSE_BUTTON_LEFT)
+			{
+				thiz->OnMouseLeftUp(xpos, ypos);
+			}
+			else if (button == GLFW_MOUSE_BUTTON_RIGHT)
+			{
+				thiz->OnMouseRightUp(xpos, ypos);
+			}
+			else if (button == GLFW_MOUSE_BUTTON_MIDDLE)
+			{
+				thiz->OnMouseMiddleUp(xpos, ypos);
+			}
+		}
+	}
+
+
+	void Application::MouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+	{
+		thiz->OnMouseWhell(yoffset);
+	}
+
+
+	void Application::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+	{
+
+	}
+
+
+	void Application::WindowSizeCallback(GLFWwindow* window, int width, int height)
+	{
+		thiz->mWidth = width;
+		thiz->mHeight = height;
+		thiz->OnResize(width, height);
+	}
+
+
+	Application::Application()
+	{
+		thiz = this;
+	}
+
+
+	Application::~Application()
+	{
+		// Cleanup imgui
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
+		
+		// Destroy glfw
+		glfwDestroyWindow(mGLFWWindow);
+		glfwTerminate();
+	}
+
+	int Application::Run(int argc, char** argv, const char* version, uint32_t width, uint32_t height, const char* title)
+	{
+		mWidth = width;
+		mHeight = height;
+
+		if (!glfwInit())
+			return EXIT_FAILURE;
+
+		// Decide GL+GLSL versions
+#ifdef __APPLE__
+	// GL 3.2 + GLSL 150
+		mGLSLVersion = "#version 150";
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
+#elif __EMSCRIPTEN__
+		mGLSLVersion = "#version 300";
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#else
+		mGLSLVersion = "#version 400";
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#endif
+
+		//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+		glfwWindowHint(GLFW_SAMPLES, 8);
+
+		glfwWindowHint(GLFW_RESIZABLE, 1);
+
+		// Create window with graphics context
+		mGLFWWindow = glfwCreateWindow(mWidth, mHeight, title, NULL, NULL);
+		if (mGLFWWindow == NULL)
+			return EXIT_FAILURE;
+
+		glfwMakeContextCurrent(mGLFWWindow);
+		glfwSwapInterval(1); // Enable vsync
+
+#ifndef __EMSCRIPTEN__
+		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+		{
+			fprintf(stderr, "Failed to initialize GLAD!\n");
+			exit(1);
+		}
+#endif
+
+#ifndef __EMSCRIPTEN__
+		if (glfwRawMouseMotionSupported())
+			glfwSetInputMode(mGLFWWindow, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+#endif
+
+		glfwSetKeyCallback(mGLFWWindow, Application::KeyCallback);
+		glfwSetCursorPosCallback(mGLFWWindow, Application::MouseMoveCallback);
+		glfwSetMouseButtonCallback(mGLFWWindow, Application::MouseButtonCallback);
+		glfwSetScrollCallback(mGLFWWindow, Application::MouseScrollCallback);
+#ifndef __EMSCRIPTEN__
+		glfwSetFramebufferSizeCallback(mGLFWWindow, Application::FramebufferSizeCallback);
+		glfwSetWindowSizeCallback(mGLFWWindow, Application::WindowSizeCallback);
+#else
+		int canv_width, canv_height;
+		if (emscripten_get_canvas_element_size(nullptr, &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
+			return EXIT_FAILURE;
+		
+		if (canv_width != mWidth || canv_height != mHeight)
+			OnResize(canv_width, canv_height);
+#endif
+
+
+		// Initialize sample.
+		bool success = OnInitialize();
+
+		if(!success)
+			return EXIT_FAILURE;
+
+
+		// Setup Dear ImGui context
+		IMGUI_CHECKVERSION();
+		ImGui::CreateContext();
+		ImGuiIO& io = ImGui::GetIO(); (void)io;
+		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+
+		// Setup Dear ImGui style
+		ImGui::StyleColorsDark();
+		//ImGui::StyleColorsClassic();
+
+		// Setup Platform/Renderer backends
+		ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
+		ImGui_ImplOpenGL3_Init(mGLSLVersion.c_str());
+
+		ImGui_ImplOpenGL3_NewFrame();
+
+#ifdef __EMSCRIPTEN__
+		emscripten_set_main_loop_arg(Application::Loop, (void*)this, 0, 1);
+#else
+		while (!glfwWindowShouldClose(mGLFWWindow))
+		{
+			Loop(this);
+		}
+#endif
+
+		success = OnFinalize();
+		if (!success)
+			return EXIT_FAILURE;
+	}
+
+
+	void Application::Loop(void* _arg)
+	{
+
+		Application* app = reinterpret_cast<Application*>(_arg);
+
+#ifdef __EMSCRIPTEN__
+		int width, height;
+		if (emscripten_get_canvas_element_size(nullptr, &width, &height) != EMSCRIPTEN_RESULT_SUCCESS)
+		{
+			fprintf(stderr, "unsupported emscripten_get_canvas_element_size!\n");
+			return;
+		}
+
+		if (width != app->mWidth || height != app->mHeight)
+			app->OnResize(width, height);
+#endif
+
+
+		{//render scene
+			app->OnRender();
+		}
+
+		{//render menu
+			
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+			app->OnGui();
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		}
+
+		glfwSwapBuffers(app->mGLFWWindow);
+		glfwPollEvents();
+	}
+}
