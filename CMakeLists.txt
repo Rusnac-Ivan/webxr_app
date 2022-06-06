@@ -67,35 +67,10 @@ set(GLAD_INCLUDE_DIR "${LIBS_ROOT_PATH}/glad-0.1.34/include")
 
 if(DEFINED EMSCRIPTEN)
     if (CMAKE_BUILD_TYPE MATCHES Debug)	 #-lnodefs.js 
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} 
-            -s NO_EXIT_RUNTIME=1 
-            -s USE_WEBGL2=1 
-            -s USE_GLFW=3 
-            -s DEMANGLE_SUPPORT=1 
-            -s ASSERTIONS=2 
-            --bind 
-            -s WASM=1 
-            -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 
-            -s INITIAL_MEMORY=512MB  
-            -s MAXIMUM_MEMORY=1GB 
-            -s ALLOW_MEMORY_GROWTH=1 
-
-            -s ASYNCIFY 
-        ")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s NO_EXIT_RUNTIME=1 -s USE_WEBGL2=1 -s USE_GLFW=3 -s DEMANGLE_SUPPORT=1 -s ASSERTIONS=2 --bind -s WASM=1 -s DISABLE_DEPRECATED_FIND_EVENT_TARGET_BEHAVIOR=1 -s INITIAL_MEMORY=512MB  -s MAXIMUM_MEMORY=1GB -s ALLOW_MEMORY_GROWTH=1 -s ASYNCIFY ")
     else()
         add_definitions(-DNDEBUG)#-s ASYNCIFY --preload-file ${RESOURCES_RELATIVE_PATH}
-        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} 
-            -s NO_EXIT_RUNTIME=1 
-            -s USE_WEBGL2=1  
-            -s USE_GLFW=3 
-            --bind 
-            -s WASM=1 
-            -s INITIAL_MEMORY=256MB 
-            -s MAXIMUM_MEMORY=1GB 
-            -s ALLOW_MEMORY_GROWTH=1 
-
-            -s ASYNCIFY 
-        ")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s NO_EXIT_RUNTIME=1 -s USE_WEBGL2=1 -s USE_GLFW=3 --bind -s WASM=1 -s INITIAL_MEMORY=256MB -s MAXIMUM_MEMORY=1GB -s ALLOW_MEMORY_GROWTH=1 -s ASYNCIFY ")
     endif()
 endif()
 

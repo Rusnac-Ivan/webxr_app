@@ -1,19 +1,23 @@
 #ifndef _RSRC_MATERIAL_H_
 #define _RSRC_MATERIAL_H_
 
+#undef OPAQUE
+
 #include <glm/glm.hpp>
 #include <map>
-#include "Image.h"
-#include <opengl/Texture2D.h>
+#include <vector>
+
 
 namespace tinygltf
 {
-	class Model;
-	class Material;
+	struct Material;
 }
 
 namespace rsrc
 {
+
+	class Image;
+
 	class Material
 	{
 		public:

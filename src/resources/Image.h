@@ -3,13 +3,12 @@
 
 #include <cstdint>
 #include <vector>
-#include <cassert>
 #include <opengl/Texture2D.h>
 
 namespace tinygltf
 {
-	class Image;
-	class Sampler;
+	struct Image;
+	struct Sampler;
 }
 
 namespace rsrc

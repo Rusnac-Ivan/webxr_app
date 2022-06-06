@@ -2,9 +2,18 @@
 #define _RSRC_NODE_H_
 
 #include "Mesh.h"
+#include <glm/gtc/quaternion.hpp>
+
+namespace tinygltf
+{
+	class Model;
+	class Node;
+}
 
 namespace rsrc
 {
+	class Material;
+
 	class Node
 	{
 			Node* mParent;

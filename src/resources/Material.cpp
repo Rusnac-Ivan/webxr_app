@@ -1,5 +1,6 @@
 #include "Material.h"
 #include <tiny_gltf.h>
+#include "Image.h"
 #include <glm/gtc/type_ptr.hpp>
 
 namespace rsrc

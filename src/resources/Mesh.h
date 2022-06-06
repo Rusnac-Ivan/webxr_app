@@ -2,20 +2,25 @@
 #define _RSRC_MESH_H_
 
 #include <glm/glm.hpp>
-#include <opengl/Render.h>
-#include "Material.h"
 #include <opengl/VertexBuffer.h>
 #include <opengl/VertexArray.h>
 #include <opengl/IndexBuffer.h>
 #include <opengl/VertexAttribute.h>
+#include <opengl/Render.h>
 #include <utilities/BoundingObjects/AABB.h>
-#include <tiny_gltf.h>
-#include <glm/gtc/type_ptr.hpp>
-#include <iostream>
 #include <memory>
+
+namespace tinygltf
+{
+	class Model;
+	struct Material;
+	struct Primitive;
+}
 
 namespace rsrc
 {
+	class Material;
+
 	struct Vertex 
 	{
 		glm::vec3 pos;

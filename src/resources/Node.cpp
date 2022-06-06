@@ -1,4 +1,8 @@
 #include "Node.h"
+#include "Material.h"
+#include <tiny_gltf.h>
+#include <glm/gtc/type_ptr.hpp>
+
 
 namespace rsrc
 {

@@ -6,13 +6,11 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 
-
 namespace core
 {
-	static Application* thiz = nullptr;
+	static Application *thiz = nullptr;
 
-
-	void Application::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+	void Application::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
 		if (action == GLFW_PRESS)
 			thiz->OnKeyPress(key);
@@ -22,14 +20,12 @@ namespace core
 			thiz->OnKeyRelease(key);
 	}
 
-
-	void Application::MouseMoveCallback(GLFWwindow* window, double xpos, double ypos)
+	void Application::MouseMoveCallback(GLFWwindow *window, double xpos, double ypos)
 	{
 		thiz->OnMouseMove(xpos, ypos);
 	}
 
-
-	void Application::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+	void Application::MouseButtonCallback(GLFWwindow *window, int button, int action, int mods)
 	{
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
@@ -66,32 +62,26 @@ namespace core
 		}
 	}
 
-
-	void Application::MouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
+	void Application::MouseScrollCallback(GLFWwindow *window, double xoffset, double yoffset)
 	{
 		thiz->OnMouseWhell(yoffset);
 	}
 
-
-	void Application::FramebufferSizeCallback(GLFWwindow* window, int width, int height)
+	void Application::FramebufferSizeCallback(GLFWwindow *window, int width, int height)
 	{
-
 	}
 
-
-	void Application::WindowSizeCallback(GLFWwindow* window, int width, int height)
+	void Application::WindowSizeCallback(GLFWwindow *window, int width, int height)
 	{
 		thiz->mWidth = width;
 		thiz->mHeight = height;
 		thiz->OnResize(width, height);
 	}
 
-
-	Application::Application()
+	Application::Application() : mIsSync(false)
 	{
 		thiz = this;
 	}
-
 
 	Application::~Application()
 	{
@@ -99,13 +89,13 @@ namespace core
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
-		
+
 		// Destroy glfw
 		glfwDestroyWindow(mGLFWWindow);
 		glfwTerminate();
 	}
 
-	int Application::Run(int argc, char** argv, const char* version, uint32_t width, uint32_t height, const char* title)
+	int Application::Run(int argc, char **argv, const char *version, uint32_t width, uint32_t height, const char *title)
 	{
 		mWidth = width;
 		mHeight = height;
@@ -113,16 +103,16 @@ namespace core
 		if (!glfwInit())
 			return EXIT_FAILURE;
 
-		// Decide GL+GLSL versions
+			// Decide GL+GLSL versions
 #ifdef __APPLE__
-	// GL 3.2 + GLSL 150
+		// GL 3.2 + GLSL 150
 		mGLSLVersion = "#version 150";
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);		   // Required on Mac
 #elif __EMSCRIPTEN__
-		mGLSLVersion = "#version 300";
+		mGLSLVersion = "#version 300 es";
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #else
@@ -131,11 +121,13 @@ namespace core
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
 
-		//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		// glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 		glfwWindowHint(GLFW_SAMPLES, 8);
 
 		glfwWindowHint(GLFW_RESIZABLE, 1);
+
+
 
 		// Create window with graphics context
 		mGLFWWindow = glfwCreateWindow(mWidth, mHeight, title, NULL, NULL);
@@ -143,7 +135,6 @@ namespace core
 			return EXIT_FAILURE;
 
 		glfwMakeContextCurrent(mGLFWWindow);
-		glfwSwapInterval(1); // Enable vsync
 
 #ifndef __EMSCRIPTEN__
 		if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -165,33 +156,42 @@ namespace core
 #ifndef __EMSCRIPTEN__
 		glfwSetFramebufferSizeCallback(mGLFWWindow, Application::FramebufferSizeCallback);
 		glfwSetWindowSizeCallback(mGLFWWindow, Application::WindowSizeCallback);
-#else
-		int canv_width, canv_height;
-		if (emscripten_get_canvas_element_size(nullptr, &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
-			return EXIT_FAILURE;
-		
-		if (canv_width != mWidth || canv_height != mHeight)
-			OnResize(canv_width, canv_height);
 #endif
-
 
 		// Initialize sample.
 		bool success = OnInitialize();
 
-		if(!success)
+		if (!success)
 			return EXIT_FAILURE;
 
+
+#ifdef __EMSCRIPTEN__
+		int canv_width, canv_height;
+		if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
+			return EXIT_FAILURE;
+
+		printf("canvas_element_size %dx%d\n", canv_width, canv_height);
+
+		if (canv_width != mWidth || (canv_height != mHeight && canv_height != 0))
+		{
+			mWidth = canv_width;
+			mHeight = canv_height;
+			glfwSetWindowSize(mGLFWWindow, canv_width, canv_height);
+			OnResize(canv_width, canv_height);
+		}
+#endif
 
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-		//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+		ImGuiIO &io = ImGui::GetIO();
+		(void)io;
+		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();
-		//ImGui::StyleColorsClassic();
+		// ImGui::StyleColorsClassic();
 
 		// Setup Platform/Renderer backends
 		ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
@@ -200,7 +200,7 @@ namespace core
 		ImGui_ImplOpenGL3_NewFrame();
 
 #ifdef __EMSCRIPTEN__
-		emscripten_set_main_loop_arg(Application::Loop, (void*)this, 0, 1);
+		emscripten_set_main_loop_arg(Application::Loop, (void *)this, 0, 1);
 #else
 		while (!glfwWindowShouldClose(mGLFWWindow))
 		{
@@ -213,31 +213,39 @@ namespace core
 			return EXIT_FAILURE;
 	}
 
-
-	void Application::Loop(void* _arg)
+	void Application::Loop(void *_arg)
 	{
+		Application *app = reinterpret_cast<Application *>(_arg);
 
-		Application* app = reinterpret_cast<Application*>(_arg);
+		if (!app->mIsSync)
+		{
+			glfwSwapInterval(1); // Enable vsync
+			app->mIsSync = true;
+		}
 
 #ifdef __EMSCRIPTEN__
 		int width, height;
-		if (emscripten_get_canvas_element_size(nullptr, &width, &height) != EMSCRIPTEN_RESULT_SUCCESS)
+		if (emscripten_get_canvas_element_size(".emscripten", &width, &height) != EMSCRIPTEN_RESULT_SUCCESS)
 		{
 			fprintf(stderr, "unsupported emscripten_get_canvas_element_size!\n");
 			return;
 		}
 
-		if (width != app->mWidth || height != app->mHeight)
+		if (width != app->mWidth || (height != app->mHeight && height != 0))
+		{
+			app->mWidth = width;
+			app->mHeight = height;
+			glfwSetWindowSize(app->mGLFWWindow, width, height);
 			app->OnResize(width, height);
+		}
 #endif
 
-
-		{//render scene
+		{ // render scene
 			app->OnRender();
 		}
 
-		{//render menu
-			
+		{ // render menu
+
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
 			app->OnGui();

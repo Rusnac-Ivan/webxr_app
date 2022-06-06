@@ -1,6 +1,7 @@
 #include "Image.h"
 #include <tiny_gltf.h>
 
+
 namespace rsrc
 {
 	Image::Image() :
