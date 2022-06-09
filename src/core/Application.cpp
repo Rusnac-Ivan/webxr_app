@@ -127,7 +127,14 @@ namespace core
 
 		glfwWindowHint(GLFW_RESIZABLE, 1);
 
+#ifdef __EMSCRIPTEN__
+		int canv_width, canv_height;
+		if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
+			return EXIT_FAILURE;
 
+		mWidth = canv_width;
+		mHeight = canv_height;
+#endif // __EMSCRIPTEN__
 
 		// Create window with graphics context
 		mGLFWWindow = glfwCreateWindow(mWidth, mHeight, title, NULL, NULL);
@@ -166,19 +173,17 @@ namespace core
 
 
 #ifdef __EMSCRIPTEN__
-		int canv_width, canv_height;
+		
 		if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
 			return EXIT_FAILURE;
 
 		printf("canvas_element_size %dx%d\n", canv_width, canv_height);
 
-		if (canv_width != mWidth || (canv_height != mHeight && canv_height != 0))
-		{
-			mWidth = canv_width;
-			mHeight = canv_height;
-			glfwSetWindowSize(mGLFWWindow, canv_width, canv_height);
-			OnResize(canv_width, canv_height);
-		}
+		mWidth = canv_width;
+		mHeight = canv_height;
+		glfwSetWindowSize(mGLFWWindow, canv_width, canv_height);
+		OnResize(canv_width, canv_height);
+		
 #endif
 
 		// Setup Dear ImGui context

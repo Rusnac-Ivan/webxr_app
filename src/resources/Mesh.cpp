@@ -131,7 +131,7 @@ namespace rsrc
 
 		for (size_t v = 0; v < posAccessor.count; v++)
 		{
-			Vertex vert{};
+			util::Vertex vert{};
 			vert.pos = glm::vec4(glm::make_vec3(&bufferPos[v * posByteStride]), 1.0f);
 			vert.normal = glm::normalize(glm::vec3(bufferNorm ? glm::make_vec3(&bufferNorm[v * normByteStride]) : glm::vec3(0.0f)));
 			vert.uv0 = bufferTexCoord ? glm::make_vec2(&bufferTexCoord[v * texCoordByteStride]) : glm::vec3(0.0f);
@@ -184,7 +184,7 @@ namespace rsrc
 		}
 		
 
-		mVBO.SetData(sizeof(Vertex) * mVertices.size(), mVertices.data());
+		mVBO.SetData(sizeof(util::Vertex) * mVertices.size(), mVertices.data());
 
 		mVAO.AddVertexLayout(
 			mVBO,

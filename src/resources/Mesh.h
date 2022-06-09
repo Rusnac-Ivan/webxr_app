@@ -8,6 +8,7 @@
 #include <opengl/VertexAttribute.h>
 #include <opengl/Render.h>
 #include <utilities/BoundingObjects/AABB.h>
+#include <utilities/Shape/Vertex.h>
 #include <memory>
 
 namespace tinygltf
@@ -21,15 +22,7 @@ namespace rsrc
 {
 	class Material;
 
-	struct Vertex 
-	{
-		glm::vec3 pos;
-		glm::vec3 normal;
-		glm::vec2 uv0;
-		//glm::vec2 uv1;
-		//glm::vec4 joint;
-		//glm::vec4 weight;
-	};
+	
 
 	class Mesh
 	{
@@ -44,7 +37,7 @@ namespace rsrc
 
 		const Material* mMaterial;
 
-		std::vector<Vertex> mVertices;
+		std::vector<util::Vertex> mVertices;
 		std::vector<uint32_t> mIndices;
 
 		util::AABB mAABB;
