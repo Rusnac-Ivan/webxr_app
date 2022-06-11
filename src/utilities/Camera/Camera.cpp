@@ -2,34 +2,33 @@
 
 namespace util
 {
-	ICamera::ICamera() :
-		mPos(0.f),
-		mUp(0.f, 1.f, 0.f),
-		mLook(0.f, 0.f, 1.f),
-		mOrientation({}),
-		mPitchYawRoll(0.f)
+	ICamera::ICamera() : mPos(0.f),
+						 mUp(0.f, 1.f, 0.f),
+						 mLook(0.f, 0.f, 1.f),
+						 mOrientation(),
+						 mPitchYawRoll(0.f)
 	{
 		mViewMat = glm::lookAt(mPos, mPos + mLook, mUp);
 	}
 	ICamera::~ICamera() {}
 
-	void ICamera::SetPosition(const glm::vec3& pos)
+	void ICamera::SetPosition(const glm::vec3 &pos)
 	{
 		mPos = pos;
 		mViewMat = glm::lookAt(mPos, mPos + mLook, mUp);
 	}
-	void ICamera::SetOrientation(const glm::vec3& up, const glm::vec3& look)
+	void ICamera::SetOrientation(const glm::vec3 &up, const glm::vec3 &look)
 	{
 		mUp = up;
 		mLook = look;
 
 		mViewMat = glm::lookAt(mPos, mPos + mLook, mUp);
 	}
-	void ICamera::SetOrientation(const glm::quat& orientation)
+	void ICamera::SetOrientation(const glm::quat &orientation)
 	{
 		mOrientation = glm::normalize(orientation);
 
-		//R^(-1) == transpose(R), if: R * R^(-1) == I
+		// R^(-1) == transpose(R), if: R * R^(-1) == I
 		const glm::mat4 inv_rot = glm::transpose(glm::toMat4(mOrientation));
 
 		const glm::mat4 inv_tran = glm::translate(glm::mat4(1.f), -mPos);
@@ -40,7 +39,7 @@ namespace util
 
 	void ICamera::SetOrientation(float pitch, float yaw, float roll)
 	{
-		//R^(-1) == transpose(R), if: R * R^(-1) == I
+		// R^(-1) == transpose(R), if: R * R^(-1) == I
 		const glm::mat4 inv_rot = glm::transpose(glm::eulerAngleYXZ(yaw, pitch, roll));
 		const glm::mat4 test = glm::transpose(glm::yawPitchRoll(yaw, pitch, roll));
 
@@ -52,11 +51,10 @@ namespace util
 		mViewMat = inv_rot * inv_tran;
 	}
 
-	Camera<ProjectionType::PERSPECTIVE>::Camera() :
-		mNear(0.01f),
-		mFar(100.f),
-		mAspectRatio(16.f / 9.f),
-		mFOV(60.f)
+	Camera<ProjectionType::PERSPECTIVE>::Camera() : mNear(0.01f),
+													mFar(100.f),
+													mAspectRatio(16.f / 9.f),
+													mFOV(60.f)
 	{
 		mProjectionMat = glm::perspective(glm::radians(mFOV), mAspectRatio, mNear, mFar);
 	}
@@ -92,14 +90,12 @@ namespace util
 		mProjectionMat = glm::perspective(glm::radians(mFOV), mAspectRatio, mNear, mFar);
 	}
 
-
-	Camera<ProjectionType::ORTHOGRAPHIC>::Camera() :
-		mNear(0.01f),
-		mFar(100.f),
-		mTop(10.f),
-		mBottom(-10.f),
-		mLeft(-10.f),
-		mRight(10.f)
+	Camera<ProjectionType::ORTHOGRAPHIC>::Camera() : mNear(0.01f),
+													 mFar(100.f),
+													 mTop(10.f),
+													 mBottom(-10.f),
+													 mLeft(-10.f),
+													 mRight(10.f)
 	{
 		mProjectionMat = glm::ortho(mLeft, mRight, mBottom, mTop, mNear, mFar);
 	}

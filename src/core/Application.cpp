@@ -1,7 +1,7 @@
 #include "Application.h"
 
 #include "Platform.h"
-
+#include <utilities/Emsc/webxr.h>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
@@ -97,6 +97,19 @@ namespace core
 
 	int Application::Run(int argc, char **argv, const char *version, uint32_t width, uint32_t height, const char *title)
 	{
+		WebXR::ConsoleLogNavigator();
+
+		if (WebXR::IsWebXRSupported())
+		{
+			if (WebXR::IsSessionSupported(XRSessionMode::INLINE))
+			{
+				printf("XRSessionMode::INLINE\n");
+			}
+		}
+		else
+		{
+		}
+
 		mWidth = width;
 		mHeight = height;
 
@@ -171,9 +184,8 @@ namespace core
 		if (!success)
 			return EXIT_FAILURE;
 
-
 #ifdef __EMSCRIPTEN__
-		
+
 		if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
 			return EXIT_FAILURE;
 
@@ -183,7 +195,7 @@ namespace core
 		mHeight = canv_height;
 		glfwSetWindowSize(mGLFWWindow, canv_width, canv_height);
 		OnResize(canv_width, canv_height);
-		
+
 #endif
 
 		// Setup Dear ImGui context
@@ -253,7 +265,9 @@ namespace core
 
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
+
 			app->OnGui();
+
 			ImGui::Render();
 			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}

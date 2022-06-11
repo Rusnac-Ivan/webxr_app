@@ -14,8 +14,6 @@ private:
 	MyApp() : Application() {}
 	~MyApp() {}
 
-
-
 public:
 	static MyApp &Launch()
 	{
