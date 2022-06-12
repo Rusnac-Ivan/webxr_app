@@ -8,12 +8,27 @@
 #include <string>
 #include "utilities/Events/CallBack.h"
 
+namespace core
+{
+    class Application;
+}
+
 /** WebXR 'XRSessionMode' enum*/
 enum struct XRSessionMode
 {
     INLINE,
     IMMERSIVE_VR,
     IMMERSIVE_AR
+};
+
+/** WebXR 'XRReferenceSpaceType' enum*/
+enum struct XRReferenceSpaceType
+{
+    VIEWER,
+    LOCAL,
+    LOCAL_FLOOR,
+    BOUNDED_FLOOR,
+    UNBOUNDED
 };
 
 enum struct XRSessionFeatures
@@ -31,16 +46,6 @@ enum struct XRSessionFeatures
     SECONDARY_VIEWS,
     UNBOUNDED,
     VIEWER
-};
-
-/** WebXR 'XRReferenceSpaceType' enum*/
-enum struct XRReferenceSpaceType
-{
-    VIEWER,
-    LOCAL,
-    LOCAL_FLOOR,
-    BOUNDED_FLOOR,
-    UNBOUNDED
 };
 
 /** WebXR current eye */
@@ -124,26 +129,42 @@ private:
 
     static util::EMObject mNavigator;
     static util::EMObject mXR;
+    static emscripten::val mXRSession;
+    static emscripten::val mCanvas;
+    static emscripten::val mRenderContext;
+
+    static core::Application *mApplication;
 
 public:
     WebXR(/* args */);
     ~WebXR();
 
-    static void Init(SessionStartedCallBack start_ckb, FrameCallBack frame_ckb, SessionEndCallBack end_ckb, ErrorCallBack error_ckb);
+    static void Start(core::Application *application);
 
     static bool IsWebXRSupported() { return mXR.IsValid(); }
     static bool IsSessionSupported(XRSessionMode mode);
+
+    static void RequestSession(XRSessionMode mode);
     static void RequestSession(XRSessionMode mode, XRSessionFeatures required);
     static void RequestSession(XRSessionMode mode, XRSessionFeatures required, XRSessionFeatures optional);
 
     static void ConsoleLogXR();
     static void ConsoleLogNavigator();
 
-private:
+    static void OnRequestSession(emscripten::val event);
+
     static void OnSessionStarted(emscripten::val session);
     static void OnFrame(emscripten::val time, emscripten::val frame);
-    static void OnSessionEnd(emscripten::val event);
+    static void OnSessionEnd(emscripten::val session);
     static void OnError(emscripten::val error);
+
+    static void OnSelect(emscripten::val event);
+    static void OnSelectStart(emscripten::val event);
+    static void OnSelectEnd(emscripten::val event);
+
+    static void OnGotLocalFloorSpace(emscripten::val refSpace);
+    static void OnFailedLocalFloorSpace(emscripten::val error);
+    static void OnGotViewerSpace(emscripten::val refSpace);
 };
 
 #endif

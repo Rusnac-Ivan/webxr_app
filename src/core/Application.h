@@ -29,11 +29,6 @@ namespace core
 		uint32_t GetWidth() const { return mWidth; }
 		uint32_t GetHeight() const { return mHeight; }
 
-		virtual bool OnInitialize() { return true; }
-		virtual bool OnGui() { return true; }
-		virtual bool OnRender() { return true; }
-		virtual bool OnFinalize() { return true; }
-
 		virtual void OnMouseLeftDown(double x, double y) {}
 		virtual void OnMouseLeftUp(double x, double y) {}
 		virtual void OnMouseRightDown(double x, double y) {}
@@ -50,9 +45,14 @@ namespace core
 	public:
 		int Run(int argc, char **argv, const char *version, uint32_t width, uint32_t height, const char *title);
 
-	private:
-		static void Loop(void *_arg);
+		virtual bool OnInitialize() { return true; }
+		virtual bool OnGui() { return true; }
+		virtual bool OnRender() { return true; }
+		virtual bool OnFinalize() { return true; }
 
+		static void OnUpdate(void *_arg);
+
+	private:
 		static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 		static void MouseMoveCallback(GLFWwindow *window, double xpos, double ypos);
 		static void MouseButtonCallback(GLFWwindow *window, int button, int action, int mods);

@@ -97,19 +97,6 @@ namespace core
 
 	int Application::Run(int argc, char **argv, const char *version, uint32_t width, uint32_t height, const char *title)
 	{
-		WebXR::ConsoleLogNavigator();
-
-		if (WebXR::IsWebXRSupported())
-		{
-			if (WebXR::IsSessionSupported(XRSessionMode::INLINE))
-			{
-				printf("XRSessionMode::INLINE\n");
-			}
-		}
-		else
-		{
-		}
-
 		mWidth = width;
 		mHeight = height;
 
@@ -178,26 +165,6 @@ namespace core
 		glfwSetWindowSizeCallback(mGLFWWindow, Application::WindowSizeCallback);
 #endif
 
-		// Initialize sample.
-		bool success = OnInitialize();
-
-		if (!success)
-			return EXIT_FAILURE;
-
-#ifdef __EMSCRIPTEN__
-
-		if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
-			return EXIT_FAILURE;
-
-		printf("canvas_element_size %dx%d\n", canv_width, canv_height);
-
-		mWidth = canv_width;
-		mHeight = canv_height;
-		glfwSetWindowSize(mGLFWWindow, canv_width, canv_height);
-		OnResize(canv_width, canv_height);
-
-#endif
-
 		// Setup Dear ImGui context
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -217,20 +184,50 @@ namespace core
 		ImGui_ImplOpenGL3_NewFrame();
 
 #ifdef __EMSCRIPTEN__
-		emscripten_set_main_loop_arg(Application::Loop, (void *)this, 0, 1);
+		if (WebXR::IsWebXRSupported())
+		{
+			mIsSync = true; // from webxr
+			WebXR::Start(this);
+		}
+		else
+		{
+			// Initialize sample.
+			bool success = OnInitialize();
+			if (!success)
+				return EXIT_FAILURE;
+
+			if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
+				return EXIT_FAILURE;
+
+			printf("canvas_element_size %dx%d\n", canv_width, canv_height);
+
+			mWidth = canv_width;
+			mHeight = canv_height;
+			glfwSetWindowSize(mGLFWWindow, canv_width, canv_height);
+			OnResize(canv_width, canv_height);
+
+			emscripten_set_main_loop_arg(Application::OnUpdate, (void *)this, 0, 1);
+
+			success = OnFinalize();
+			if (!success)
+				return EXIT_FAILURE;
+		}
 #else
+		// Initialize sample.
+		bool success = OnInitialize();
+		if (!success)
+			return EXIT_FAILURE;
 		while (!glfwWindowShouldClose(mGLFWWindow))
 		{
-			Loop(this);
+			OnUpdate(this);
 		}
-#endif
-
 		success = OnFinalize();
 		if (!success)
 			return EXIT_FAILURE;
+#endif
 	}
 
-	void Application::Loop(void *_arg)
+	void Application::OnUpdate(void *_arg)
 	{
 		Application *app = reinterpret_cast<Application *>(_arg);
 
