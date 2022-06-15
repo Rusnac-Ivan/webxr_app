@@ -7,6 +7,8 @@
 #include <map>
 #include <string>
 #include "utilities/Events/CallBack.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace core
 {
@@ -79,6 +81,41 @@ enum WebXRInputPoseMode
     WEBXR_INPUT_POSE_TARGET_RAY = 1, /** targetRaySpace */
 };
 
+/** WebXR rigid transform */
+typedef struct WebXRRigidTransform
+{
+
+    glm::mat4 matrix;
+    glm::vec3 position;
+    glm::quat orientation;
+} WebXRRigidTransform;
+
+typedef struct WebXRViewport
+{
+    uint32_t x;
+    uint32_t y;
+    uint32_t width;
+    uint32_t height;
+} WebXRViewport;
+
+/** WebXR view */
+typedef struct WebXRView
+{
+    /* view pose */
+    WebXRRigidTransform viewPose;
+    /* projection matrix */
+    glm::mat4 projectionMatrix;
+    /* x, y, width, height of the eye viewport on target texture */
+    WebXRViewport viewport;
+} WebXRView;
+
+typedef struct WebXRInputSource
+{
+    WebXRRigidTransform rigidTransform;
+    XRHandedness handedness;
+    XRTargetRayMode targetRayMode;
+} WebXRInputSource;
+
 class WebXR
 {
 public:
@@ -91,32 +128,6 @@ public:
     static FrameCallBack mFrameCallBack;
     static SessionEndCallBack mSessionEndCallBack;
     static ErrorCallBack mErrorCallBack;
-
-    /** WebXR rigid transform */
-    typedef struct WebXRRigidTransform
-    {
-        float matrix[16];
-        float position[3];
-        float orientation[4];
-    } WebXRRigidTransform;
-
-    /** WebXR view */
-    typedef struct WebXRView
-    {
-        /* view pose */
-        WebXRRigidTransform viewPose;
-        /* projection matrix */
-        float projectionMatrix[16];
-        /* x, y, width, height of the eye viewport on target texture */
-        int viewport[4];
-    } WebXRView;
-
-    typedef struct WebXRInputSource
-    {
-        int id;
-        XRHandedness handedness;
-        XRTargetRayMode targetRayMode;
-    } WebXRInputSource;
 
 private:
     static std::map<XRSessionMode, std::string> _XRSessionMode;
@@ -133,7 +144,17 @@ private:
     static emscripten::val mCanvas;
     static emscripten::val mRenderContext;
 
+    static emscripten::val mRefSpace;
+
     static core::Application *mApplication;
+    static constexpr uint32_t mMaxSourcesCount = 2;
+    // static WebXRInputSource mXRInputSources[mMaxSourcesCount];
+
+    static WebXRInputSource mXRLeftInputSource;
+    static WebXRInputSource mXRRightInputSource;
+    static WebXRRigidTransform mHeadPose;
+    static WebXRView mLeftEyeView;
+    static WebXRView mRightEyeView;
 
 public:
     WebXR(/* args */);
@@ -150,6 +171,12 @@ public:
 
     static void ConsoleLogXR();
     static void ConsoleLogNavigator();
+
+    static const WebXRInputSource &GetLeftInputSource();
+    static const WebXRInputSource &GetRightInputSource();
+    static const WebXRRigidTransform &GetHeadPose();
+    static const WebXRView &GetLeftEyeView();
+    static const WebXRView &GetRightEyeView();
 
     static void OnRequestSession(emscripten::val event);
 

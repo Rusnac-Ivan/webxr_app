@@ -196,15 +196,8 @@ namespace core
 			if (!success)
 				return EXIT_FAILURE;
 
-			if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
+			if (ResizeGLFWWindow() == EXIT_FAILURE)
 				return EXIT_FAILURE;
-
-			printf("canvas_element_size %dx%d\n", canv_width, canv_height);
-
-			mWidth = canv_width;
-			mHeight = canv_height;
-			glfwSetWindowSize(mGLFWWindow, canv_width, canv_height);
-			OnResize(canv_width, canv_height);
 
 			emscripten_set_main_loop_arg(Application::OnUpdate, (void *)this, 0, 1);
 
@@ -225,6 +218,7 @@ namespace core
 		if (!success)
 			return EXIT_FAILURE;
 #endif
+		return EXIT_SUCCESS;
 	}
 
 	void Application::OnUpdate(void *_arg)
@@ -271,5 +265,22 @@ namespace core
 
 		glfwSwapBuffers(app->mGLFWWindow);
 		glfwPollEvents();
+	}
+
+	int Application::ResizeGLFWWindow()
+	{
+		int canv_width, canv_height;
+		if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
+			return EXIT_FAILURE;
+
+		mWidth = canv_width;
+		mHeight = canv_height;
+
+		printf("canvas_element_size %dx%d\n", canv_width, canv_height);
+
+		glfwSetWindowSize(mGLFWWindow, canv_width, canv_height);
+		OnResize(canv_width, canv_height);
+
+		return EXIT_SUCCESS;
 	}
 }

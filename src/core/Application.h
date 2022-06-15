@@ -52,6 +52,8 @@ namespace core
 
 		static void OnUpdate(void *_arg);
 
+		int ResizeGLFWWindow();
+
 	private:
 		static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 		static void MouseMoveCallback(GLFWwindow *window, double xpos, double ypos);
