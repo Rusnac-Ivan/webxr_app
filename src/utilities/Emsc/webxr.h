@@ -84,7 +84,6 @@ enum WebXRInputPoseMode
 /** WebXR rigid transform */
 typedef struct WebXRRigidTransform
 {
-
     glm::mat4 matrix;
     glm::vec3 position;
     glm::quat orientation;
@@ -101,6 +100,7 @@ typedef struct WebXRViewport
 /** WebXR view */
 typedef struct WebXRView
 {
+    XREye eye;
     /* view pose */
     WebXRRigidTransform viewPose;
     /* projection matrix */
@@ -138,23 +138,27 @@ private:
     static std::map<XRTargetRayMode, std::string> _XRTargetRayMode;
     /* data */
 
-    static util::EMObject mNavigator;
-    static util::EMObject mXR;
+    static emscripten::val mNavigator;
+    static emscripten::val mXR;
     static emscripten::val mXRSession;
+    static emscripten::val mXRFrame;
+    static emscripten::val mXRInputSources;
+    static emscripten::val mXRViews;
+    static emscripten::val XRGLLayer;
     static emscripten::val mCanvas;
     static emscripten::val mRenderContext;
 
     static emscripten::val mRefSpace;
 
     static core::Application *mApplication;
-    static constexpr uint32_t mMaxSourcesCount = 2;
-    // static WebXRInputSource mXRInputSources[mMaxSourcesCount];
+    static constexpr uint32_t MAX_SOURCE_COUNT = 4;
+    static constexpr uint32_t MAX_VIEW_COUNT = 2;
 
-    static WebXRInputSource mXRLeftInputSource;
-    static WebXRInputSource mXRRightInputSource;
+    // static uint32_t mSourceCount;
+    //  static uint32_t mEyeCount;
+    static WebXRInputSource mInputSources[MAX_SOURCE_COUNT];
     static WebXRRigidTransform mHeadPose;
-    static WebXRView mLeftEyeView;
-    static WebXRView mRightEyeView;
+    static WebXRView mViews[MAX_VIEW_COUNT];
 
 public:
     WebXR(/* args */);
@@ -162,21 +166,17 @@ public:
 
     static void Start(core::Application *application);
 
-    static bool IsWebXRSupported() { return mXR.IsValid(); }
+    static bool IsWebXRSupported();
     static bool IsSessionSupported(XRSessionMode mode);
 
     static void RequestSession(XRSessionMode mode);
     static void RequestSession(XRSessionMode mode, XRSessionFeatures required);
     static void RequestSession(XRSessionMode mode, XRSessionFeatures required, XRSessionFeatures optional);
 
-    static void ConsoleLogXR();
-    static void ConsoleLogNavigator();
-
-    static const WebXRInputSource &GetLeftInputSource();
-    static const WebXRInputSource &GetRightInputSource();
     static const WebXRRigidTransform &GetHeadPose();
-    static const WebXRView &GetLeftEyeView();
-    static const WebXRView &GetRightEyeView();
+
+    static void GetViews(WebXRView **sourceArray, uint32_t *arraySize);
+    static void GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode = WEBXR_INPUT_POSE_GRIP);
 
     static void OnRequestSession(emscripten::val event);
 

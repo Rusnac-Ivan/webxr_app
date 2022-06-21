@@ -1,4 +1,6 @@
 #include "Model.h"
+#include <fstream>
+#include <vector>
 
 #ifndef __EMSCRIPTEN__
 #ifdef __GNUC__
@@ -37,7 +39,7 @@ errno_t _wfopen_s(FILE **f, const wchar_t *name, const wchar_t *mode)
 
 namespace rsrc
 {
-	Model::Model()
+	Model::Model() : mProgress(0.f), mIsReady(false), mIsBinary(false)
 	{
 	}
 
@@ -68,6 +70,8 @@ namespace rsrc
 			tinygltf::Material &mat = model.materials[i];
 			mMaterials[i].LoadFromTinyGLTF(mat, mTextures);
 		}
+		// Push a default material at the end of the list for meshes with no material assigned
+		mMaterials.push_back(std::move(Material()));
 	}
 
 	void Model::LoadFromFile(std::string filename, float scale)
@@ -83,7 +87,68 @@ namespace rsrc
 		{
 			binary = (filename.substr(extpos + 1, filename.length() - extpos) == "glb");
 		}
+
+		bool fileLoaded = false;
+		if (binary)
+			fileLoaded = gltfContext.LoadBinaryFromFile(&gltfModel, &error, &warning, filename);
+		else
+			fileLoaded = gltfContext.LoadASCIIFromFile(&gltfModel, &error, &warning, filename);
+
+		if (fileLoaded)
+		{
+			const tinygltf::Scene& scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
+
+			LoadTextures(gltfModel);
+			LoadMaterials(gltfModel);
+
+			mNodes.clear();
+			mNodes.resize(scene.nodes.size());
+			for (size_t i = 0; i < scene.nodes.size(); i++)
+			{
+				const tinygltf::Node node = gltfModel.nodes[scene.nodes[i]];
+				mNodes[i].LoadFromTinyGLTF(nullptr, node, mMaterials, scene.nodes[i], gltfModel, scale);
+			}
+		}
+
+		
+
+		mIsReady = true;
 	}
+
+	void Model::Load(const char *file)
+	{
+		std::string fileName = std::string(file);
+		mIsBinary = false;
+		size_t extpos = fileName.rfind('.', fileName.length());
+		if (extpos != std::string::npos)
+		{
+			mIsBinary = (fileName.substr(extpos + 1, fileName.length() - extpos) == "glb");
+		}
+#ifdef __EMSCRIPTEN__
+		emscripten_async_wget2_data(
+			fileName.c_str(), "GET", NULL, this, true,
+			[](unsigned handle, void *arg, void *data, unsigned size)
+			{
+				Model *model = (Model *)arg;
+				model->LoadFromMemoryTinyGLTF((const uint8_t *)data, size, model->mIsBinary);
+			},
+			[](unsigned handle, void *arg, int error_code, const char *status) {
+
+			},
+			[](unsigned handle, void *arg, int bytes_loaded, int total_size)
+			{
+				Model *model = (Model *)arg;
+				if (total_size)
+					model->mProgress = ((float)bytes_loaded / total_size) * 100.f;
+			});
+#else
+		
+		LoadFromFile(file);
+		mProgress = 100.f;
+		mIsReady = true;
+#endif
+	}
+
 	void Model::LoadFromMemoryTinyGLTF(const uint8_t *data, size_t dataSize, bool is_binary, float scale)
 	{
 		tinygltf::Model gltfModel;
@@ -102,6 +167,9 @@ namespace rsrc
 		{
 			const tinygltf::Scene &scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
 
+			LoadTextures(gltfModel);
+			LoadMaterials(gltfModel);
+
 			mNodes.clear();
 			mNodes.resize(scene.nodes.size());
 			for (size_t i = 0; i < scene.nodes.size(); i++)
@@ -110,6 +178,8 @@ namespace rsrc
 				mNodes[i].LoadFromTinyGLTF(nullptr, node, mMaterials, scene.nodes[i], gltfModel, scale);
 			}
 		}
+
+		mIsReady = true;
 	}
 
 	void Model::CalculateBoundingBox(Node *node, Node *parent)
@@ -119,11 +189,18 @@ namespace rsrc
 	{
 	}
 
-	void Model::Draw()
+	void Model::DrawNode(gl::Program *program, Node *node)
 	{
-		for (auto &node : mNodes)
+	}
+
+	void Model::Draw(gl::Program *program, const glm::mat4 &model)
+	{
+		if (mIsReady && program)
 		{
-			node.Draw();
+			for (auto &node : mNodes)
+			{
+				node.Draw(program, model);
+			}
 		}
 	}
 }

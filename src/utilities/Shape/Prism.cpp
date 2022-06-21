@@ -1,10 +1,15 @@
 #include "Prism.h"
+#include "Vertex.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace util
 {
     Prism::Prism() {}
 
     Prism::~Prism() {}
+
+    const float *Prism::GetVertexData() const { return reinterpret_cast<const float *>(mVertices.size() > 0 ? mVertices.data() : nullptr); }
+    uint32_t Prism::GetVertexCount() const { return mVertices.size(); }
 
     void Prism::Generate(float edge_width)
     {
@@ -22,118 +27,143 @@ namespace util
         P2_ = P2 + d;
         P3_ = P3 + d;
 
+        P2 = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(-90.f), glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(P2, 1.f));
+        P3 = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(-90.f), glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(P3, 1.f));
+        P1 = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(-90.f), glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(P1, 1.f));
+
+        P1_ = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(-90.f), glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(P1_, 1.f));
+        P2_ = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(-90.f), glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(P2_, 1.f));
+        P3_ = glm::vec3(glm::rotate(glm::mat4(1.f), glm::radians(-90.f), glm::vec3(1.f, 0.f, 0.f)) * glm::vec4(P3_, 1.f));
+
         Vertex v1, v2, v3, v1_, v2_, v3_;
 
-        //triangle I
+        // triangle I
         glm::vec3 norm_1 = glm::normalize(glm::cross(P2_ - P1, P2 - P1));
 
         v1.pos = P1;
         v1.normal = norm_1;
         v1.uv0 = glm::vec2(0.f);
+        v1.uv1 = glm::vec2(0.f);
 
         v2.pos = P2;
         v2.normal = norm_1;
         v2.uv0 = glm::vec2(0.f);
+        v2.uv1 = glm::vec2(0.f);
 
         v2_.pos = P2_;
         v2_.normal = norm_1;
         v2_.uv0 = glm::vec2(0.f);
-
+        v2_.uv1 = glm::vec2(0.f);
 
         mVertices.push_back(v1);
         mVertices.push_back(v2);
         mVertices.push_back(v2_);
 
-        //triangle II
+        // triangle II
         glm::vec3 norm_2 = glm::normalize(glm::cross(P1_ - P1, P2_ - P1));
 
         v1.pos = P1;
         v1.normal = norm_2;
         v1.uv0 = glm::vec2(0.f);
+        v1.uv1 = glm::vec2(0.f);
 
         v2_.pos = P2_;
         v2_.normal = norm_1;
         v2_.uv0 = glm::vec2(0.f);
+        v2_.uv1 = glm::vec2(0.f);
 
         v1_.pos = P1_;
         v1_.normal = norm_1;
         v1_.uv0 = glm::vec2(0.f);
+        v1_.uv1 = glm::vec2(0.f);
 
         mVertices.push_back(v1);
         mVertices.push_back(v2_);
         mVertices.push_back(v1_);
 
-        //triangle III
+        // triangle III
         glm::vec3 norm_3 = glm::normalize(glm::cross(P2_ - P2, P3_ - P2));
 
         v2.pos = P2;
         v2.normal = norm_3;
         v2.uv0 = glm::vec2(0.f);
+        v2.uv1 = glm::vec2(0.f);
 
         v3_.pos = P3_;
         v3_.normal = norm_3;
         v3_.uv0 = glm::vec2(0.f);
+        v3_.uv1 = glm::vec2(0.f);
 
         v2_.pos = P2_;
         v2_.normal = norm_3;
         v2_.uv0 = glm::vec2(0.f);
+        v2_.uv1 = glm::vec2(0.f);
 
         mVertices.push_back(v2);
         mVertices.push_back(v3_);
         mVertices.push_back(v2_);
 
-        //triangle IV
+        // triangle IV
         glm::vec3 norm_4 = glm::normalize(glm::cross(P3_ - P2, P3 - P2));
 
         v2.pos = P2;
         v2.normal = norm_4;
         v2.uv0 = glm::vec2(0.f);
+        v2.uv1 = glm::vec2(0.f);
 
         v3.pos = P3;
         v3.normal = norm_4;
         v3.uv0 = glm::vec2(0.f);
+        v3.uv1 = glm::vec2(0.f);
 
         v3_.pos = P3_;
         v3_.normal = norm_4;
         v3_.uv0 = glm::vec2(0.f);
+        v3_.uv1 = glm::vec2(0.f);
 
         mVertices.push_back(v2);
         mVertices.push_back(v3);
         mVertices.push_back(v3_);
 
-        //triangle V
+        // triangle V
         glm::vec3 norm_5 = glm::normalize(glm::cross(P3_ - P3, P1_ - P3));
 
         v3.pos = P3;
         v3.normal = norm_5;
         v3.uv0 = glm::vec2(0.f);
+        v3.uv1 = glm::vec2(0.f);
 
         v1_.pos = P1_;
         v1_.normal = norm_5;
         v1_.uv0 = glm::vec2(0.f);
+        v1_.uv1 = glm::vec2(0.f);
 
         v3_.pos = P3_;
         v3_.normal = norm_5;
         v3_.uv0 = glm::vec2(0.f);
+        v3_.uv1 = glm::vec2(0.f);
 
         mVertices.push_back(v3);
         mVertices.push_back(v1_);
         mVertices.push_back(v3_);
 
-        //triangle VI
+        // triangle VI
         glm::vec3 norm_6 = glm::normalize(glm::cross(P1_ - P3, P1 - P3));
 
         v3.pos = P3;
         v3.normal = norm_6;
         v3.uv0 = glm::vec2(0.f);
+        v3.uv1 = glm::vec2(0.f);
 
         v1.pos = P1;
         v1.normal = norm_6;
         v1.uv0 = glm::vec2(0.f);
+        v1.uv1 = glm::vec2(0.f);
 
         v1_.pos = P1_;
         v1_.normal = norm_6;
         v1_.uv0 = glm::vec2(0.f);
+        v1_.uv1 = glm::vec2(0.f);
 
         mVertices.push_back(v3);
         mVertices.push_back(v1);

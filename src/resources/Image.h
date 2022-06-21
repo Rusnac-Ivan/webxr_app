@@ -32,6 +32,8 @@ namespace rsrc
 			Image(Image&&) noexcept;
 			Image& operator=(Image&&) noexcept;
 
+
+			inline gl::Texture2D* GetTexture() { return &mTexture; }
 			inline const uint8_t* GetRawData() const { return mData.data(); }
 			inline size_t GetWidth() const { return mWidth; }
 			inline size_t GetHeight() const { return mHeight; }

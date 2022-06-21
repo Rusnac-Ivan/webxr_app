@@ -1,31 +1,29 @@
 #include "Image.h"
 #include <tiny_gltf.h>
 
-
 namespace rsrc
 {
-	Image::Image() :
-		mWidth(0),
-		mHeight(0),
-		mChannels(0),
-		mIsFloatingPoint(false)
-	{}
-	Image::Image(uint8_t* data, size_t width, size_t height, size_t channels, bool isFloatingPoint)
+	Image::Image() : mWidth(0),
+					 mHeight(0),
+					 mChannels(0),
+					 mIsFloatingPoint(false)
+	{
+	}
+	Image::Image(uint8_t *data, size_t width, size_t height, size_t channels, bool isFloatingPoint)
 	{
 		SetData(data, width, height, channels, isFloatingPoint);
 	}
 
-	Image::Image(Image&& other) noexcept :
-		mData(std::move(other.mData)),
-		mWidth(other.mWidth),
-		mHeight(other.mHeight),
-		mChannels(other.mChannels),
-		mIsFloatingPoint(other.mIsFloatingPoint),
-		mTexture(std::move(other.mTexture))
+	Image::Image(Image &&other) noexcept : mData(std::move(other.mData)),
+										   mWidth(other.mWidth),
+										   mHeight(other.mHeight),
+										   mChannels(other.mChannels),
+										   mIsFloatingPoint(other.mIsFloatingPoint),
+										   mTexture(std::move(other.mTexture))
 	{
 		other.mData.clear();
 	}
-	Image& Image::operator=(Image&& other) noexcept
+	Image &Image::operator=(Image &&other) noexcept
 	{
 		mData = std::move(other.mData);
 		mWidth = other.mWidth;
@@ -40,7 +38,7 @@ namespace rsrc
 
 	Image::~Image() {}
 
-	void Image::SetData(const unsigned char* data, size_t width, size_t height, size_t channels, bool isFloatingPoint)
+	void Image::SetData(const unsigned char *data, size_t width, size_t height, size_t channels, bool isFloatingPoint)
 	{
 		mWidth = width;
 		mHeight = height;
@@ -57,27 +55,33 @@ namespace rsrc
 		gl::Texture::Format format = gl::Texture::Format::UNKNOWN;
 		switch (mChannels)
 		{
-			case 1:
-			{
-				format = gl::Texture::Format::RED;
-			}break;
-			case 2:
-			{
-				format = gl::Texture::Format::RG;
-			}break;
-			case 3:
-			{
-				format = gl::Texture::Format::RGB;
-			}break;
-			case 4:
-			{
-				format = gl::Texture::Format::RGBA;
-			}break;
-			default:
-				break;
+		case 1:
+		{
+			format = gl::Texture::Format::RED;
+		}
+		break;
+		case 2:
+		{
+			format = gl::Texture::Format::RG;
+		}
+		break;
+		case 3:
+		{
+			format = gl::Texture::Format::RGB;
+		}
+		break;
+		case 4:
+		{
+			format = gl::Texture::Format::RGBA;
+		}
+		break;
+		default:
+			break;
 		}
 
 		mTexture.LoadData(0, format, mWidth, mHeight, 0, format, gl::DataType::UNSIGNED_BYTE, mData.data());
+
+		mData.clear();
 	}
 
 	void Image::SetPixelByte(size_t x, size_t y, uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255)
@@ -88,7 +92,7 @@ namespace rsrc
 			return;
 		}
 
-		assert(x < this->mWidth&& y < this->mHeight);
+		assert(x < this->mWidth && y < this->mHeight);
 
 		switch (this->mChannels)
 		{
@@ -116,7 +120,7 @@ namespace rsrc
 		}
 	}
 
-	template<typename T>
+	template <typename T>
 	T Clamp(T v, T minv, T maxv)
 	{
 		return (v < minv) ? minv : (v > maxv ? maxv : v);
@@ -127,45 +131,43 @@ namespace rsrc
 		if (!this->mIsFloatingPoint)
 		{
 			this->SetPixelByte(x, y,
-				(uint8_t)Clamp(r * 255.0f, 0.0f, 255.0f),
-				(uint8_t)Clamp(g * 255.0f, 0.0f, 255.0f),
-				(uint8_t)Clamp(b * 255.0f, 0.0f, 255.0f),
-				(uint8_t)Clamp(a * 255.0f, 0.0f, 255.0f)
-			);
+							   (uint8_t)Clamp(r * 255.0f, 0.0f, 255.0f),
+							   (uint8_t)Clamp(g * 255.0f, 0.0f, 255.0f),
+							   (uint8_t)Clamp(b * 255.0f, 0.0f, 255.0f),
+							   (uint8_t)Clamp(a * 255.0f, 0.0f, 255.0f));
 			return;
 		}
 
-		assert(x < this->mWidth&& y < this->mHeight);
+		assert(x < this->mWidth && y < this->mHeight);
 		switch (this->mChannels)
 		{
 		case 1:
-			((float*)this->mData.data())[x * this->mHeight + y] = r;
+			((float *)this->mData.data())[x * this->mHeight + y] = r;
 			break;
 		case 2:
-			((float*)this->mData.data())[(x * this->mHeight + y) * 2 + 0] = r;
-			((float*)this->mData.data())[(x * this->mHeight + y) * 2 + 1] = g;
+			((float *)this->mData.data())[(x * this->mHeight + y) * 2 + 0] = r;
+			((float *)this->mData.data())[(x * this->mHeight + y) * 2 + 1] = g;
 			break;
 		case 3:
-			((float*)this->mData.data())[(x * this->mHeight + y) * 3 + 0] = r;
-			((float*)this->mData.data())[(x * this->mHeight + y) * 3 + 1] = g;
-			((float*)this->mData.data())[(x * this->mHeight + y) * 3 + 2] = b;
+			((float *)this->mData.data())[(x * this->mHeight + y) * 3 + 0] = r;
+			((float *)this->mData.data())[(x * this->mHeight + y) * 3 + 1] = g;
+			((float *)this->mData.data())[(x * this->mHeight + y) * 3 + 2] = b;
 			break;
 		case 4:
-			((float*)this->mData.data())[(x * this->mHeight + y) * 4 + 0] = r;
-			((float*)this->mData.data())[(x * this->mHeight + y) * 4 + 1] = g;
-			((float*)this->mData.data())[(x * this->mHeight + y) * 4 + 2] = b;
-			((float*)this->mData.data())[(x * this->mHeight + y) * 4 + 3] = a;
+			((float *)this->mData.data())[(x * this->mHeight + y) * 4 + 0] = r;
+			((float *)this->mData.data())[(x * this->mHeight + y) * 4 + 1] = g;
+			((float *)this->mData.data())[(x * this->mHeight + y) * 4 + 2] = b;
+			((float *)this->mData.data())[(x * this->mHeight + y) * 4 + 3] = a;
 			break;
 		default:
 			assert(false && "Unknown"); // invalid channel count
 			break;
 		}
-
 	}
 
-	void Image::LoadFromGLTF(const tinygltf::Image& gltfimage, std::vector<tinygltf::Sampler>& samplers, int sampler_idx)
+	void Image::LoadFromGLTF(const tinygltf::Image &gltfimage, std::vector<tinygltf::Sampler> &samplers, int sampler_idx)
 	{
-		
+
 		SetData(&gltfimage.image[0], gltfimage.width, gltfimage.height, gltfimage.component, false);
 
 		if (sampler_idx == -1)
@@ -177,9 +179,10 @@ namespace rsrc
 		}
 		else
 		{
-			tinygltf::Sampler& sampler = samplers[sampler_idx];
-			mTexture.SetMinFilterMode(static_cast<gl::Texture::FilterMode>(sampler.minFilter));
-			mTexture.SetMagFilterMode(static_cast<gl::Texture::FilterMode>(sampler.magFilter));
+			tinygltf::Sampler &sampler = samplers[sampler_idx];
+			
+			mTexture.SetMinFilterMode(static_cast<gl::Texture::FilterMode>(sampler.minFilter > -1 ? sampler.minFilter : GL_LINEAR));
+			mTexture.SetMagFilterMode(static_cast<gl::Texture::FilterMode>(sampler.magFilter > -1 ? sampler.magFilter : GL_LINEAR));
 			mTexture.SetWrapModeS(static_cast<gl::Texture::WrapMode>(sampler.wrapS));
 			mTexture.SetWrapModeT(static_cast<gl::Texture::WrapMode>(sampler.wrapT));
 		}

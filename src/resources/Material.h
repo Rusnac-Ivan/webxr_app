@@ -13,9 +13,14 @@ namespace tinygltf
 	struct Material;
 }
 
+namespace gl
+{
+	class Texture2D;
+}
+
+
 namespace rsrc
 {
-
 	class Image;
 
 	class Material
@@ -28,10 +33,9 @@ namespace rsrc
 				BLEND //TRANSPARENT
 			};
 
-			enum struct MapType
+			enum MapType
 			{
-				DIFFUSE,
-				ALBEDO,
+				BASE_COLOR,
 				NORMAL,
 				ROUGHNESS,
 				METALLIC,
@@ -40,7 +44,8 @@ namespace rsrc
 				GLOSSINESS,
 				AMBIENT_OCCLUSION,
 				EMISSIVE,
-				HEIGHT
+				HEIGHT,
+				COUNT
 			};
 		private:
 			AlphaMode mAlphaMode = AlphaMode::OPAQUE;
@@ -52,7 +57,8 @@ namespace rsrc
 			glm::vec4 mBaseColorFactor;
 			glm::vec4 mEmissiveFactor;
 
-			std::map<MapType, const Image*> mAttachedMaps;
+			Image* mAttachedMaps[MapType::COUNT] = {};
+			int mTexCoordSets[MapType::COUNT] = {};
 
 			struct Extension {
 				float glossinessFactor = 0.5f;
@@ -74,11 +80,17 @@ namespace rsrc
 			Material(Material&&) noexcept;
 			Material& operator=(Material&&) noexcept;
 
+			gl::Texture2D* GetTextureByMap(MapType type);
+			AlphaMode GetAlphaMode() { return mAlphaMode; }
+			int GetTextureCoordSets(MapType type) { return mTexCoordSets[type]; }
+
 			float GetTransparency() const { return mTransparency; }
 			float GetMetallicFactor() const { return mMetallicFactor; }
 			float GetRoughnessFactor() const { return mRoughnessFactor; }
 			glm::vec4 GetBaseColorFactor() const { return mBaseColorFactor; }
 			glm::vec4 GetEmissiveFactor() const { return mEmissiveFactor; }
+
+			
 			
 			float GetGlossinessFactor() const { return mExtension.glossinessFactor; }
 			glm::vec4 GetDiffuseFactor() const { return mExtension.diffuseFactor; }
@@ -94,14 +106,13 @@ namespace rsrc
 			void SetDiffuseFactor(glm::vec4 diffuse) { mExtension.diffuseFactor = diffuse; } 
 			void SetSpecularFactor(glm::vec3 specular) { mExtension.specularFactor = specular; }
 
-			void LoadFromTinyGLTF(tinygltf::Material& material, const std::vector<Image>& textures);
+			void LoadFromTinyGLTF(tinygltf::Material& material, std::vector<Image>& textures);
 
 			//void AttachMap(const MapType type, uint8_t* data, size_t width, size_t height, size_t channels, bool isFloatingPoint);
 			void AttachMap(const MapType type, Image* image);
 			void DetachMap(const MapType type);
 
 		private:
-			void SetMap(MapType map_type, const Image* image);
 	};
 
 }

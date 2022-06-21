@@ -2,6 +2,7 @@
 #include "webxr.h"
 #include <core/Application.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 EMSCRIPTEN_BINDINGS(WebXR)
 {
@@ -18,27 +19,31 @@ EMSCRIPTEN_BINDINGS(WebXR)
     emscripten::function("WXROnRequestSession", &WebXR::OnRequestSession);
 };
 
-util::EMObject WebXR::mNavigator = util::EMObject::Global("navigator");
-util::EMObject WebXR::mXR = WebXR::mNavigator["xr"];
+emscripten::val WebXR::mNavigator = emscripten::val::global("navigator");
+emscripten::val WebXR::mXR = emscripten::val::undefined();
 emscripten::val WebXR::mXRSession = emscripten::val::undefined();
+emscripten::val WebXR::mXRFrame = emscripten::val::undefined();
 emscripten::val WebXR::mCanvas = emscripten::val::undefined();
 emscripten::val WebXR::mRenderContext = emscripten::val::undefined();
 emscripten::val WebXR::mRefSpace = emscripten::val::undefined();
+emscripten::val WebXR::mXRInputSources = emscripten::val::undefined();
+emscripten::val WebXR::mXRViews = emscripten::val::undefined();
+emscripten::val WebXR::XRGLLayer = emscripten::val::undefined();
 
 core::Application *WebXR::mApplication = nullptr;
-constexpr uint32_t WebXR::mMaxSourcesCount;
+constexpr uint32_t WebXR::MAX_SOURCE_COUNT;
 
-WebXRInputSource WebXR::mXRLeftInputSource = {};
-WebXRInputSource WebXR::mXRRightInputSource = {};
+// uint32_t WebXR::mEyeCount = 0;
+// WebXRInputSource WebXR::mXRInputSources[WebXR::mMaxSourcesCount] = {};
+WebXRInputSource WebXR::mInputSources[MAX_SOURCE_COUNT] = {};
 WebXRRigidTransform WebXR::mHeadPose = {};
-WebXRView WebXR::mLeftEyeView = {};
-WebXRView WebXR::mRightEyeView = {};
+WebXRView WebXR::mViews[MAX_VIEW_COUNT] = {};
 
-const WebXRInputSource &WebXR::GetLeftInputSource() { return mXRLeftInputSource; }
-const WebXRInputSource &WebXR::GetRightInputSource() { return mXRRightInputSource; }
+// const WebXRInputSource &WebXR::GetLeftInputSource() { return mXRLeftInputSource; }
+// const WebXRInputSource &WebXR::GetRightInputSource() { return mXRRightInputSource; }
 const WebXRRigidTransform &WebXR::GetHeadPose() { return mHeadPose; }
-const WebXRView &WebXR::GetLeftEyeView() { return mLeftEyeView; }
-const WebXRView &WebXR::GetRightEyeView() { return mRightEyeView; }
+// const WebXRView &WebXR::GetLeftEyeView() { return mLeftEyeView; }
+// const WebXRView &WebXR::GetRightEyeView() { return mRightEyeView; }
 
 WebXR::SessionStartedCallBack WebXR::mSessionStartedCallBack;
 WebXR::FrameCallBack WebXR::mFrameCallBack;
@@ -101,14 +106,15 @@ WebXR::~WebXR()
 {
 }
 
-void WebXR::ConsoleLogXR()
+bool WebXR::IsWebXRSupported()
 {
-    mXR.ConsoleLog();
-}
-
-void WebXR::ConsoleLogNavigator()
-{
-    mNavigator.ConsoleLog();
+    if (mNavigator.hasOwnProperty("xr"))
+    {
+        mXR = mNavigator["xr"];
+        return true;
+    }
+    else
+        return false;
 }
 
 void WebXR::OnRequestSession(emscripten::val event)
@@ -312,8 +318,110 @@ void convertJSDOMPointToQuat(const emscripten::val &domPoint, glm::quat &quat)
     quat.w = domPoint["w"].as<float>();
 }
 
+void WebXR::GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode)
+{
+    emscripten::val::global("console").call<void>("log", mXRInputSources);
+    uint32_t inputSourcesCount = mXRInputSources["length"].as<uint32_t>();
+    assert(inputSourcesCount <= MAX_SOURCE_COUNT);
+
+    for (uint32_t i = 0; i < inputSourcesCount; i++)
+    {
+        emscripten::val inputSource = mXRInputSources[i];
+
+        if (inputSource["handedness"].call<int>("localeCompare", std::string("right")) == 0)
+            mInputSources[i].handedness = XRHandedness::RIGHT;
+        else if (inputSource["handedness"].call<int>("localeCompare", std::string("left")) == 0)
+            mInputSources[i].handedness = XRHandedness::LEFT;
+        else
+            mInputSources[i].handedness = XRHandedness::NONE;
+
+        if (inputSource["handedness"].call<int>("localeCompare", std::string("gaze")) == 0)
+            mInputSources[i].targetRayMode = XRTargetRayMode::GAZE;
+        else if (inputSource["handedness"].call<int>("localeCompare", std::string("tracked-pointer")) == 0)
+            mInputSources[i].targetRayMode = XRTargetRayMode::TRACKED_POINTER;
+        else
+            mInputSources[i].targetRayMode = XRTargetRayMode::SCREEN;
+
+        if (mode == WEBXR_INPUT_POSE_GRIP)
+        {
+            emscripten::val gripSpace = inputSource["gripSpace"];
+            if (!(gripSpace.isNull() || gripSpace.isUndefined()))
+            {
+                emscripten::val gripPose = mXRFrame.call<emscripten::val>("getPose", gripSpace, mRefSpace);
+                emscripten::val transform = gripPose["transform"];
+                emscripten::val position = transform["position"];
+                emscripten::val orientation = transform["orientation"];
+                emscripten::val matrix = transform["matrix"];
+
+                convertJSDOMPointToVec3(position, mInputSources[i].rigidTransform.position);
+                convertJSDOMPointToQuat(orientation, mInputSources[i].rigidTransform.orientation);
+                convertJSArrayToMat4(matrix, mInputSources[i].rigidTransform.matrix);
+            }
+        }
+        if (mode == WEBXR_INPUT_POSE_TARGET_RAY)
+        {
+            emscripten::val targetRaySpace = inputSource["targetRaySpace"];
+            if (!(targetRaySpace.isNull() || targetRaySpace.isUndefined()))
+            {
+                emscripten::val targetRayPose = mXRFrame.call<emscripten::val>("getPose", targetRaySpace, mRefSpace);
+                emscripten::val transform = targetRayPose["transform"];
+                emscripten::val position = transform["position"];
+                emscripten::val orientation = transform["orientation"];
+                emscripten::val matrix = transform["matrix"];
+
+                convertJSDOMPointToVec3(position, mInputSources[i].rigidTransform.position);
+                convertJSDOMPointToQuat(orientation, mInputSources[i].rigidTransform.orientation);
+                convertJSArrayToMat4(matrix, mInputSources[i].rigidTransform.matrix);
+            }
+        }
+    }
+
+    *sourceArray = mInputSources;
+    *arraySize = inputSourcesCount;
+}
+
+void WebXR::GetViews(WebXRView **sourceArray, uint32_t *arraySize)
+{
+    uint32_t viewCount = mXRViews["length"].as<uint32_t>();
+    assert(viewCount == MAX_VIEW_COUNT);
+    for (uint32_t i = 0; i < viewCount; i++)
+    {
+        const emscripten::val xrView = mXRViews[i];
+        const emscripten::val transform = xrView["transform"];
+        const emscripten::val projectionMatrix = xrView["projectionMatrix"];
+        const emscripten::val viewport = XRGLLayer.call<emscripten::val>("getViewport", xrView);
+
+        const emscripten::val position = transform["position"];
+        const emscripten::val orientation = transform["orientation"];
+        const emscripten::val matrix = transform["matrix"];
+
+        const emscripten::val eye = xrView["eye"];
+        if (xrView["eye"].call<int>("localeCompare", std::string("right")) == 0)
+            mViews[i].eye = XREye::RIGHT;
+        else if (xrView["eye"].call<int>("localeCompare", std::string("left")) == 0)
+            mViews[i].eye = XREye::LEFT;
+        else
+            mViews[i].eye = XREye::NONE;
+
+        convertJSDOMPointToVec3(position, mViews[i].viewPose.position);
+        convertJSDOMPointToQuat(orientation, mViews[i].viewPose.orientation);
+        // convertJSArrayToMat4(matrix, mViews[i].viewPose.matrix);
+        mViews[i].viewPose.matrix = glm::transpose(glm::toMat4(mViews[i].viewPose.orientation)) * glm::translate(glm::mat4(1.f), -mViews[i].viewPose.position);
+
+        convertJSArrayToMat4(projectionMatrix, mViews[i].projectionMatrix);
+
+        mViews[i].viewport.x = viewport["x"].as<uint32_t>();
+        mViews[i].viewport.y = viewport["y"].as<uint32_t>();
+        mViews[i].viewport.width = viewport["width"].as<uint32_t>();
+        mViews[i].viewport.height = viewport["height"].as<uint32_t>();
+    }
+    *sourceArray = mViews;
+    *arraySize = viewCount;
+}
+
 void WebXR::OnFrame(emscripten::val time, emscripten::val frame)
 {
+    mXRFrame = frame;
     emscripten::val session = frame["session"];
 
     emscripten::val viewPose = frame.call<emscripten::val>("getViewerPose", mRefSpace);
@@ -328,11 +436,11 @@ void WebXR::OnFrame(emscripten::val time, emscripten::val frame)
     convertJSArrayToMat4(viewMatrix, mHeadPose.matrix);
 
     emscripten::val renderState = session["renderState"];
-    emscripten::val glLayer = renderState["baseLayer"];
+    XRGLLayer = renderState["baseLayer"];
 
-    emscripten::val framebuffer = glLayer["framebuffer"];
+    emscripten::val framebuffer = XRGLLayer["framebuffer"];
 
-    emscripten::val::global("console").call<void>("log", glLayer);
+    emscripten::val::global("console").call<void>("log", XRGLLayer);
     if (!(framebuffer.isNull() || framebuffer.isUndefined()))
     {
         // emscripten::val gl = emscripten::val::global("gl");
@@ -340,69 +448,8 @@ void WebXR::OnFrame(emscripten::val time, emscripten::val frame)
         mRenderContext.call<void>("bindFramebuffer", mRenderContext["FRAMEBUFFER"], framebuffer);
     }
 
-    // read input sources (controllers) pose
-    emscripten::val inputSources = session["inputSources"];
-    uint32_t inputSourcesCount = inputSources["length"].as<uint32_t>();
-    assert(inputSourcesCount <= mMaxSourcesCount);
-
-    for (uint32_t i = 0; i < inputSourcesCount; i++)
-    {
-        WebXRInputSource *currentInputSource = nullptr;
-        emscripten::val inputSource = inputSources[i];
-        if (inputSource["handedness"].call<int>("localeCompare", std::string("right")) == 0)
-            currentInputSource = &mXRRightInputSource;
-        if (inputSource["handedness"].call<int>("localeCompare", std::string("left")) == 0)
-            currentInputSource = &mXRLeftInputSource;
-        // mXRInputSources[i].handedness = static_cast<XRHandedness>(inputSource["handedness"].as<uint32_t>());
-        // mXRInputSources[i].targetRayMode = static_cast<XRTargetRayMode>(inputSource["targetRayMode"].as<uint32_t>());
-        emscripten::val gripSpace = inputSource["gripSpace"];
-        if (!(gripSpace.isNull() || gripSpace.isUndefined()))
-        {
-            emscripten::val gripPose = frame.call<emscripten::val>("getPose", gripSpace, mRefSpace);
-            emscripten::val transform = gripPose["transform"];
-            // emscripten::val::global("console").call<void>("log", gripSpace);
-            emscripten::val position = transform["position"];
-            emscripten::val orientation = transform["orientation"];
-            emscripten::val matrix = transform["matrix"];
-
-            convertJSDOMPointToVec3(position, currentInputSource->rigidTransform.position);
-            convertJSDOMPointToQuat(orientation, currentInputSource->rigidTransform.orientation);
-            convertJSArrayToMat4(matrix, currentInputSource->rigidTransform.matrix);
-        }
-    }
-
-    // render twice left and right eye
-    emscripten::val views = viewPose["views"];
-    uint32_t viewCount = views["length"].as<uint32_t>();
-    assert(viewCount == 2);
-    for (uint32_t i = 0; i < viewCount; i++)
-    {
-        const emscripten::val xrView = views[i];
-        const emscripten::val transform = xrView["transform"];
-        const emscripten::val projectionMatrix = xrView["projectionMatrix"];
-        const emscripten::val viewport = glLayer.call<emscripten::val>("getViewport", xrView);
-
-        const emscripten::val position = transform["position"];
-        const emscripten::val orientation = transform["orientation"];
-        const emscripten::val matrix = transform["matrix"];
-
-        WebXRView *view = nullptr;
-        const emscripten::val eye = xrView["eye"];
-        if (xrView["eye"].call<int>("localeCompare", std::string("right")) == 0)
-            view = &mRightEyeView;
-        if (xrView["eye"].call<int>("localeCompare", std::string("left")) == 0)
-            view = &mLeftEyeView;
-
-        convertJSDOMPointToVec3(position, view->viewPose.position);
-        convertJSDOMPointToQuat(orientation, view->viewPose.orientation);
-        convertJSArrayToMat4(matrix, view->viewPose.matrix);
-        convertJSArrayToMat4(projectionMatrix, view->projectionMatrix);
-
-        view->viewport.x = viewport["x"].as<uint32_t>();
-        view->viewport.y = viewport["y"].as<uint32_t>();
-        view->viewport.width = viewport["width"].as<uint32_t>();
-        view->viewport.height = viewport["height"].as<uint32_t>();
-    }
+    mXRViews = viewPose["views"];
+    mXRInputSources = session["inputSources"];
 
     printf("WebXR::OnFrame\n");
     // mFrameCallBack();
@@ -457,12 +504,12 @@ void WebXR::OnSelectEnd(emscripten::val event)
 
 bool WebXR::IsSessionSupported(XRSessionMode mode)
 {
-    return mXR.CallAwait("isSessionSupported", _XRSessionMode[mode]).GetAs<bool>();
+    return mXR.call<emscripten::val>("isSessionSupported", _XRSessionMode[mode]).await().as<bool>();
 }
 
 void WebXR::RequestSession(XRSessionMode mode)
 {
-    emscripten::val promise = mXR.GetJSObject().call<emscripten::val>("requestSession", _XRSessionMode[mode]);
+    emscripten::val promise = mXR.call<emscripten::val>("requestSession", _XRSessionMode[mode]);
     promise.call<void>("then", emscripten::val::module_property("WXROnSessionStarted"), emscripten::val::module_property("WXROnError"));
 }
 
@@ -470,7 +517,7 @@ void WebXR::RequestSession(XRSessionMode mode, XRSessionFeatures required)
 {
     emscripten::val option = emscripten::val::object();
     option.set("requiredFeatures", _XRSessionFeatures[required]);
-    emscripten::val promise = mXR.GetJSObject().call<emscripten::val>("requestSession", _XRSessionMode[mode], option);
+    emscripten::val promise = mXR.call<emscripten::val>("requestSession", _XRSessionMode[mode], option);
     promise.call<void>("then", emscripten::val::module_property("WXROnSessionStarted"), emscripten::val::module_property("WXROnError"));
 }
 
@@ -479,7 +526,7 @@ void WebXR::RequestSession(XRSessionMode mode, XRSessionFeatures required, XRSes
     emscripten::val option = emscripten::val::object();
     option.set("requiredFeatures", _XRSessionFeatures[required]);
     option.set("optionalFeatures", _XRSessionFeatures[optional]);
-    emscripten::val promise = mXR.GetJSObject().call<emscripten::val>("requestSession", _XRSessionMode[mode], option);
+    emscripten::val promise = mXR.call<emscripten::val>("requestSession", _XRSessionMode[mode], option);
     promise.call<void>("then", emscripten::val::module_property("WXROnSessionStarted"), emscripten::val::module_property("WXROnError"));
 }
 

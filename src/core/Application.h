@@ -51,8 +51,9 @@ namespace core
 		virtual bool OnFinalize() { return true; }
 
 		static void OnUpdate(void *_arg);
-
+#ifdef __EMSCRIPTEN__
 		int ResizeGLFWWindow();
+#endif
 
 	private:
 		static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);

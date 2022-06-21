@@ -22,6 +22,7 @@ namespace gl
 		unsigned int mID;
 		unsigned int mAttributeIndex;
 		size_t mVertexCount;
+
 	public:
 		VertexArray();
 		~VertexArray();
@@ -29,20 +30,19 @@ namespace gl
 		void Create();
 		void Destroy();
 
-		VertexArray(const VertexArray&) = delete;
-		VertexArray(VertexArray&& array) noexcept;
-		VertexArray& operator=(const VertexArray&) = delete;
-		VertexArray& operator=(VertexArray&& array) noexcept;
+		VertexArray(const VertexArray &) = delete;
+		VertexArray(VertexArray &&array) noexcept;
+		VertexArray &operator=(const VertexArray &) = delete;
+		VertexArray &operator=(VertexArray &&array) noexcept;
 
 		void Bind();
 		void UnBind();
 
-		void AddVertexLayout(VertexBuffer& buffer, std::vector<VertexAttribute> layout, VertexAttributeRate inputRate);
+		void AddVertexLayout(VertexBuffer &buffer, std::vector<VertexAttribute> layout, VertexAttributeRate inputRate = VertexAttributeRate::PER_VERTEX);
 		void RemoveVertexLayout(std::vector<VertexAttribute> layout);
-		void LinkIndexBuffer(IndexBuffer& buffer);
+		void LinkIndexBuffer(IndexBuffer &buffer);
 
 		int GetAttributeCount() const { return mAttributeIndex; }
-
 	};
 }
 

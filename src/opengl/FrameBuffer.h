@@ -38,7 +38,6 @@ namespace gl
 		COLOR14 = GL_COLOR_ATTACHMENT14,
 		COLOR15 = GL_COLOR_ATTACHMENT15,
 		COLOR16 = GL_COLOR_ATTACHMENT16,
-
 		DEPTH = GL_DEPTH_ATTACHMENT,
 		STENCIL = GL_STENCIL_ATTACHMENT,
 		DEPTH_STENCIL = GL_DEPTH_STENCIL_ATTACHMENT
@@ -53,8 +52,10 @@ namespace gl
 		uint32_t mWidth;
 		uint32_t mHeight;
 
-		std::map<Attachment, Texture2D> mAttachedTextures;
-		std::map<Attachment, CubeMap> mAttachedCubeMaps;
+		//std::map<Attachment, Texture2D> mAttachedTextures;
+		//std::map<Attachment, CubeMap> mAttachedCubeMaps;
+
+		//Texture2D* mAttachedTextures[]
 	public:
 		FrameBuffer();
 		~FrameBuffer();
@@ -77,8 +78,8 @@ namespace gl
 		void UseDrawBuffers(const std::vector<Attachment>& attachments);
 		void UseOnlyDepth();
 
-		bool HasTextureAttached() const { return mAttachedTextures.size() > 0; }
-		bool HasCubeMapAttached() const { return mAttachedCubeMaps.size() > 0; }
+		//bool HasTextureAttached() const { return mAttachedTextures.size() > 0; }
+		//bool HasCubeMapAttached() const { return mAttachedCubeMaps.size() > 0; }
 
 		bool IsComplete() const;
 

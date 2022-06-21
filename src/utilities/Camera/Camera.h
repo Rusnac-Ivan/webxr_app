@@ -25,6 +25,8 @@ namespace util
 			ICamera();
 			virtual ~ICamera();
 
+			void SetViewState(const glm::vec3& pos, const glm::vec3& up, const glm::vec3& look);
+
 			void SetPosition(const glm::vec3& pos);
 			void SetOrientation(const glm::vec3& up, const glm::vec3& look);
 			void SetOrientation(const glm::quat& orientation);
@@ -36,6 +38,8 @@ namespace util
 			const glm::vec3& GetLook() const { return mLook; }
 			const glm::quat& GetOrientation() const { return mOrientation; }
 			const glm::vec3& GetPitchYawRoll() const { return mPitchYawRoll; }
+
+			const glm::mat4& GetViewMat() { return mViewMat; }
 
 			virtual const glm::mat4& GetProjectionMat() = 0;
 	};
@@ -54,7 +58,7 @@ namespace util
 
 
 	template<>
-	class Camera<ProjectionType::PERSPECTIVE>
+	class Camera<ProjectionType::PERSPECTIVE> : public ICamera
 	{
 		float mNear;
 		float mFar;
@@ -87,7 +91,7 @@ namespace util
 
 
 	template<>
-	class Camera<ProjectionType::ORTHOGRAPHIC>
+	class Camera<ProjectionType::ORTHOGRAPHIC> : public ICamera
 	{
 		float mNear;
 		float mFar;

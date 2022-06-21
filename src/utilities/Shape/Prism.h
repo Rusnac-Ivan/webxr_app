@@ -2,13 +2,15 @@
 #define _UTIL_PRISM_H_
 
 #include <vector>
-#include "Vertex.h"
 
 namespace util
 {
+	struct Vertex;
+
 	class Prism
 	{
 		std::vector<Vertex> mVertices;
+
 	public:
 		Prism();
 		~Prism();
@@ -16,15 +18,12 @@ namespace util
 		void Generate(float edge_width);
 		void Reset();
 
-		const float* GetVertexData() const { return reinterpret_cast<const float*>(mVertices.size() > 0 ? mVertices.data() : nullptr); }
-		uint32_t GetVertexCount() const { return mVertices.size(); }
-
+		const float *GetVertexData() const;
+		uint32_t GetVertexCount() const;
 
 	private:
-
 	};
 
-	
 }
 
 #endif

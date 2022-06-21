@@ -106,17 +106,14 @@ namespace core
 			// Decide GL+GLSL versions
 #ifdef __APPLE__
 		// GL 3.2 + GLSL 150
-		mGLSLVersion = "#version 150";
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);		   // Required on Mac
 #elif __EMSCRIPTEN__
-		mGLSLVersion = "#version 300 es";
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #else
-		mGLSLVersion = "#version 400";
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 #endif
@@ -179,7 +176,7 @@ namespace core
 
 		// Setup Platform/Renderer backends
 		ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
-		ImGui_ImplOpenGL3_Init(mGLSLVersion.c_str());
+		ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
 		ImGui_ImplOpenGL3_NewFrame();
 
@@ -210,6 +207,7 @@ namespace core
 		bool success = OnInitialize();
 		if (!success)
 			return EXIT_FAILURE;
+		OnResize(mWidth, mHeight);
 		while (!glfwWindowShouldClose(mGLFWWindow))
 		{
 			OnUpdate(this);
@@ -267,11 +265,14 @@ namespace core
 		glfwPollEvents();
 	}
 
+#ifdef __EMSCRIPTEN__
 	int Application::ResizeGLFWWindow()
 	{
+
 		int canv_width, canv_height;
 		if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
 			return EXIT_FAILURE;
+
 
 		mWidth = canv_width;
 		mHeight = canv_height;
@@ -283,4 +284,5 @@ namespace core
 
 		return EXIT_SUCCESS;
 	}
+#endif
 }

@@ -4,10 +4,9 @@
 #include <vector>
 #include <utilities/BoundingObjects/AABB.h>
 #include <opengl/Texture.h>
+#include <opengl/Program.h>
 #include <string>
 #include <cstdint>
-
-
 
 namespace tinygltf
 {
@@ -23,7 +22,7 @@ namespace rsrc
 
 	class Model
 	{
-		struct TextureSampler 
+		struct TextureSampler
 		{
 			gl::Texture::FilterMode magFilter;
 			gl::Texture::FilterMode minFilter;
@@ -38,24 +37,33 @@ namespace rsrc
 		std::vector<Mesh> mMeshes;
 		std::vector<Image> mTextures;
 		std::vector<Material> mMaterials;
+
+		bool mIsBinary;
+
+		float mProgress;
+		bool mIsReady;
+
 	public:
 		Model();
 		~Model();
 
-		void LoadTextures(tinygltf::Model& model);
-		void LoadMaterials(tinygltf::Model& model);
+		void Load(const char *file);
 
-		void LoadFromFile(std::string filename, float scale = 1.0f);
-		void LoadFromMemoryTinyGLTF(const uint8_t* data, size_t dataSize, bool is_binary, float scale = 1.0f);
+		float GetProgress() { return mProgress; }
 
-		void Draw();
-		void CalculateBoundingBox(Node* node, Node* parent);
+		void Draw(gl::Program *program, const glm::mat4 &model);
+		void CalculateBoundingBox(Node *node, Node *parent);
 		void GetSceneDimensions();
 
 	private:
+		void DrawNode(gl::Program *program, Node *node);
 
+		void LoadTextures(tinygltf::Model &model);
+		void LoadMaterials(tinygltf::Model &model);
+
+		void LoadFromFile(std::string filename, float scale = 1.0f);
+		void LoadFromMemoryTinyGLTF(const uint8_t *data, size_t dataSize, bool is_binary, float scale = 1.0f);
 	};
-
 
 }
 

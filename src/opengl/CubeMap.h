@@ -80,11 +80,13 @@ namespace gl
 
 		void GenerateMipmaps();
 
+		void SetTarget(Target target, int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void* pixels);
+
 	private:
 		void Create();
 		void Destroy();
 
-		void SetTarget(Target target, int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void* pixels);
+		
 	};
 
 }

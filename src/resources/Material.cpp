@@ -1,53 +1,79 @@
 #include "Material.h"
 #include <tiny_gltf.h>
 #include "Image.h"
+#include <opengl/Texture2D.h>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace rsrc
 {
-	Material::Material() :
-		mTransparency(1.f),
-		mMetallicFactor(0.5f),
-		mRoughnessFactor(0.5f),
-		mBaseColorFactor(0.5),
-		mEmissiveFactor(0.f)
-	{}
+	Material::Material() : mTransparency(1.f),
+						   mMetallicFactor(0.1f),
+						   mRoughnessFactor(0.5f),
+						   mAlphaCutoff(0.5f),
+						   mBaseColorFactor(0.8),
+						   mEmissiveFactor(0.f)
+	{
+		for (uint32_t i = 0; i < MapType::COUNT; i++)
+		{
+			mTexCoordSets[i] = -1;
+		}
+	}
 	Material::~Material() {}
 
-	Material::Material(Material&& other) noexcept : 
-		mAlphaMode(other.mAlphaMode),
-		mTransparency(other.mTransparency),
-		mMetallicFactor(other.mMetallicFactor),
-		mRoughnessFactor(other.mRoughnessFactor),
-		mBaseColorFactor(other.mBaseColorFactor),
-		mEmissiveFactor(other.mEmissiveFactor),
-		mAttachedMaps(std::move(other.mAttachedMaps)),
-		mExtension(other.mExtension),
-		mPbrWorkflows(other.mPbrWorkflows)
+	Material::Material(Material &&other) noexcept : mAlphaMode(other.mAlphaMode),
+													mTransparency(other.mTransparency),
+													mMetallicFactor(other.mMetallicFactor),
+													mRoughnessFactor(other.mRoughnessFactor),
+													mAlphaCutoff(other.mAlphaCutoff),
+													mBaseColorFactor(other.mBaseColorFactor),
+													mEmissiveFactor(other.mEmissiveFactor),
+													mExtension(other.mExtension),
+													mPbrWorkflows(other.mPbrWorkflows)
 	{
+		for (uint32_t i = 0; i < MapType::COUNT; i++)
+		{
+			mAttachedMaps[i] = other.mAttachedMaps[i];
+			other.mAttachedMaps[i] = nullptr;
+		}
+		for (uint32_t i = 0; i < MapType::COUNT; i++)
+		{
+			mTexCoordSets[i] = other.mTexCoordSets[i];
+			other.mTexCoordSets[i] = -1;
+		}
 		other.mAlphaMode = AlphaMode::OPAQUE;
 		other.mTransparency = 1.f;
 		other.mMetallicFactor = 0.5f;
 		other.mRoughnessFactor = 0.5f;
+		other.mAlphaCutoff = 0.5f;
 		other.mBaseColorFactor = glm::vec4(0.5f);
-		other.mEmissiveFactor = glm::vec4(0.f);;
+		other.mEmissiveFactor = glm::vec4(0.f);
+		;
 		other.mExtension.diffuseFactor = glm::vec4(0.5f);
 		other.mExtension.glossinessFactor = 0.5f;
 		other.mExtension.specularFactor = glm::vec3(0.5f);
 		other.mPbrWorkflows.metallicRoughness = true;
 		other.mPbrWorkflows.specularGlossiness = false;
-		other.mAttachedMaps.clear();
 	}
 
-	Material& Material::operator=(Material&& other) noexcept
+	Material &Material::operator=(Material &&other) noexcept
 	{
 		mAlphaMode = other.mAlphaMode;
 		mTransparency = other.mTransparency;
 		mMetallicFactor = other.mMetallicFactor;
 		mRoughnessFactor = other.mRoughnessFactor;
+		mAlphaCutoff = other.mAlphaCutoff;
 		mBaseColorFactor = other.mBaseColorFactor;
 		mEmissiveFactor = other.mEmissiveFactor;
-		mAttachedMaps = std::move(other.mAttachedMaps);
+		for (uint32_t i = 0; i < MapType::COUNT; i++)
+		{
+			mAttachedMaps[i] = other.mAttachedMaps[i];
+			other.mAttachedMaps[i] = nullptr;
+		}
+		for (uint32_t i = 0; i < MapType::COUNT; i++)
+		{
+			mTexCoordSets[i] = other.mTexCoordSets[i];
+			other.mTexCoordSets[i] = -1;
+		}
 		mExtension = other.mExtension;
 		mPbrWorkflows = other.mPbrWorkflows;
 
@@ -56,13 +82,13 @@ namespace rsrc
 		other.mMetallicFactor = 0.5f;
 		other.mRoughnessFactor = 0.5f;
 		other.mBaseColorFactor = glm::vec4(0.5f);
-		other.mEmissiveFactor = glm::vec4(0.f);;
+		other.mEmissiveFactor = glm::vec4(0.f);
+		;
 		other.mExtension.diffuseFactor = glm::vec4(0.5f);
 		other.mExtension.glossinessFactor = 0.5f;
 		other.mExtension.specularFactor = glm::vec3(0.5f);
 		other.mPbrWorkflows.metallicRoughness = true;
 		other.mPbrWorkflows.specularGlossiness = false;
-		other.mAttachedMaps.clear();
 
 		return *this;
 	}
@@ -71,87 +97,97 @@ namespace rsrc
 	{
 		mAttachedMaps[type].SetData(data, width, height, channels, isFloatingPoint);
 	}*/
-	void Material::AttachMap(const MapType type, Image* image)
+	void Material::AttachMap(const MapType type, Image *image)
 	{
 		mAttachedMaps[type] = image;
 	}
 	void Material::DetachMap(const MapType type)
 	{
-		mAttachedMaps.erase(type);
+		mAttachedMaps[type] = nullptr;
 	}
 
-	void Material::SetMap(MapType map_type, const Image* image)
+	gl::Texture2D *Material::GetTextureByMap(MapType type)
 	{
-		mAttachedMaps[map_type] = image;
+		Image* img = mAttachedMaps[type];
+		gl::Texture2D* tex = nullptr;
+
+		if(img)
+			tex = img->GetTexture();
+
+		return tex;
 	}
 
-	void Material::LoadFromTinyGLTF(tinygltf::Material& mat, const std::vector<Image>& textures)
+	void Material::LoadFromTinyGLTF(tinygltf::Material &mat, std::vector<Image> &textures)
 	{
 
 		if (mat.values.find("baseColorTexture") != mat.values.end())
 		{
 			uint32_t texture_idx = mat.values["baseColorTexture"].TextureIndex();
+			mTexCoordSets[MapType::BASE_COLOR] = mat.values["baseColorTexture"].TextureTexCoord();
 
-
-			SetMap(MapType::ALBEDO, &(textures[texture_idx]));
+			AttachMap(MapType::BASE_COLOR, &(textures[texture_idx]));
 		}
-		if (mat.values.find("metallicRoughnessTexture") != mat.values.end()) 
+		if (mat.values.find("metallicRoughnessTexture") != mat.values.end())
 		{
 			uint32_t texture_idx = mat.values["metallicRoughnessTexture"].TextureIndex();
+			mTexCoordSets[MapType::METALLIC_ROUGHNESS] = mat.values["metallicRoughnessTexture"].TextureTexCoord();
 
-			SetMap(MapType::METALLIC_ROUGHNESS, &(textures[texture_idx]));
+			AttachMap(MapType::METALLIC_ROUGHNESS, &(textures[texture_idx]));
 		}
-		if (mat.additionalValues.find("normalTexture") != mat.additionalValues.end()) 
+		if (mat.additionalValues.find("normalTexture") != mat.additionalValues.end())
 		{
 			uint32_t texture_idx = mat.additionalValues["normalTexture"].TextureIndex();
-			
-			SetMap(MapType::NORMAL, &(textures[texture_idx]));
+			mTexCoordSets[MapType::NORMAL] = mat.values["normalTexture"].TextureTexCoord();
+
+			AttachMap(MapType::NORMAL, &(textures[texture_idx]));
 		}
-		if (mat.additionalValues.find("emissiveTexture") != mat.additionalValues.end()) 
+		if (mat.additionalValues.find("emissiveTexture") != mat.additionalValues.end())
 		{
 			uint32_t texture_idx = mat.additionalValues["emissiveTexture"].TextureIndex();
+			mTexCoordSets[MapType::EMISSIVE] = mat.values["emissiveTexture"].TextureTexCoord();
 
-			SetMap(MapType::EMISSIVE, &(textures[texture_idx]));
+			AttachMap(MapType::EMISSIVE, &(textures[texture_idx]));
 		}
-		if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end()) 
+		if (mat.additionalValues.find("occlusionTexture") != mat.additionalValues.end())
 		{
 			uint32_t texture_idx = mat.additionalValues["occlusionTexture"].TextureIndex();
+			mTexCoordSets[MapType::AMBIENT_OCCLUSION] = mat.values["occlusionTexture"].TextureTexCoord();
 
-			SetMap(MapType::AMBIENT_OCCLUSION, &(textures[texture_idx]));
+			AttachMap(MapType::AMBIENT_OCCLUSION, &(textures[texture_idx]));
 		}
 
-		if (mat.values.find("roughnessFactor") != mat.values.end()) 
+		if (mat.values.find("roughnessFactor") != mat.values.end())
 		{
 			mRoughnessFactor = static_cast<float>(mat.values["roughnessFactor"].Factor());
 		}
-		if (mat.values.find("metallicFactor") != mat.values.end()) 
+		if (mat.values.find("metallicFactor") != mat.values.end())
 		{
 			mMetallicFactor = static_cast<float>(mat.values["metallicFactor"].Factor());
 		}
-		if (mat.values.find("baseColorFactor") != mat.values.end()) 
+		if (mat.values.find("baseColorFactor") != mat.values.end())
 		{
 			mBaseColorFactor = glm::make_vec4(mat.values["baseColorFactor"].ColorFactor().data());
 		}
 
-		if (mat.additionalValues.find("alphaMode") != mat.additionalValues.end()) 
+		if (mat.additionalValues.find("alphaMode") != mat.additionalValues.end())
 		{
 			tinygltf::Parameter param = mat.additionalValues["alphaMode"];
-			if (param.string_value == "BLEND") 
+			if (param.string_value == "BLEND")
 			{
 				mAlphaMode = AlphaMode::BLEND;
 			}
-			if (param.string_value == "MASK") 
+			if (param.string_value == "MASK")
 			{
 				mAlphaCutoff = 0.5f;
 				mAlphaMode = AlphaMode::MASK;
 			}
 		}
 
-		if (mat.additionalValues.find("alphaCutoff") != mat.additionalValues.end()) 
+		if (mat.additionalValues.find("alphaCutoff") != mat.additionalValues.end())
 		{
 			mAlphaCutoff = static_cast<float>(mat.additionalValues["alphaCutoff"].Factor());
 		}
-		if (mat.additionalValues.find("emissiveFactor") != mat.additionalValues.end()) 
+		if (mat.additionalValues.find("emissiveFactor") != mat.additionalValues.end())
 		{
 			mEmissiveFactor = glm::vec4(glm::make_vec3(mat.additionalValues["emissiveFactor"].ColorFactor().data()), 1.0);
 		}

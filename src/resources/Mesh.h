@@ -18,6 +18,11 @@ namespace tinygltf
 	struct Primitive;
 }
 
+namespace gl
+{
+	class Program;
+}
+
 namespace rsrc
 {
 	class Material;
@@ -35,7 +40,7 @@ namespace rsrc
 		std::unique_ptr<gl::IndexBuffer> mIBO;
 		gl::VertexArray mVAO;
 
-		const Material* mMaterial;
+		Material* mMaterial;
 
 		std::vector<util::Vertex> mVertices;
 		std::vector<uint32_t> mIndices;
@@ -43,6 +48,8 @@ namespace rsrc
 		util::AABB mAABB;
 
 		glm::mat4 mTransform;
+
+		gl::Program* mProgram;
 	public:
 		Mesh();
 		~Mesh();
@@ -58,9 +65,9 @@ namespace rsrc
 		bool HasIndices() { return mIndices.size() > 0; }
 		const util::AABB& GetBoundingBox() { return mAABB; }
 
-		void LoadFromTinyGLTF(tinygltf::Model& model, const tinygltf::Primitive& primitive, const std::vector<Material>& materials, const glm::mat4& transform);
+		void LoadFromTinyGLTF(tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<Material>& materials, const glm::mat4& transform);
 
-		void Draw();
+		void Draw(gl::Program* program, const glm::mat4& model);
 	};
 
 	

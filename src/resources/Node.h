@@ -16,36 +16,44 @@ namespace rsrc
 
 	class Node
 	{
-			Node* mParent;
-			int32_t mIndex;
-			std::vector<Node> mChildrens;
-			
-			std::string mName;
-			std::vector<Mesh> mMeshes;
+		Node *mParent;
+		int32_t mIndex;
+		std::vector<Node> mChildrens;
 
-			glm::vec3 mTranslation;
-			glm::vec3 mScale;
-			glm::quat mRotation;
-			glm::mat4 mTransform;
+		std::string mName;
+		std::vector<Mesh> mMeshes;
 
-		public:
-			Node();
-			~Node();
+		glm::mat4 mTransform;
 
-			Node(const Node&) = delete;
-			Node& operator=(const Node&) = delete;
-			Node(Node&&) noexcept;
-			Node& operator=(Node&&) noexcept;
+	public:
+		Node();
+		~Node();
 
-			void LoadFromTinyGLTF(Node* parent, const tinygltf::Node& node, const std::vector<Material>& materials, uint32_t nodeIndex, tinygltf::Model& model, float globalscale);
+		Node(const Node &) = delete;
+		Node &operator=(const Node &) = delete;
+		Node(Node &&) noexcept;
+		Node &operator=(Node &&) noexcept;
 
-			void Draw();
+		const glm::mat4 &GetLocalMatrix() { return mTransform; }
 
-		private:
+		void LoadFromTinyGLTF(Node *parent, const tinygltf::Node &node, std::vector<Material> &materials, uint32_t nodeIndex, tinygltf::Model &model, float globalscale);
 
+		void Draw(gl::Program* program, const glm::mat4& model);
+
+		glm::mat4 GetGlobalMatrix() 
+		{
+			glm::mat4 m = GetLocalMatrix();
+			Node* p = mParent;
+			while (p) {
+				m = p->GetLocalMatrix() * m;
+				p = p->mParent;
+			}
+			return m;
+		}
+
+	private:
 	};
 
-	
 }
 
 #endif

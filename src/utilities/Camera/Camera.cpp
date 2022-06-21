@@ -12,6 +12,15 @@ namespace util
 	}
 	ICamera::~ICamera() {}
 
+	void ICamera::SetViewState(const glm::vec3& pos, const glm::vec3& up, const glm::vec3& look)
+	{
+		mPos = pos;
+		mUp = up;
+		mLook = look;
+
+		mViewMat = glm::lookAt(mPos, mPos + mLook, mUp);
+	}
+
 	void ICamera::SetPosition(const glm::vec3 &pos)
 	{
 		mPos = pos;
