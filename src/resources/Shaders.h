@@ -18,6 +18,8 @@ namespace rsrc
             CUBE_MAP_FRAG_SH,
             RAY_VERT_SH,
             RAY_FRAG_SH,
+            MENU_VERT_SH,
+            MENU_FRAG_SH,
             SHADER_COUNT
         };
         enum TheProgram
@@ -25,6 +27,7 @@ namespace rsrc
             PBR_PROG,
             CUBE_MAP_PROG,
             RAY_PROG,
+            MENU_PROG,
             PROGRAM_COUNT
         };
 
@@ -32,9 +35,11 @@ namespace rsrc
             {
                 {PBR_VERT_COMPUTE_SH, PBR_FRAG_COMPUTE_SH},
                 {CUBE_MAP_VERT_SH, CUBE_MAP_FRAG_SH},
-                {RAY_VERT_SH, RAY_FRAG_SH}};
+                {RAY_VERT_SH, RAY_FRAG_SH},
+                {MENU_VERT_SH, MENU_FRAG_SH},
+            };
 
-        const char *mShaderFileNames[SHADER_COUNT] = {"pbr_compute_vert.vs", "pbr_compute_frag.fs", "cube_map.vs", "cube_map.fs", "ray.vs", "ray.fs"};
+        const char *mShaderFileNames[SHADER_COUNT] = {"pbr_compute_vert.vs", "pbr_compute_frag.fs", "cube_map.vs", "cube_map.fs", "ray.vs", "ray.fs", "menu.vs", "menu.fs"};
 
         struct Program
         {
@@ -74,6 +79,7 @@ namespace rsrc
         gl::Program *GetPBRProg() { return mPrograms[PBR_PROG].GetProgram(); }
         gl::Program *GetCubeMapProg() { return mPrograms[CUBE_MAP_PROG].GetProgram(); }
         gl::Program *GetRayProg() { return mPrograms[RAY_PROG].GetProgram(); }
+        gl::Program* GetMenuProg() { return mPrograms[MENU_PROG].GetProgram(); }
 
         void Load(const char *path);
 

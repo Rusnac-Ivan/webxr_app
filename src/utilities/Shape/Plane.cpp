@@ -2,12 +2,12 @@
 
 namespace util
 {
-	Plane::Plane() :
-		mWidth(0.f),
-		mHeight(0.f),
-		mHSD(0.f),
-		mVSD(0.f),
-		mDir(Direction::OZ_POS)
+	Plane::Plane() : mWidth(0.f),
+					 mHeight(0.f),
+					 mHSD(0.f),
+					 mVSD(0.f),
+					 mDir(Direction::OZ_POS),
+					 mNormal(0.f)
 	{
 	}
 
@@ -31,34 +31,46 @@ namespace util
 		{
 		case util::Plane::OX_POS:
 		{
-			glm::vec3 p0 = glm::vec3(0.f, -height / 2.f, width / 2);
-			Generate(p0, glm::vec3(1.f, 0.f, 0.f), h_step, v_step);
-		}break;
+			mNormal = glm::vec3(1.f, 0.f, 0.f);
+			mOrigin = glm::vec3(0.f, -height / 2.f, width / 2);
+			Generate(mOrigin, mNormal, h_step, v_step);
+		}
+		break;
 		case util::Plane::OX_NEG:
 		{
-			glm::vec3 p0 = glm::vec3(0.f, -height / 2.f, -width / 2);
-			Generate(p0, glm::vec3(-1.f, 0.f, 0.f), h_step, v_step);
-		}break;
+			mNormal = glm::vec3(-1.f, 0.f, 0.f);
+			mOrigin = glm::vec3(0.f, -height / 2.f, -width / 2);
+			Generate(mOrigin, mNormal, h_step, v_step);
+		}
+		break;
 		case util::Plane::OY_POS:
 		{
-			glm::vec3 p0 = glm::vec3(-width / 2, 0.f, height / 2.f);
-			Generate(p0, glm::vec3(0.f, 1.f, 0.f), h_step, v_step);
-		}break;
+			mNormal = glm::vec3(0.f, 1.f, 0.f);
+			mOrigin = glm::vec3(-width / 2, 0.f, height / 2.f);
+			Generate(mOrigin, mNormal, h_step, v_step);
+		}
+		break;
 		case util::Plane::OY_NEG:
 		{
-			glm::vec3 p0 = glm::vec3(-width / 2, 0.f, -height / 2.f);
-			Generate(p0, glm::vec3(0.f, -1.f, 0.f), h_step, v_step);
-		}break;
+			mNormal = glm::vec3(0.f, -1.f, 0.f);
+			mOrigin = glm::vec3(-width / 2, 0.f, -height / 2.f);
+			Generate(mOrigin, mNormal, h_step, v_step);
+		}
+		break;
 		case util::Plane::OZ_POS:
 		{
-			glm::vec3 p0 = glm::vec3(-width / 2, -height / 2.f, 0.f);
-			Generate(p0, glm::vec3(0.f, 0.f, 1.f), h_step, v_step);
-		}break;
+			mNormal = glm::vec3(0.f, 0.f, 1.f);
+			mOrigin = glm::vec3(-width / 2, -height / 2.f, 0.f);
+			Generate(mOrigin, mNormal, h_step, v_step);
+		}
+		break;
 		case util::Plane::OZ_NEG:
 		{
-			glm::vec3 p0 = glm::vec3(width / 2, -height / 2.f, 0.f);
-			Generate(p0, glm::vec3(0.f, 0.f, -1.f), h_step, v_step);
-		}break;
+			mNormal = glm::vec3(0.f, 0.f, -1.f);
+			mOrigin = glm::vec3(width / 2, -height / 2.f, 0.f);
+			Generate(mOrigin, mNormal, h_step, v_step);
+		}
+		break;
 		default:
 			break;
 		}
@@ -90,21 +102,21 @@ namespace util
 		float tex_u_step = 1.f / mHSD;
 		float tex_v_step = 1.f / mVSD;
 
-		//generate vertices
+		// generate vertices
 		for (int ver = 0; ver < mVSD + 1; ver++)
 		{
 			for (int hor = 0; hor < mHSD + 1; hor++)
 			{
 				Vertex v;
 				v.pos = p0 + MakeStep(mDir, h_step * hor, v_step * ver);
-				v.normal = norm;
-				v.uv0 = glm::vec2(tex_u_step * hor, tex_v_step * ver);
+				// v.normal = norm;
+				v.uv = glm::vec2(tex_u_step * hor, tex_v_step * ver);
 
 				mVertices.push_back(v);
 			}
 		}
 
-		//generate indices
+		// generate indices
 		for (int ver = 0; ver < mVSD; ver++)
 		{
 			for (int hor = 0; hor < mHSD; hor++)

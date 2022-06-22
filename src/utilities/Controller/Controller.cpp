@@ -10,7 +10,7 @@
 
 namespace util
 {
-    Controller::Controller(/* args */) {}
+    Controller::Controller(/* args */) :  mRayProgram(nullptr){}
 
     Controller::~Controller() {}
 
@@ -35,85 +35,29 @@ namespace util
             gl::VertexAttributeRate::PER_VERTEX);
     }
 
-    void Controller::Draw(const glm::mat4 &view, const glm::mat4 &proj, const glm::vec3 &pos, const glm::quat &orient)
+    void Controller::Draw(const glm::vec3 &pos, const glm::quat &orient)
     {
-        gl::Program *pbr_prog = util::ResourceManager::GetShaders()->GetPBRProg();
+        gl::Program* pbr_prog = util::ResourceManager::GetShaders()->GetPBRProg();
         pbr_prog->Use();
+
         glm::mat4 model = glm::translate(glm::mat4(1.f), pos) * glm::toMat4(orient);
-        mModel.Draw(pbr_prog, model);
+        mModel.Draw(model);
 
         gl::Program *ray_prog = util::ResourceManager::GetShaders()->GetRayProg();
         ray_prog->Use();
-        ray_prog->SetMatrix4(ray_prog->Uniform("view"), view);
-        ray_prog->SetMatrix4(ray_prog->Uniform("projection"), proj);
+        if (mRayProgram != ray_prog)
+        {
+            mUniformLocations.ray_model = ray_prog->Uniform("model");
+            mRayProgram = ray_prog;
+        }
 
         glm::mat4 ray_model = model * glm::scale(glm::mat4(1.f), glm::vec3(1.f, mRayLength, 1.f));
-        ray_prog->SetMatrix4(ray_prog->Uniform("model"), ray_model);
+        ray_prog->SetMatrix4(mUniformLocations.ray_model, ray_model);
 
         gl::Pipeline::EnableBlending();
 
         mVAO.Bind();
         gl::Render::DrawVertices(gl::Primitive::TRIANGLES, mVertexCount, 0);
-        gl::Pipeline::DisableBlending();
-
-        /*gl::Program *program = util::ResourceManager::GetShaders()->GetRayProg();
-        program->Use();
-
-        program->SetMatrix4(program->Uniform("view"), view);
-        program->SetMatrix4(program->Uniform("projection"), proj);
-
-        glm::mat4 scale_mat(1.f);
-        scale_mat = glm::scale(scale_mat, glm::vec3(1.f, mRayLength, 1.f));
-
-        float angle = acos(glm::dot(glm::vec3(0.f, 1.f, 0.f), dir));
-
-        angle = glm::radians(angle);
-
-        glm::vec3 rot_axis = glm::cross(dir, glm::vec3(0.f, 1.f, 0.f));
-
-        glm::mat4 rotation_mat;
-
-        glm::vec3 v = rot_axis;
-        v = glm::normalize(v);
-        float x, y, z;
-
-        x = v.x;
-        y = v.y;
-        z = v.z;
-
-        angle = glm::degrees(angle);
-
-        float cos_a = cos(angle);
-        float one_minus_cos_a = 1.0f - cos_a;
-        float sin_a = sin(angle);
-
-        rotation_mat[0][0] = one_minus_cos_a * x * x + cos_a;
-        rotation_mat[0][1] = one_minus_cos_a * x * y - sin_a * z;
-        rotation_mat[0][2] = one_minus_cos_a * x * z + sin_a * y;
-        rotation_mat[0][3] = 0.0f;
-        rotation_mat[1][0] = one_minus_cos_a * y * x + sin_a * z;
-        rotation_mat[1][1] = one_minus_cos_a * y * y + cos_a;
-        rotation_mat[1][2] = one_minus_cos_a * y * z - sin_a * x;
-        rotation_mat[1][3] = 0.0f;
-        rotation_mat[2][0] = one_minus_cos_a * z * x - sin_a * y;
-        rotation_mat[2][1] = one_minus_cos_a * z * y + sin_a * x;
-        rotation_mat[2][2] = one_minus_cos_a * z * z + cos_a;
-        rotation_mat[2][3] = 0.0f;
-        rotation_mat[3][0] = 0.0f;
-        rotation_mat[3][1] = 0.0f;
-        rotation_mat[3][2] = 0.0f;
-        rotation_mat[3][3] = 1.f;
-
-        glm::mat4 rot_scale_mat;
-
-        rot_scale_mat = rotation_mat * scale_mat;
-        glm::mat4 translate = glm::translate(glm::mat4(1.f), pos);
-
-        glm::mat4 transform = translate * rot_scale_mat;
-
-        program->SetMatrix4(program->Uniform("model"), transform);
-
-        mVAO.Bind();
-        gl::Render::DrawVertices(gl::Primitive::TRIANGLES, mVertexCount, 0);*/
+        //gl::Pipeline::DisableBlending();
     }
 }

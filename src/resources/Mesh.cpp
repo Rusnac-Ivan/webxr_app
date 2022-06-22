@@ -7,6 +7,7 @@
 #include <opengl/Program.h>
 #include <opengl/Texture2D.h>
 #include <opengl/Pipeline.h>
+#include <utilities/Resources/ResourceManager.h>
 
 namespace rsrc
 {
@@ -232,24 +233,32 @@ namespace rsrc
 		mIndices.clear();
 	}
 
-	void Mesh::Draw(gl::Program *program, const glm::mat4 &model)
+	void Mesh::Draw(const glm::mat4 &model)
 	{
-		program->SetMatrix4(program->Uniform("model"), model * mTransform);
+		gl::Program* pbr_prog = util::ResourceManager::GetShaders()->GetPBRProg();
+		pbr_prog->Use();
 
 		int base_color_unit = 0;
 		int metallic_roughness_unit = 1;
 		int normal_unit = 2;
 		int emissive_unit = 3;
 
-		if (mProgram != program)
+		if (mProgram != pbr_prog)
 		{
+			mUniformLocations.model = pbr_prog->Uniform("model");
+			mUniformLocations.uMaterState = pbr_prog->Uniform("uMaterState");
+			mUniformLocations.uTexMapSets = pbr_prog->Uniform("uTexMapSets");
+
 			// must set once
-			program->SetInt(program->Uniform("uBaseColorMap"), base_color_unit);
-			program->SetInt(program->Uniform("uMetallicRoughnessMap"), metallic_roughness_unit);
-			program->SetInt(program->Uniform("uNormalMap"), normal_unit);
-			program->SetInt(program->Uniform("uEmissiveMap"), emissive_unit);
-			mProgram = program;
+			pbr_prog->SetInt(pbr_prog->Uniform("uBaseColorMap"), base_color_unit);
+			pbr_prog->SetInt(pbr_prog->Uniform("uMetallicRoughnessMap"), metallic_roughness_unit);
+			pbr_prog->SetInt(pbr_prog->Uniform("uNormalMap"), normal_unit);
+			pbr_prog->SetInt(pbr_prog->Uniform("uEmissiveMap"), emissive_unit);
+			mProgram = pbr_prog;
 		}
+
+		pbr_prog->SetMatrix4(mUniformLocations.model, model * mTransform);
+
 
 		if (mMaterial)
 		{
@@ -262,29 +271,45 @@ namespace rsrc
 				gl::Pipeline::DisableBlending();
 			}
 
-			program->SetFloat4(program->Uniform("uBaseColorFactor"), mMaterial->GetBaseColorFactor());
-			program->SetFloat(program->Uniform("uMetalnessFactor"), mMaterial->GetMetallicFactor());
-			program->SetFloat(program->Uniform("uRoughnessFactor"), mMaterial->GetRoughnessFactor());
-			program->SetFloat4(program->Uniform("uEmissiveFactor"), mMaterial->GetEmissiveFactor());
+			//program->SetFloat4(program->Uniform("uBaseColorFactor"), mMaterial->GetBaseColorFactor());
+			//program->SetFloat(program->Uniform("uMetalnessFactor"), mMaterial->GetMetallicFactor());
+			//program->SetFloat(program->Uniform("uRoughnessFactor"), mMaterial->GetRoughnessFactor());
+			//program->SetFloat4(program->Uniform("uEmissiveFactor"), mMaterial->GetEmissiveFactor());
 
 			gl::Texture2D *baseColorMap = mMaterial->GetTextureByMap(Material::MapType::BASE_COLOR);
 			gl::Texture2D *metallicRoughnessMap = mMaterial->GetTextureByMap(Material::MapType::METALLIC_ROUGHNESS);
 			gl::Texture2D *normalMap = mMaterial->GetTextureByMap(Material::MapType::NORMAL);
 			gl::Texture2D *emissiveMap = mMaterial->GetTextureByMap(Material::MapType::EMISSIVE);
 
-			program->SetInt(program->Uniform("uBaseColorMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::BASE_COLOR));
+			glm::mat4 material_state(0.f);
+			material_state[0] = mMaterial->GetBaseColorFactor();
+			material_state[1] = glm::vec4(mMaterial->GetMetallicFactor(), mMaterial->GetRoughnessFactor(), glm::vec2(0.f));
+			material_state[3] = mMaterial->GetEmissiveFactor();
+
+			pbr_prog->SetMatrix4(mUniformLocations.uMaterState, material_state);
+
+			glm::ivec4 texMapSets = glm::ivec4(
+				mMaterial->GetTextureCoordSets(Material::MapType::BASE_COLOR),
+				mMaterial->GetTextureCoordSets(Material::MapType::METALLIC_ROUGHNESS),
+				mMaterial->GetTextureCoordSets(Material::MapType::NORMAL),
+				mMaterial->GetTextureCoordSets(Material::MapType::EMISSIVE)
+			);
+
+			pbr_prog->SetInt4(mUniformLocations.uTexMapSets, texMapSets);
+
+			//program->SetInt(program->Uniform("uBaseColorMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::BASE_COLOR));
 			if (baseColorMap)
 				baseColorMap->Activate(base_color_unit);
 
-			program->SetInt(program->Uniform("uMetallicRoughnessMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::METALLIC_ROUGHNESS));
+			//program->SetInt(program->Uniform("uMetallicRoughnessMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::METALLIC_ROUGHNESS));
 			if (metallicRoughnessMap)
 				metallicRoughnessMap->Activate(metallic_roughness_unit);
 
-			program->SetInt(program->Uniform("uNormalMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::NORMAL));
+			//program->SetInt(program->Uniform("uNormalMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::NORMAL));
 			if (normalMap)
 				normalMap->Activate(normal_unit);
 
-			program->SetInt(program->Uniform("uEmissiveMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::EMISSIVE));
+			//program->SetInt(program->Uniform("uEmissiveMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::EMISSIVE));
 			if (emissiveMap)
 				emissiveMap->Activate(emissive_unit);
 		}

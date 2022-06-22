@@ -31,6 +31,15 @@ namespace rsrc
 
 	class Mesh
 	{
+		struct UniformLocations
+		{
+			int32_t model = -1;
+			int32_t uMaterState = -1;
+			int32_t uTexMapSets = -1;
+		};
+
+		UniformLocations mUniformLocations;
+
 		uint32_t mFirstIndex;
 		uint32_t mIndexCount;
 		uint32_t mVertexCount;
@@ -67,7 +76,7 @@ namespace rsrc
 
 		void LoadFromTinyGLTF(tinygltf::Model& model, const tinygltf::Primitive& primitive, std::vector<Material>& materials, const glm::mat4& transform);
 
-		void Draw(gl::Program* program, const glm::mat4& model);
+		void Draw(const glm::mat4& model);
 	};
 
 	

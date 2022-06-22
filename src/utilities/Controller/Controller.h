@@ -12,7 +12,14 @@ namespace util
 {
     class Controller
     {
-    private:
+        struct UniformLocations
+        {
+            int32_t ray_model = -1;
+        };
+        UniformLocations mUniformLocations;
+
+        gl::Program* mRayProgram;
+
         rsrc::Model mModel;
         util::Prism mPrism;
 
@@ -30,7 +37,7 @@ namespace util
         void Create(const char* path, float ray_length, float ray_width);
         float GetProgress() { return mModel.GetProgress(); }
 
-        void Draw(const glm::mat4 &view, const glm::mat4 &proj, const glm::vec3 &pos, const glm::quat &orient);
+        void Draw(const glm::vec3 &pos, const glm::quat &orient);
     };
 
 }

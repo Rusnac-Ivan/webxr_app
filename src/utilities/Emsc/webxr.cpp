@@ -3,6 +3,7 @@
 #include <core/Application.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <widgets3d/ImGui_Impl_2d_to_3d.h>
 
 EMSCRIPTEN_BINDINGS(WebXR)
 {
@@ -320,7 +321,7 @@ void convertJSDOMPointToQuat(const emscripten::val &domPoint, glm::quat &quat)
 
 void WebXR::GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode)
 {
-    emscripten::val::global("console").call<void>("log", mXRInputSources);
+    // emscripten::val::global("console").call<void>("log", mXRInputSources);
     uint32_t inputSourcesCount = mXRInputSources["length"].as<uint32_t>();
     assert(inputSourcesCount <= MAX_SOURCE_COUNT);
 
@@ -440,7 +441,7 @@ void WebXR::OnFrame(emscripten::val time, emscripten::val frame)
 
     emscripten::val framebuffer = XRGLLayer["framebuffer"];
 
-    emscripten::val::global("console").call<void>("log", XRGLLayer);
+    // emscripten::val::global("console").call<void>("log", XRGLLayer);
     if (!(framebuffer.isNull() || framebuffer.isUndefined()))
     {
         // emscripten::val gl = emscripten::val::global("gl");
@@ -484,6 +485,7 @@ void WebXR::OnError(emscripten::val error)
 void WebXR::OnSelect(emscripten::val event)
 {
     printf("WebXR::OnSelect\n");
+    emscripten::val::global("console").call<void>("log", event);
     /*let session = ev.frame.session;
     let refSpace = getRefSpace(session, true);
 
@@ -494,12 +496,15 @@ void WebXR::OnSelect(emscripten::val event)
 }
 void WebXR::OnSelectStart(emscripten::val event)
 {
-
     printf("WebXR::OnSelectstart\n");
+    emscripten::val::global("console").call<void>("log", event);
+    ImGui_Impl_2d_to_3d_MouseButtonCallback(MOUSEBUTTON_LEFT, PRESS, 0);
 }
 void WebXR::OnSelectEnd(emscripten::val event)
 {
     printf("WebXR::OnSelectend\n");
+    emscripten::val::global("console").call<void>("log", event);
+    ImGui_Impl_2d_to_3d_MouseButtonCallback(MOUSEBUTTON_LEFT, RELEASE, 0);
 }
 
 bool WebXR::IsSessionSupported(XRSessionMode mode)

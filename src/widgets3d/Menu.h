@@ -8,11 +8,24 @@
 #include <opengl/VertexArray.h>
 #include <opengl/FrameBuffer.h>
 #include <opengl/Texture2D.h>
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <utilities/Shape/Plane.h>
+#include <utilities/Emsc/webxr.h>
+
+#ifndef __EMSCRIPTEN__
+typedef void* WebXRInputSource;
+#endif
 
 namespace w3d
 {
     class Menu
     {
+        struct UniformLocations
+        {
+            int32_t model = -1;
+        };
+        UniformLocations mUniformLocations;
     public:
         using ComposeFun = void (*)();
 
@@ -21,20 +34,26 @@ namespace w3d
         gl::VertexArray mVAO;
         gl::IndexBuffer mEBO;
 
+        gl::Program *mProgram;
+
         gl::FrameBuffer mFBO;
-        gl::Texture2D *mBaseColor;
+        gl::Texture2D mBaseColor;
 
         float mWidth;
         float mHeight;
 
         bool mIsOpen;
 
+        util::Plane mPlane;
+
     public:
-        Menu(/* args */);
+        Menu();
         ~Menu();
 
-        void Compose(const char* name, ImGuiWindowFlags flags, ComposeFun fun);
-        void Draw(const glm::mat4 &view, const glm::mat4 &proj);
+        void Create(float width, float height);
+
+        void Compose(WebXRInputSource *inputSource, const char *name, ComposeFun gui_fun);
+        void Draw(const glm::mat4 &model);
     };
 
 }

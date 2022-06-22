@@ -11,15 +11,31 @@
 #include <utilities/Resources/ResourceManager.h>
 #include <utilities/Camera/Camera.h>
 #include <utilities/Controller/Controller.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_opengl3.h>
 
 class MyApp : public core::Application
 {
 private:
+	struct UniformLocations
+	{
+		int32_t pbr_prog_proj_view = -1;
+		int32_t cubemap_prog_proj_view = -1;
+		int32_t ray_prog_proj_view = -1;
+		int32_t menu_prog_proj_view = -1;
+
+		int32_t pbr_prog_ligh_pos = -1;
+		int32_t pbr_prog_view_pos = -1;
+	};
+	bool is_init_uniforms = false;
+	UniformLocations mUniformLocations;
+
+	WebXRInputSource *mInputSource;
 	util::Camera<util::ProjectionType::PERSPECTIVE> mCamera;
 	std::vector<float> mFPS;
 	MyApp(MyApp &app) = delete;
 	MyApp &operator=(MyApp &app) = delete;
-	MyApp() : Application() {}
+	MyApp() : mInputSource(nullptr), Application() {}
 	~MyApp() {}
 
 public:
@@ -31,7 +47,7 @@ public:
 
 	virtual bool OnInitialize()
 	{
-		mCamera.SetViewState(glm::vec3(0.f, 0.08f, 0.2f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -1.f));
+		mCamera.SetViewState(glm::vec3(0.f, 0.f, 0.7f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -1.f));
 
 		printf("MyApp::OnInitialize\n");
 		util::ResourceManager::OnInitialize();
@@ -40,10 +56,122 @@ public:
 
 		gl::Pipeline::EnableDepthTest();
 		gl::Render::SetClearColor(0.5f, 0.4f, 0.0f, 1.f);
+
 		return true;
 	};
 	virtual bool OnGui()
 	{
+		util::ResourceManager::GetW3DMenu()->Compose(mInputSource, "3DMenu",
+													 []()
+													 {
+														 static float FPS[100] = {};
+														 float fps = (*GImGui).IO.Framerate;
+
+														 float average_fps = 0.f;
+														 for (uint32_t i = 1; i < 100; i++)
+														 {
+															 FPS[i - 1] = FPS[i];
+															 FPS[99] = fps;
+															 average_fps += FPS[i] / 100.f;
+														 }
+
+														 if (average_fps > 50.f)
+														 {
+															 ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.7f, 0.f, 0.5f));
+														 }
+														 else if (average_fps > 20.f)
+														 {
+															 ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.7f, 0.f, 0.5f));
+														 }
+														 else
+														 {
+															 ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.f, 0.f, 0.5f));
+														 }
+
+														 char text[128] = {};
+
+														 sprintf(text, "FPS: %.3f", average_fps);
+														 ImGui::Text("%-64s", text);
+
+														 ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 30.f);
+														 ImGui::PlotLines("##Frame Times", &FPS[0], 100);
+
+														 ImGui::PopStyleColor();
+
+														 if (ImGui::Button("Ok", ImVec2(90.f, 30.f)))
+														 {
+															 printf("Button Ok\n");
+														 }
+														 if (ImGui::Button("Save", ImVec2(90.f, 30.f)))
+														 {
+															 printf("Button Save\n");
+														 }
+														 if (ImGui::Button("Cancel", ImVec2(90.f, 30.f)))
+														 {
+															 printf("Button Cancel\n");
+														 }
+														 static float slider = 0.5f;
+														 ImGui::SliderFloat("Clouds Speed", &slider, 0.f, 1.f, "%.3f");
+
+														 static char buff[64] = {};
+														 ImGui::InputText("in text", buff, IM_ARRAYSIZE(buff));
+
+														 static bool animate = true;
+														 ImGui::Checkbox("Animate", &animate);
+
+														 static float arr[] = {0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f};
+														 ImGui::PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr));
+
+														 static float values[90] = {};
+														 static int values_offset = 0;
+														 static double refresh_time = 0.0;
+														 if (!animate || refresh_time == 0.0)
+															 refresh_time = ImGui::GetTime();
+														 while (refresh_time < ImGui::GetTime()) // Create data at fixed 60 Hz rate for the demo
+														 {
+															 static float phase = 0.0f;
+															 values[values_offset] = cosf(phase);
+															 values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
+															 phase += 0.10f * values_offset;
+															 refresh_time += 1.0f / 60.0f;
+														 }
+
+														 {
+															 float average = 0.0f;
+															 for (int n = 0; n < IM_ARRAYSIZE(values); n++)
+																 average += values[n];
+															 average /= (float)IM_ARRAYSIZE(values);
+															 char overlay[32];
+															 sprintf(overlay, "avg %f", average);
+															 ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
+														 }
+														 ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
+													 });
+
+		float progress = util::ResourceManager::GetProgress();
+		if (progress < 99.999f)
+		{
+			ImGui::NewFrame();
+
+			ImGui::SetNextWindowPos(ImVec2(0.f, 0.f));
+			ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+			// ImGui::SetNextWindowSize(ImVec2(GetWidth(), GetHeight()));
+			ImGui::Begin("Loading", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings);
+			{
+				ImVec2 bar_size = ImVec2(500.f, 30.f);
+				ImGui::SetCursorPos(ImVec2((ImGui::GetIO().DisplaySize.x - bar_size.x) / 2.f, (ImGui::GetIO().DisplaySize.y - bar_size.y) / 2.f));
+				ImGui::ProgressBar(util::ResourceManager::GetProgress() / 100.f, bar_size);
+			}
+			ImGui::End();
+
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+			return true;
+		}
+
+		/*//ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
 		float progress = util::ResourceManager::GetProgress();
 		if (progress < 99.999f)
 		{
@@ -58,12 +186,9 @@ public:
 			ImGui::End();
 
 			return true;
-		}
+		}*/
 
-		// printf("MyApp::OnGui\n");
-		ImGui::ShowDemoWindow(nullptr);
-
-		{
+		/*{
 			float fps = (*GImGui).IO.Framerate;
 
 			if (mFPS.size() > 100) // Max seconds to show
@@ -184,25 +309,68 @@ public:
 			ImGui::PopStyleColor();
 		}
 
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());*/
 		return true;
 	}
-	virtual bool OnRender()
+
+	void InitPrograms(const glm::vec3 &light_pos, const glm::vec3 &view_pos, const glm::mat4 &proj_view)
 	{
 		rsrc::Shaders *shaders = util::ResourceManager::GetShaders();
+
+		gl::Program *pbr_prog = shaders->GetPBRProg();
+		gl::Program *cubemap_prog = shaders->GetCubeMapProg();
+		gl::Program *ray_prog = shaders->GetRayProg();
+		gl::Program *menu_prog = shaders->GetMenuProg();
+
+		pbr_prog->Use();
+		if (!is_init_uniforms)
+		{
+			mUniformLocations.pbr_prog_proj_view = pbr_prog->Uniform("proj_view");
+			mUniformLocations.pbr_prog_ligh_pos = pbr_prog->Uniform("uLightPos");
+			mUniformLocations.pbr_prog_view_pos = pbr_prog->Uniform("uViewPos");
+		}
+		pbr_prog->SetMatrix4(mUniformLocations.pbr_prog_proj_view, proj_view);
+		pbr_prog->SetFloat3(mUniformLocations.pbr_prog_view_pos, view_pos);
+		pbr_prog->SetFloat3(mUniformLocations.pbr_prog_ligh_pos, light_pos);
+
+		cubemap_prog->Use();
+		if (!is_init_uniforms)
+			mUniformLocations.cubemap_prog_proj_view = cubemap_prog->Uniform("proj_view");
+		cubemap_prog->SetMatrix4(mUniformLocations.cubemap_prog_proj_view, proj_view);
+
+		ray_prog->Use();
+		if (!is_init_uniforms)
+			mUniformLocations.ray_prog_proj_view = ray_prog->Uniform("proj_view");
+		ray_prog->SetMatrix4(mUniformLocations.ray_prog_proj_view, proj_view);
+
+		menu_prog->Use();
+		if (!is_init_uniforms)
+			mUniformLocations.menu_prog_proj_view = menu_prog->Uniform("proj_view");
+		menu_prog->SetMatrix4(mUniformLocations.menu_prog_proj_view, proj_view);
+
+		is_init_uniforms = true;
+	}
+
+	virtual bool OnRender()
+	{
+		if (util::ResourceManager::GetProgress() < 99.999f)
+			return true;
+
+		rsrc::Shaders *shaders = util::ResourceManager::GetShaders();
+
+		if (!shaders->IsReady())
+			return true;
+
+		InitPrograms(mCamera.GetPosition(), mCamera.GetPosition(), mCamera.GetProjectionMat() * mCamera.GetViewMat());
 
 		gl::Render::Clear(gl::BufferBit::COLOR, gl::BufferBit::DEPTH);
 #ifndef __EMSCRIPTEN__
 		util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), mCamera.GetViewMat(), mCamera.GetProjectionMat());
-		gl::Program *program = shaders->GetPBRProg();
-		program->Use();
-		program->SetFloat3(program->Uniform("uViewPos"), mCamera.GetPosition());
-		program->SetFloat3(program->Uniform("uLightPos"), mCamera.GetPosition());
-		program->SetMatrix4(program->Uniform("view"), mCamera.GetViewMat());
-		program->SetMatrix4(program->Uniform("projection"), mCamera.GetProjectionMat());
-		util::ResourceManager::GetModel()->Draw(program, glm::mat4(1.f));
+		util::ResourceManager::GetModel()->Draw(glm::mat4(1.f));
 
-		util::ResourceManager::GetController()->Draw(mCamera.GetViewMat(), mCamera.GetProjectionMat(), glm::vec3(0.f, 0.f, 0.f), glm::quat(1.f, 0.f, 0.f, 0.f));
-
+		util::ResourceManager::GetController()->Draw(glm::vec3(0.f, 0.f, 0.f), glm::quat(1.f, 0.f, 0.f, 0.f));
+		util::ResourceManager::GetW3DMenu()->Draw(glm::mat4(1.f));
 #else
 		const WebXRRigidTransform &headPose = WebXR::GetHeadPose();
 
@@ -216,15 +384,13 @@ public:
 			gl::Render::SetViewport(view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height);
 			if (shaders->IsReady())
 			{
+				InitPrograms(headPose.position, headPose.position, view.projectionMatrix * view.viewPose.matrix);
+
 				util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), view.viewPose.matrix, view.projectionMatrix);
 
-				gl::Program *program = shaders->GetPBRProg();
-				program->Use();
-				program->SetFloat3(program->Uniform("uViewPos"), headPose.position);
-				program->SetFloat3(program->Uniform("uLightPos"), headPose.position);
-				program->SetMatrix4(program->Uniform("view"), view.viewPose.matrix);
-				program->SetMatrix4(program->Uniform("projection"), view.projectionMatrix);
-				util::ResourceManager::GetModel()->Draw(program, glm::mat4(1.f));
+				// util::ResourceManager::GetModel()->Draw(program, glm::mat4(1.f));
+
+				util::ResourceManager::GetW3DMenu()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f)));
 
 				WebXRInputSource *inputSourceArray = nullptr;
 				uint32_t inputCount = 0;
@@ -237,8 +403,10 @@ public:
 						ImGui::Text("%s", "right");
 					if (inputSource.handedness == XRHandedness::LEFT)
 						ImGui::Text("%s", "left");*/
+					if (inputSource.handedness == XRHandedness::RIGHT)
+						mInputSource = &inputSource;
 
-					util::ResourceManager::GetController()->Draw(view.viewPose.matrix, view.projectionMatrix, transform.position, transform.orientation);
+					util::ResourceManager::GetController()->Draw(transform.position, transform.orientation);
 				}
 			}
 		}

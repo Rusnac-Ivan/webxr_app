@@ -51,12 +51,12 @@ namespace rsrc
 
 		float GetProgress() { return mProgress; }
 
-		void Draw(gl::Program *program, const glm::mat4 &model);
+		void Draw(const glm::mat4 &model);
 		void CalculateBoundingBox(Node *node, Node *parent);
 		void GetSceneDimensions();
 
 	private:
-		void DrawNode(gl::Program *program, Node *node);
+		void DrawNode(Node *node);
 
 		void LoadTextures(tinygltf::Model &model);
 		void LoadMaterials(tinygltf::Model &model);

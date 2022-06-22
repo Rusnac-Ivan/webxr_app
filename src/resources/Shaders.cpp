@@ -8,7 +8,7 @@ namespace rsrc
 {
     bool Shaders::mIsReady = false;
 
-    Shaders::Shaders() : mPrograms{this, this, this} {}
+    Shaders::Shaders() : mPrograms{this, this, this, this} {}
     Shaders::~Shaders() {}
 
     void Shaders::Program::LoadVertSh(const char *shaderCodes, const int length)

@@ -97,19 +97,14 @@ namespace rsrc
 
     void CubeMap::Draw(gl::Program *prog, const glm::mat4 &view, const glm::mat4 &proj)
     {
+        prog->Use();
         if (mIsReady && prog)
         {
-            //printf("CubeMap::Draw\n");
-
-            prog->Use();
-            prog->SetMatrix4(prog->Uniform("view"), view);
-            prog->SetMatrix4(prog->Uniform("projection"), proj);
             gl::Pipeline::SetDepthFunc(gl::CompareFunc::LEQUAL);
             mGLCubeMap.Activate(0);
             mVAO.Bind();
             gl::Render::DrawVertices(gl::Primitive::TRIANGLES, 36, 0);
             gl::Pipeline::SetDepthFunc(gl::CompareFunc::LESS);
-            prog->StopUsing();
         }
     }
 

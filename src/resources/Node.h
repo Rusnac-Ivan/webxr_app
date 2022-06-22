@@ -38,7 +38,7 @@ namespace rsrc
 
 		void LoadFromTinyGLTF(Node *parent, const tinygltf::Node &node, std::vector<Material> &materials, uint32_t nodeIndex, tinygltf::Model &model, float globalscale);
 
-		void Draw(gl::Program* program, const glm::mat4& model);
+		void Draw(const glm::mat4& model);
 
 		glm::mat4 GetGlobalMatrix() 
 		{

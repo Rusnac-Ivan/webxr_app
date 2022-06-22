@@ -6,6 +6,7 @@
 #include <resources/CubeMap.h>
 #include <resources/Model.h>
 #include <utilities/Controller/Controller.h>
+#include <widgets3d/Menu.h>
 
 namespace util
 {
@@ -17,6 +18,7 @@ namespace util
         static std::unique_ptr<rsrc::CubeMap> mCubeMap;
         static std::unique_ptr<rsrc::Model> mModel;
         static std::unique_ptr<util::Controller> mController;
+        static std::unique_ptr<w3d::Menu> mMenu;
 
         ResourceManager();
         ~ResourceManager();
@@ -29,6 +31,7 @@ namespace util
         static rsrc::Model* GetModel();
         static rsrc::Shaders *GetShaders();
         static util::Controller *GetController();
+        static w3d::Menu* GetW3DMenu();
 
         static float GetProgress();
     };

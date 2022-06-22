@@ -8,22 +8,25 @@
 
 out vec4 FragColor;
 
-uniform vec4      uBaseColorFactor;
+//uniform vec4      uBaseColorFactor;
 uniform sampler2D uBaseColorMap;
-uniform int       uBaseColorMapSet;
+//uniform int       uBaseColorMapSet;
 
-uniform float     uRoughnessFactor;
-uniform float     uMetalnessFactor;
+//uniform float     uRoughnessFactor;
+//uniform float     uMetalnessFactor;
 uniform sampler2D uMetallicRoughnessMap;
-uniform int       uMetallicRoughnessMapSet;
+//uniform int       uMetallicRoughnessMapSet;
 
 uniform sampler2D uNormalMap;
-uniform int       uNormalMapSet;
+//uniform int       uNormalMapSet;
 
-uniform vec4     uEmissiveFactor;
+//uniform vec4     uEmissiveFactor;
 uniform sampler2D uEmissiveMap;
-uniform int       uEmissiveMapSet;
+//uniform int       uEmissiveMapSet;
 
+
+uniform ivec4   uTexMapSets;
+uniform mat4    uMaterState;
 
 in vec3 WorldPos;
 in vec3 Normal;
@@ -35,8 +38,6 @@ uniform vec3 uLightPos;
 
 float uExposure = 4.5;
 float uGamma = 2.2;
-
-uniform int is_metall = 1;
 
 const float M_PI = 3.1415926535897932;
 const float c_MinRoughness = 0.04;
@@ -82,7 +83,7 @@ vec4 SRGBtoLINEAR(vec4 srgbIn)
 vec3 getNormal()
 {
 	// Perturb normal, see http://www.thetenthplanet.de/archives/1180
-	vec3 tangentNormal = texture(uNormalMap, uNormalMapSet == 0 ? UV0 : UV1).xyz * 2.0 - 1.0;
+	vec3 tangentNormal = texture(uNormalMap, uTexMapSets[2] == 0 ? UV0 : UV1).xyz * 2.0 - 1.0;
 
 	vec3 q1 = dFdx(WorldPos);
 	vec3 q2 = dFdy(WorldPos);
@@ -155,14 +156,19 @@ void main()
 	
 	vec3 f0 = vec3(0.04);
 	
-	perceptualRoughness = uRoughnessFactor;
-	metallic = uMetalnessFactor;
+	metallic = uMaterState[1][0];
+	perceptualRoughness = uMaterState[1][1];
 	
-	if (uMetallicRoughnessMapSet > -1)
+	if (uTexMapSets[0] > -1) 
+        baseColor = SRGBtoLINEAR(texture(uBaseColorMap, uTexMapSets[0] == 0 ? UV0 : UV1)) * uMaterState[0];
+    else 
+        baseColor = uMaterState[0];
+	
+	if (uTexMapSets[1] > -1)
 	{
         // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
         // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
-        vec4 mrSample = texture(uMetallicRoughnessMap, uMetallicRoughnessMapSet == 0 ? UV0 : UV1);
+        vec4 mrSample = texture(uMetallicRoughnessMap, uTexMapSets[1] == 0 ? UV0 : UV1);
         perceptualRoughness = mrSample.g * perceptualRoughness;
         metallic = mrSample.b * metallic;
 	}
@@ -172,10 +178,7 @@ void main()
         metallic = saturate(metallic);
     }
     
-    if (uBaseColorMapSet > -1) 
-        baseColor = SRGBtoLINEAR(texture(uBaseColorMap, uBaseColorMapSet == 0 ? UV0 : UV1)) * uBaseColorFactor;
-    else 
-        baseColor = uBaseColorFactor;
+    
     
     //f0 = 0.16 * f0 * f0 * (1.0 - metallic) + baseColor.rgb * metallic;
     
@@ -194,7 +197,7 @@ void main()
 	// For very low reflectance range on highly diffuse objects (below 4%), incrementally reduce grazing reflecance to 0%.
 	float reflectance90 = saturate(reflectance * 25.0);
 	
-	vec3 n = (uNormalMapSet > -1) ? getNormal() : normalize(Normal);
+	vec3 n = (uTexMapSets[2] > -1) ? getNormal() : normalize(Normal);
 	vec3 v = normalize(uViewPos - WorldPos);    // Vector from surface point to camera
 	vec3 l = normalize(uLightPos - WorldPos);     // Vector from surface point to light
 	vec3 h = normalize(l+v);                        // Half vector between both l and v
@@ -226,22 +229,17 @@ void main()
 	
 	// lightIntensity is the illuminance
     // at perpendicular incidence in lux
-    float lightIntensity = 7.f; //lux
+    float lightIntensity = 5.f; //lux
     float illuminance = lightIntensity * NdotL;
     color *= illuminance;
     
 	
 	const float u_EmissiveFactor = 1.0f;
-	if (uEmissiveMapSet > -1) 
+	if (uTexMapSets[3] > -1) 
 	{
-		vec3 emissive = SRGBtoLINEAR(texture(uEmissiveMap, uEmissiveMapSet == 0 ? UV0 : UV1)).rgb * vec3(uEmissiveFactor);
+		vec3 emissive = SRGBtoLINEAR(texture(uEmissiveMap, uTexMapSets[3] == 0 ? UV0 : UV1)).rgb * vec3(uMaterState[3]);
 		color += emissive;
 	}
-	
-	
-	
-	//if(is_metall == 1)
-        //color = uBaseColorFactor.rgb;
 	
 	FragColor = vec4(color  + 0.08 * baseColor.rgb, baseColor.a);
 }

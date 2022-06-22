@@ -91,6 +91,19 @@ namespace gl
         GL(Uniform1i(location, value));
     }
 
+    void Program::SetInt2(const int location, const int x, const int y) const
+    {
+        GL(Uniform2i(location, x, y));
+    }
+    void Program::SetInt3(const int location, const glm::ivec3& value) const
+    {
+        GL(Uniform3iv(location, 1, glm::value_ptr(value)));
+    }
+    void Program::SetInt4(const int location, const glm::ivec4& value) const
+    {
+        GL(Uniform4iv(location, 1, glm::value_ptr(value)));
+    }
+
     void Program::SetFloat(const int location, const float value) const
     {
         GL(Uniform1f(location, value));

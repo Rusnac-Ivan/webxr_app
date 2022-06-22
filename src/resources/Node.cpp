@@ -97,16 +97,16 @@ namespace rsrc
 		}
 	}
 
-	void Node::Draw(gl::Program* program, const glm::mat4& model)
+	void Node::Draw(const glm::mat4& model)
 	{
 		for (auto& mesh : mMeshes)
 		{
-			mesh.Draw(program, model);
+			mesh.Draw(model);
 		}
 
 		for (auto& node : mChildrens)
 		{
-			node.Draw(program, model);
+			node.Draw(model);
 		}
 	}
 }

@@ -189,17 +189,17 @@ namespace rsrc
 	{
 	}
 
-	void Model::DrawNode(gl::Program *program, Node *node)
+	void Model::DrawNode(Node *node)
 	{
 	}
 
-	void Model::Draw(gl::Program *program, const glm::mat4 &model)
+	void Model::Draw(const glm::mat4 &model)
 	{
-		if (mIsReady && program)
+		if (mIsReady)
 		{
 			for (auto &node : mNodes)
 			{
-				node.Draw(program, model);
+				node.Draw(model);
 			}
 		}
 	}

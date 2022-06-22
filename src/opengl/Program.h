@@ -33,6 +33,9 @@ namespace gl
 
         void SetBool(const int location, const bool value) const;
         void SetInt(const int location, const int value) const;
+        void SetInt2(const int location, const int x, const int y) const;
+        void SetInt3(const int location, const glm::ivec3& value) const;
+        void SetInt4(const int location, const glm::ivec4& value) const;
         void SetFloat(const int location, const float value) const;
         void SetFloat2(const int location, const float x, const float y) const;
         void SetFloat2(const int location, const glm::vec2 value) const;

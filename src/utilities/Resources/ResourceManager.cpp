@@ -7,6 +7,7 @@ namespace util
     std::unique_ptr<rsrc::CubeMap> ResourceManager::mCubeMap;
     std::unique_ptr<util::Controller> ResourceManager::mController;
     std::unique_ptr<rsrc::Model> ResourceManager::mModel;
+    std::unique_ptr<w3d::Menu> ResourceManager::mMenu;
 
     ResourceManager::ResourceManager()
     {
@@ -16,6 +17,7 @@ namespace util
     rsrc::CubeMap *ResourceManager::GetCubeMap() { return mCubeMap.get(); }
     rsrc::Model* ResourceManager::GetModel() { return mModel.get(); }
     rsrc::Shaders *ResourceManager::GetShaders() { return mShaders.get(); }
+    w3d::Menu* ResourceManager::GetW3DMenu() { return mMenu.get(); }
 
     util::Controller *ResourceManager::GetController()
     {
@@ -46,6 +48,9 @@ namespace util
         // mController->Load(std::string(path + "/models/DamagedHelmet.glb").c_str());
         // mController->Load(std::string(path + "/models/watch.glb").c_str());
         // mController->Load(std::string(path + "/models/space_war_c.glb").c_str());
+
+        mMenu = std::make_unique<w3d::Menu>();
+        mMenu->Create(500, 700);
     }
     void ResourceManager::OnFinalize()
     {
@@ -53,6 +58,7 @@ namespace util
         mCubeMap.release();
         mModel.release();
         mController.release();
+        mMenu.release();
     }
 
     float ResourceManager::GetProgress()

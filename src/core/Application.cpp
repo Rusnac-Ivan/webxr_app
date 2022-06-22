@@ -5,6 +5,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#include <widgets3d/ImGui_Impl_2d_to_3d.h>
 
 namespace core
 {
@@ -87,7 +88,8 @@ namespace core
 	{
 		// Cleanup imgui
 		ImGui_ImplOpenGL3_Shutdown();
-		ImGui_ImplGlfw_Shutdown();
+		//ImGui_ImplGlfw_Shutdown();
+		ImGui_Impl_2d_to_3d_Shutdown();
 		ImGui::DestroyContext();
 
 		// Destroy glfw
@@ -175,7 +177,8 @@ namespace core
 		// ImGui::StyleColorsClassic();
 
 		// Setup Platform/Renderer backends
-		ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
+		//ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
+		ImGui_Impl_2d_to_3d_InitForOpenGL();
 		ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
 		ImGui_ImplOpenGL3_NewFrame();
@@ -251,14 +254,7 @@ namespace core
 		}
 
 		{ // render menu
-
-			ImGui_ImplGlfw_NewFrame();
-			ImGui::NewFrame();
-
 			app->OnGui();
-
-			ImGui::Render();
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		}
 
 		glfwSwapBuffers(app->mGLFWWindow);

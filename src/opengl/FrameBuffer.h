@@ -19,33 +19,62 @@ namespace gl
 		Read = GL_READ_FRAMEBUFFER,
 	};
 
-	enum struct Attachment
-	{
-		COLOR0 = GL_COLOR_ATTACHMENT0,
-		COLOR1 = GL_COLOR_ATTACHMENT1,
-		COLOR2 = GL_COLOR_ATTACHMENT2,
-		COLOR3 = GL_COLOR_ATTACHMENT3,
-		COLOR4 = GL_COLOR_ATTACHMENT4,
-		COLOR5 = GL_COLOR_ATTACHMENT5,
-		COLOR6 = GL_COLOR_ATTACHMENT6,
-		COLOR7 = GL_COLOR_ATTACHMENT7,
-		COLOR8 = GL_COLOR_ATTACHMENT8,
-		COLOR9 = GL_COLOR_ATTACHMENT9,
-		COLOR10 = GL_COLOR_ATTACHMENT10,
-		COLOR11 = GL_COLOR_ATTACHMENT11,
-		COLOR12 = GL_COLOR_ATTACHMENT12,
-		COLOR13 = GL_COLOR_ATTACHMENT13,
-		COLOR14 = GL_COLOR_ATTACHMENT14,
-		COLOR15 = GL_COLOR_ATTACHMENT15,
-		COLOR16 = GL_COLOR_ATTACHMENT16,
-		DEPTH = GL_DEPTH_ATTACHMENT,
-		STENCIL = GL_STENCIL_ATTACHMENT,
-		DEPTH_STENCIL = GL_DEPTH_STENCIL_ATTACHMENT
-	};
+	
 
 	class FrameBuffer
 	{
+	public:
+		enum Attachment
+		{
+			COLOR0,
+			COLOR1,
+			COLOR2,
+			COLOR3,
+			COLOR4,
+			COLOR5,
+			COLOR6,
+			COLOR7,
+			COLOR8,
+			COLOR9,
+			COLOR10,
+			COLOR11,
+			COLOR12,
+			COLOR13,
+			COLOR14,
+			COLOR15,
+			COLOR16,
+			DEPTH,
+			STENCIL,
+			DEPTH_STENCIL,
+			ATTACH_COUNT
+		};
+	private:
 		static constexpr BindType mBinding = BindType::ReadAndDraw;
+
+		static constexpr GLenum mAttachments[ATTACH_COUNT] = {
+				GL_COLOR_ATTACHMENT0,
+				GL_COLOR_ATTACHMENT1,
+				GL_COLOR_ATTACHMENT2,
+				GL_COLOR_ATTACHMENT3,
+				GL_COLOR_ATTACHMENT4,
+				GL_COLOR_ATTACHMENT5,
+				GL_COLOR_ATTACHMENT6,
+				GL_COLOR_ATTACHMENT7,
+				GL_COLOR_ATTACHMENT8,
+				GL_COLOR_ATTACHMENT9,
+				GL_COLOR_ATTACHMENT10,
+				GL_COLOR_ATTACHMENT11,
+				GL_COLOR_ATTACHMENT12,
+				GL_COLOR_ATTACHMENT13,
+				GL_COLOR_ATTACHMENT14,
+				GL_COLOR_ATTACHMENT15,
+				GL_COLOR_ATTACHMENT16,
+				GL_DEPTH_ATTACHMENT,
+				GL_STENCIL_ATTACHMENT,
+				GL_DEPTH_STENCIL_ATTACHMENT
+			};
+
+		
 
 		unsigned int mID;
 
@@ -55,7 +84,10 @@ namespace gl
 		//std::map<Attachment, Texture2D> mAttachedTextures;
 		//std::map<Attachment, CubeMap> mAttachedCubeMaps;
 
-		//Texture2D* mAttachedTextures[]
+		
+
+		Texture2D* mAttachedTextures[ATTACH_COUNT];
+		CubeMap* mAttachedCubeMaps[ATTACH_COUNT];
 	public:
 		FrameBuffer();
 		~FrameBuffer();
@@ -69,8 +101,8 @@ namespace gl
 		void Bind() const;
 		void UnBind() const;
 
-		void AttachTexture2D(Attachment attachment);
-		void AttachCubeMap(Attachment attachment);
+		void AttachTexture2D(Attachment attachment, Texture2D* texture);
+		void AttachCubeMap(Attachment attachment, CubeMap* cube_map);
 		void DetachTexture2D(Attachment attachment);
 		void DetachCubeMap(Attachment attachment);
 

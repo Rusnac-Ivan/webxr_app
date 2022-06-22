@@ -13,6 +13,11 @@ namespace gl
 
 	void FrameBuffer::Create()
 	{
+		for (uint32_t i = 0; i < ATTACH_COUNT; i++)
+		{
+			mAttachedTextures[i] = nullptr;
+			mAttachedCubeMaps[i] = nullptr;
+		}
 		if (mID)
 		{
 			GL(DeleteFramebuffers(1, &mID));
@@ -22,6 +27,11 @@ namespace gl
 	}
 	void FrameBuffer::Destroy()
 	{
+		for (uint32_t i = 0; i < ATTACH_COUNT; i++)
+		{
+			mAttachedTextures[i] = nullptr;
+			mAttachedCubeMaps[i] = nullptr;
+		}
 		if (mID)
 			GL(DeleteFramebuffers(1, &mID));
 	}
@@ -37,78 +47,76 @@ namespace gl
 
 	void FrameBuffer::SetSize(uint32_t width, uint32_t height)
 	{
-		mWidth = width;
-		mHeight = height;
+		if (mWidth != width || mHeight != height)
+		{
+			mWidth = width;
+			mHeight = height;
 
-		if (mAttachedTextures.size() > 0)
-		{
-			for (auto& attached_texture : mAttachedTextures)
+			for (uint32_t i = 0; i < ATTACH_COUNT; i++)
 			{
-				Texture2D& texture = attached_texture.second;
-				texture.LoadData(0, texture.GetFormat(), mWidth, mHeight, 0, texture.GetFormat(), texture.GetPixelDataType(), nullptr);
-			}
-		}
-		if (mAttachedCubeMaps.size() > 0)
-		{
-			for (auto& attached_cubemap : mAttachedCubeMaps)
-			{
-				CubeMap& cubemap = attached_cubemap.second;
-				cubemap.SetTargets(0, cubemap.GetFormat(), mWidth, mHeight, 0, cubemap.GetFormat(), cubemap.GetPixelDataType(), true);
+				gl::Texture2D* tex = mAttachedTextures[i];
+				if (tex)
+					tex->LoadData(0, tex->GetFormat(), mWidth, mHeight, 0, tex->GetFormat(), tex->GetPixelDataType(), nullptr);
+				gl::CubeMap* cub_map = mAttachedCubeMaps[i];
+				if (cub_map)
+					cub_map->SetTargets(0, cub_map->GetFormat(), mWidth, mHeight, 0, cub_map->GetFormat(), cub_map->GetPixelDataType(), true);
 			}
 		}
 	}
 
-	void FrameBuffer::AttachTexture2D(Attachment attachment = Attachment::COLOR0)
+	void FrameBuffer::AttachTexture2D(Attachment attachment, Texture2D* texture)
 	{
+		mAttachedTextures[attachment] = texture;
 		if (attachment == Attachment::DEPTH)
 		{
-			mAttachedTextures[attachment].LoadData(0, Texture::Format::DEPTH24, mWidth, mHeight, 0, Texture::Format::DEPTH, DataType::UNSIGNED_BYTE, nullptr);
+			mAttachedTextures[attachment]->LoadData(0, Texture::Format::DEPTH24, mWidth, mHeight, 0, Texture::Format::DEPTH, DataType::UNSIGNED_BYTE, nullptr);
 		}
 		else if (attachment == Attachment::DEPTH_STENCIL)
 		{
-			mAttachedTextures[attachment].LoadData(0, Texture::Format::DEPTH24_STENCIL8, mWidth, mHeight, 0, Texture::Format::DEPTH_STENCIL, DataType::UNSIGNED_BYTE, nullptr);
+			mAttachedTextures[attachment]->LoadData(0, Texture::Format::DEPTH24_STENCIL8, mWidth, mHeight, 0, Texture::Format::DEPTH_STENCIL, DataType::UNSIGNED_BYTE, nullptr);
 		}
 		else // Color Attachment
 		{
-			mAttachedTextures[attachment].LoadData(0, Texture::Format::RGB8, mWidth, mHeight, 0, Texture::Format::RGB, DataType::UNSIGNED_BYTE, nullptr);
+			mAttachedTextures[attachment]->LoadData(0, Texture::Format::RGBA, mWidth, mHeight, 0, Texture::Format::RGBA, DataType::UNSIGNED_BYTE, nullptr);
 		}
 
 		Bind();
-		GL(FramebufferTexture2D(static_cast<GLenum>(mBinding), static_cast<GLenum>(attachment), static_cast<GLenum>(Texture::Type::TARGET_2D), mAttachedTextures[attachment].GetID(), 0));
+		GL(FramebufferTexture2D(static_cast<GLenum>(mBinding), mAttachments[attachment], static_cast<GLenum>(Texture::Type::TARGET_2D), mAttachedTextures[attachment]->GetID(), 0));
 		UnBind();
 	}
-	void FrameBuffer::AttachCubeMap(Attachment attachment = Attachment::COLOR0)
+	void FrameBuffer::AttachCubeMap(Attachment attachment, CubeMap* cube_map)
 	{
+		mAttachedCubeMaps[attachment] = cube_map;
 		if (attachment == Attachment::DEPTH)
 		{
-			mAttachedCubeMaps[attachment].SetTargets(0, Texture::Format::DEPTH24, mWidth, mHeight, 0, Texture::Format::DEPTH, DataType::UNSIGNED_BYTE, true);
+			mAttachedCubeMaps[attachment]->SetTargets(0, Texture::Format::DEPTH24, mWidth, mHeight, 0, Texture::Format::DEPTH, DataType::UNSIGNED_BYTE, true);
 		}
 		else if (attachment == Attachment::DEPTH_STENCIL)
 		{
-			mAttachedCubeMaps[attachment].SetTargets(0, Texture::Format::DEPTH24_STENCIL8, mWidth, mHeight, 0, Texture::Format::DEPTH_STENCIL, DataType::UNSIGNED_BYTE, true);
+			mAttachedCubeMaps[attachment]->SetTargets(0, Texture::Format::DEPTH24_STENCIL8, mWidth, mHeight, 0, Texture::Format::DEPTH_STENCIL, DataType::UNSIGNED_BYTE, true);
 		}
 		else // Color Attachment
 		{
-			mAttachedCubeMaps[attachment].SetTargets(0, Texture::Format::RGB8, mWidth, mHeight, 0, Texture::Format::RGB, DataType::UNSIGNED_BYTE, true);
+			mAttachedCubeMaps[attachment]->SetTargets(0, Texture::Format::RGB8, mWidth, mHeight, 0, Texture::Format::RGB, DataType::UNSIGNED_BYTE, true);
 		}
 
 		Bind();
-		GL(FramebufferTexture(static_cast<GLenum>(mBinding), static_cast<GLenum>(attachment), mAttachedCubeMaps[attachment].GetID(), 0));
+		GL(FramebufferTexture(static_cast<GLenum>(mBinding), mAttachments[attachment], mAttachedCubeMaps[attachment]->GetID(), 0));
 		UnBind();
 	}
 
 	void FrameBuffer::DetachTexture2D(Attachment attachment)
 	{
-		mAttachedTextures.erase(attachment);
+		mAttachedTextures[attachment] = nullptr;
 
 		Bind();
-		GL(FramebufferTexture2D(static_cast<GLenum>(mBinding), static_cast<GLenum>(attachment), static_cast<GLenum>(Texture::Type::TARGET_2D), 0, 0));
+		GL(FramebufferTexture2D(static_cast<GLenum>(mBinding), mAttachments[attachment], static_cast<GLenum>(Texture::Type::TARGET_2D), 0, 0));
 		UnBind();
 	}
 
 	void FrameBuffer::DetachCubeMap(Attachment attachment)
 	{
-		mAttachedCubeMaps.erase(attachment);
+		mAttachedCubeMaps[attachment] = nullptr;
 
 		Bind();
 		GL(FramebufferTexture(static_cast<GLenum>(mBinding), static_cast<GLenum>(attachment), 0, 0));
@@ -117,12 +125,34 @@ namespace gl
 
 	bool FrameBuffer::IsComplete() const
 	{
-		bool is_complete = true;
 		Bind();
-		if (glCheckFramebufferStatus(static_cast<GLenum>(mBinding)) != GL_FRAMEBUFFER_COMPLETE)
-			is_complete = false;
+		GLenum status = GL(CheckFramebufferStatus(GL_FRAMEBUFFER));
 		UnBind();
-		return is_complete;
+		if (status == GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT)
+		{
+			assert("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT" && NULL);
+		}
+		else if (status == GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT)
+		{
+			assert("GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT" && NULL);
+		}
+		else if (status == GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER)
+		{
+			assert("GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER" && NULL);
+		}
+		else if (status == GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER)
+		{
+			assert("GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER" && NULL);
+		}
+		else if (status == GL_FRAMEBUFFER_UNSUPPORTED)
+		{
+			assert("GL_FRAMEBUFFER_UNSUPPORTED" && NULL);
+		}
+
+		if (status == GL_FRAMEBUFFER_COMPLETE)
+			return true;
+		else
+			return false;
 	}
 
 	/*template<typename T, typename... Args>
@@ -136,8 +166,12 @@ namespace gl
 
 	void FrameBuffer::UseDrawBuffers(const std::vector<Attachment>& attachments)
 	{
+		std::vector<GLenum> vattachments;
+		for (Attachment attach : attachments)
+			vattachments.push_back(mAttachments[attach]);
+
 		Bind();
-		GL(DrawBuffers((GLsizei)attachments.size(), reinterpret_cast<const GLenum*>(attachments.data())));
+		GL(DrawBuffers(vattachments.size(), vattachments.data()));
 		UnBind();
 	}
 
