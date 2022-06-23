@@ -7,6 +7,7 @@ namespace util
     std::unique_ptr<rsrc::CubeMap> ResourceManager::mCubeMap;
     std::unique_ptr<util::Controller> ResourceManager::mController;
     std::unique_ptr<rsrc::Model> ResourceManager::mModel;
+    std::unique_ptr<rsrc::Model> ResourceManager::mModel1;
     std::unique_ptr<w3d::Menu> ResourceManager::mMenu;
 
     ResourceManager::ResourceManager()
@@ -15,9 +16,10 @@ namespace util
     ResourceManager::~ResourceManager() {}
 
     rsrc::CubeMap *ResourceManager::GetCubeMap() { return mCubeMap.get(); }
-    rsrc::Model* ResourceManager::GetModel() { return mModel.get(); }
+    rsrc::Model *ResourceManager::GetModel() { return mModel.get(); }
+    rsrc::Model *ResourceManager::GetModel1() { return mModel1.get(); }
     rsrc::Shaders *ResourceManager::GetShaders() { return mShaders.get(); }
-    w3d::Menu* ResourceManager::GetW3DMenu() { return mMenu.get(); }
+    w3d::Menu *ResourceManager::GetW3DMenu() { return mMenu.get(); }
 
     util::Controller *ResourceManager::GetController()
     {
@@ -41,7 +43,10 @@ namespace util
 
         // loads models
         mModel = std::make_unique<rsrc::Model>();
-        mModel->Load(std::string(path + "/models/watch.glb").c_str());
+        mModel->Load(std::string(path + "/models/Range_Rover.glb").c_str());
+
+        mModel1 = std::make_unique<rsrc::Model>();
+        mModel1->Load(std::string(path + "/models/mini.glb").c_str());
 
         mController = std::make_unique<util::Controller>();
         mController->Create(path.c_str(), 1.5f, 0.01f);
@@ -81,6 +86,12 @@ namespace util
         if (mModel)
         {
             progress += mModel->GetProgress();
+            count++;
+        }
+
+        if (mModel1)
+        {
+            progress += mModel1->GetProgress();
             count++;
         }
 

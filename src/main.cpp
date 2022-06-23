@@ -30,6 +30,8 @@ private:
 	bool is_init_uniforms = false;
 	UniformLocations mUniformLocations;
 
+	glm::mat4 mMenuModel;
+
 	WebXRInputSource *mInputSource;
 	util::Camera<util::ProjectionType::PERSPECTIVE> mCamera;
 	std::vector<float> mFPS;
@@ -47,7 +49,7 @@ public:
 
 	virtual bool OnInitialize()
 	{
-		mCamera.SetViewState(glm::vec3(0.f, 0.f, 0.7f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -1.f));
+		mCamera.SetViewState(glm::vec3(0.f, 1.5f, 3.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -1.f));
 
 		printf("MyApp::OnInitialize\n");
 		util::ResourceManager::OnInitialize();
@@ -61,95 +63,98 @@ public:
 	};
 	virtual bool OnGui()
 	{
-		util::ResourceManager::GetW3DMenu()->Compose(mInputSource, "3DMenu",
-													 []()
-													 {
-														 static float FPS[100] = {};
-														 float fps = (*GImGui).IO.Framerate;
+		mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f));
+		util::ResourceManager::GetW3DMenu()
+			->Compose(mInputSource, mMenuModel, "3DMenu",
+					  []()
+					  {
+						  static float FPS[100] = {};
+						  float fps = (*GImGui).IO.Framerate;
 
-														 float average_fps = 0.f;
-														 for (uint32_t i = 1; i < 100; i++)
-														 {
-															 FPS[i - 1] = FPS[i];
-															 FPS[99] = fps;
-															 average_fps += FPS[i] / 100.f;
-														 }
+						  float average_fps = 0.f;
+						  for (uint32_t i = 1; i < 100; i++)
+						  {
+							  FPS[i - 1] = FPS[i];
+							  FPS[99] = fps;
+							  average_fps += FPS[i] / 100.f;
+						  }
 
-														 if (average_fps > 50.f)
-														 {
-															 ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.7f, 0.f, 0.5f));
-														 }
-														 else if (average_fps > 20.f)
-														 {
-															 ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.7f, 0.f, 0.5f));
-														 }
-														 else
-														 {
-															 ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.f, 0.f, 0.5f));
-														 }
+						  if (average_fps > 50.f)
+						  {
+							  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.7f, 0.f, 0.5f));
+						  }
+						  else if (average_fps > 20.f)
+						  {
+							  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.7f, 0.f, 0.5f));
+						  }
+						  else
+						  {
+							  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.f, 0.f, 0.5f));
+						  }
 
-														 char text[128] = {};
+						  char text[128] = {};
 
-														 sprintf(text, "FPS: %.3f", average_fps);
-														 ImGui::Text("%-64s", text);
+						  sprintf(text, "FPS: %.3f", average_fps);
+						  ImGui::Text("%-64s", text);
 
-														 ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 30.f);
-														 ImGui::PlotLines("##Frame Times", &FPS[0], 100);
+						  ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 30.f);
+						  ImGui::PlotLines("##Frame Times", &FPS[0], 100);
 
-														 ImGui::PopStyleColor();
+						  ImGui::PopStyleColor();
 
-														 if (ImGui::Button("Ok", ImVec2(90.f, 30.f)))
-														 {
-															 printf("Button Ok\n");
-														 }
-														 if (ImGui::Button("Save", ImVec2(90.f, 30.f)))
-														 {
-															 printf("Button Save\n");
-														 }
-														 if (ImGui::Button("Cancel", ImVec2(90.f, 30.f)))
-														 {
-															 printf("Button Cancel\n");
-														 }
-														 static float slider = 0.5f;
-														 ImGui::SliderFloat("Clouds Speed", &slider, 0.f, 1.f, "%.3f");
+						  if (ImGui::Button("Ok", ImVec2(90.f, 30.f)))
+						  {
+							  printf("Button Ok\n");
+						  }
+						  if (ImGui::Button("Save", ImVec2(90.f, 30.f)))
+						  {
+							  printf("Button Save\n");
+						  }
+						  if (ImGui::Button("Cancel", ImVec2(90.f, 30.f)))
+						  {
+							  printf("Button Cancel\n");
+						  }
+						  static float slider = 0.5f;
+						  ImGui::SliderFloat("Clouds Speed", &slider, 0.f, 1.f, "%.3f");
 
-														 static char buff[64] = {};
-														 ImGui::InputText("in text", buff, IM_ARRAYSIZE(buff));
+						  static char buff[64] = {};
+						  ImGui::InputText("in text", buff, IM_ARRAYSIZE(buff));
 
-														 static bool animate = true;
-														 ImGui::Checkbox("Animate", &animate);
+						  static bool animate = true;
+						  ImGui::Checkbox("Animate", &animate);
 
-														 static float arr[] = {0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f};
-														 ImGui::PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr));
+						  static float arr[] = {0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f};
+						  ImGui::PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr));
 
-														 static float values[90] = {};
-														 static int values_offset = 0;
-														 static double refresh_time = 0.0;
-														 if (!animate || refresh_time == 0.0)
-															 refresh_time = ImGui::GetTime();
-														 while (refresh_time < ImGui::GetTime()) // Create data at fixed 60 Hz rate for the demo
-														 {
-															 static float phase = 0.0f;
-															 values[values_offset] = cosf(phase);
-															 values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
-															 phase += 0.10f * values_offset;
-															 refresh_time += 1.0f / 60.0f;
-														 }
+						  static float values[90] = {};
+						  static int values_offset = 0;
+						  static double refresh_time = 0.0;
+						  if (!animate || refresh_time == 0.0)
+							  refresh_time = ImGui::GetTime();
+						  while (refresh_time < ImGui::GetTime()) // Create data at fixed 60 Hz rate for the demo
+						  {
+							  static float phase = 0.0f;
+							  values[values_offset] = cosf(phase);
+							  values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
+							  phase += 0.10f * values_offset;
+							  refresh_time += 1.0f / 60.0f;
+						  }
 
-														 {
-															 float average = 0.0f;
-															 for (int n = 0; n < IM_ARRAYSIZE(values); n++)
-																 average += values[n];
-															 average /= (float)IM_ARRAYSIZE(values);
-															 char overlay[32];
-															 sprintf(overlay, "avg %f", average);
-															 ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
-														 }
-														 ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
-													 });
+						  {
+							  float average = 0.0f;
+							  for (int n = 0; n < IM_ARRAYSIZE(values); n++)
+								  average += values[n];
+							  average /= (float)IM_ARRAYSIZE(values);
+							  char overlay[32];
+							  sprintf(overlay, "avg %f", average);
+							  ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
+						  }
+						  ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
+					  });
 
 		float progress = util::ResourceManager::GetProgress();
-		if (progress < 99.999f)
+		// if (progress < 99.999f)
+		if (false)
 		{
 			ImGui::NewFrame();
 
@@ -354,8 +359,8 @@ public:
 
 	virtual bool OnRender()
 	{
-		if (util::ResourceManager::GetProgress() < 99.999f)
-			return true;
+		// if (util::ResourceManager::GetProgress() < 99.999f)
+		// return true;
 
 		rsrc::Shaders *shaders = util::ResourceManager::GetShaders();
 
@@ -388,9 +393,11 @@ public:
 
 				util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), view.viewPose.matrix, view.projectionMatrix);
 
-				// util::ResourceManager::GetModel()->Draw(program, glm::mat4(1.f));
+				util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(-2.f, 0.f, 1.f)));
+				util::ResourceManager::GetModel1()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 1.f)));
 
-				util::ResourceManager::GetW3DMenu()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f)));
+				util::ResourceManager::GetW3DMenu()->Draw(mMenuModel);
+				// util::ResourceManager::GetW3DMenu()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f)));
 
 				WebXRInputSource *inputSourceArray = nullptr;
 				uint32_t inputCount = 0;

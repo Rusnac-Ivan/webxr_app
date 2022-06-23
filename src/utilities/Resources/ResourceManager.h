@@ -13,10 +13,10 @@ namespace util
     class ResourceManager
     {
 
-
         static std::unique_ptr<rsrc::Shaders> mShaders;
         static std::unique_ptr<rsrc::CubeMap> mCubeMap;
         static std::unique_ptr<rsrc::Model> mModel;
+        static std::unique_ptr<rsrc::Model> mModel1;
         static std::unique_ptr<util::Controller> mController;
         static std::unique_ptr<w3d::Menu> mMenu;
 
@@ -28,10 +28,11 @@ namespace util
         static void OnFinalize();
 
         static rsrc::CubeMap *GetCubeMap();
-        static rsrc::Model* GetModel();
+        static rsrc::Model *GetModel();
+        static rsrc::Model *GetModel1();
         static rsrc::Shaders *GetShaders();
         static util::Controller *GetController();
-        static w3d::Menu* GetW3DMenu();
+        static w3d::Menu *GetW3DMenu();
 
         static float GetProgress();
     };

@@ -7,7 +7,11 @@ namespace util
 					 mHSD(0.f),
 					 mVSD(0.f),
 					 mDir(Direction::OZ_POS),
-					 mNormal(0.f)
+					 mNormal(0.f),
+					 mUp(0.f),
+					 mOrigin(0.f),
+					 mRight(0.f)
+
 	{
 	}
 
@@ -17,6 +21,9 @@ namespace util
 
 	void Plane::Generate(float width, float height, float hsd, float vsd, Direction dir)
 	{
+		mWidth = width;
+		mHeight = height;
+
 		mVertices.clear();
 		mIndices.clear();
 
@@ -33,6 +40,8 @@ namespace util
 		{
 			mNormal = glm::vec3(1.f, 0.f, 0.f);
 			mOrigin = glm::vec3(0.f, -height / 2.f, width / 2);
+			mUp = glm::vec3(0.f, 1.f, 0.f);
+			mRight = glm::vec3(0.f, 0.f, -1.f);
 			Generate(mOrigin, mNormal, h_step, v_step);
 		}
 		break;
@@ -40,6 +49,8 @@ namespace util
 		{
 			mNormal = glm::vec3(-1.f, 0.f, 0.f);
 			mOrigin = glm::vec3(0.f, -height / 2.f, -width / 2);
+			mUp = glm::vec3(0.f, 1.f, 0.f);
+			mRight = glm::vec3(0.f, 0.f, 1.f);
 			Generate(mOrigin, mNormal, h_step, v_step);
 		}
 		break;
@@ -47,6 +58,8 @@ namespace util
 		{
 			mNormal = glm::vec3(0.f, 1.f, 0.f);
 			mOrigin = glm::vec3(-width / 2, 0.f, height / 2.f);
+			mUp = glm::vec3(0.f, 0.f, 1.f);
+			mRight = glm::vec3(-1.f, 0.f, 0.f);
 			Generate(mOrigin, mNormal, h_step, v_step);
 		}
 		break;
@@ -54,6 +67,8 @@ namespace util
 		{
 			mNormal = glm::vec3(0.f, -1.f, 0.f);
 			mOrigin = glm::vec3(-width / 2, 0.f, -height / 2.f);
+			mUp = glm::vec3(0.f, 0.f, 1.f);
+			mRight = glm::vec3(1.f, 0.f, 0.f);
 			Generate(mOrigin, mNormal, h_step, v_step);
 		}
 		break;
@@ -61,6 +76,8 @@ namespace util
 		{
 			mNormal = glm::vec3(0.f, 0.f, 1.f);
 			mOrigin = glm::vec3(-width / 2, -height / 2.f, 0.f);
+			mUp = glm::vec3(0.f, 1.f, 0.f);
+			mRight = glm::vec3(1.f, 0.f, 0.f);
 			Generate(mOrigin, mNormal, h_step, v_step);
 		}
 		break;
@@ -68,6 +85,8 @@ namespace util
 		{
 			mNormal = glm::vec3(0.f, 0.f, -1.f);
 			mOrigin = glm::vec3(width / 2, -height / 2.f, 0.f);
+			mUp = glm::vec3(0.f, 1.f, 0.f);
+			mRight = glm::vec3(-1.f, 0.f, 0.f);
 			Generate(mOrigin, mNormal, h_step, v_step);
 		}
 		break;

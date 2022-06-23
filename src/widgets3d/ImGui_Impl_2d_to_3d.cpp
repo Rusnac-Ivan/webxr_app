@@ -10,49 +10,48 @@ typedef void (*Charfun)(unsigned int);
 
 struct ImGui_Impl_2d_to_3d_Data
 {
-    double                  Time;
+    double Time;
 
-    bool                    MouseJustPressed[ImGuiMouseButton_COUNT];
-    bool                    InstalledCallbacks;
+    bool MouseJustPressed[ImGuiMouseButton_COUNT];
+    bool InstalledCallbacks;
 
-    // Chain GLFW callbacks: our callbacks will call the user's previously installed callbacks, if any.
-    Windowfocusfun      PrevUserCallbackWindowFocus;
-    Cursorenterfun      PrevUserCallbackCursorEnter;
-    Mousebuttonfun      PrevUserCallbackMousebutton;
-    Scrollfun           PrevUserCallbackScroll;
-    Keyfun              PrevUserCallbackKey;
-    Charfun             PrevUserCallbackChar;
+    // callbacks: our callbacks will call the user's previously installed callbacks, if any.
+    Windowfocusfun PrevUserCallbackWindowFocus;
+    Cursorenterfun PrevUserCallbackCursorEnter;
+    Mousebuttonfun PrevUserCallbackMousebutton;
+    Scrollfun PrevUserCallbackScroll;
+    Keyfun PrevUserCallbackKey;
+    Charfun PrevUserCallbackChar;
 
     ImGui_Impl_2d_to_3d_Data() { memset(this, 0, sizeof(*this)); }
 };
 
-static ImGui_Impl_2d_to_3d_Data* ImGui_Impl_2d_to_3d_GetBackendData()
+static ImGui_Impl_2d_to_3d_Data *ImGui_Impl_2d_to_3d_GetBackendData()
 {
-    return ImGui::GetCurrentContext() ? (ImGui_Impl_2d_to_3d_Data*)ImGui::GetIO().BackendPlatformUserData : NULL;
+    return ImGui::GetCurrentContext() ? (ImGui_Impl_2d_to_3d_Data *)ImGui::GetIO().BackendPlatformUserData : NULL;
 }
 
 void ImGui_Impl_2d_to_3d_Shutdown()
 {
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui_Impl_2d_to_3d_Data* bd = ImGui_Impl_2d_to_3d_GetBackendData();
+    ImGuiIO &io = ImGui::GetIO();
+    ImGui_Impl_2d_to_3d_Data *bd = ImGui_Impl_2d_to_3d_GetBackendData();
 
     io.BackendPlatformName = NULL;
     io.BackendPlatformUserData = NULL;
     IM_DELETE(bd);
 }
 
-
 bool ImGui_Impl_2d_to_3d_InitForOpenGL()
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     IM_ASSERT(io.BackendPlatformUserData == NULL && "Already initialized a platform backend!");
 
     // Setup backend capabilities flags
-    ImGui_Impl_2d_to_3d_Data* bd = IM_NEW(ImGui_Impl_2d_to_3d_Data)();
-    io.BackendPlatformUserData = (void*)bd;
+    ImGui_Impl_2d_to_3d_Data *bd = IM_NEW(ImGui_Impl_2d_to_3d_Data)();
+    io.BackendPlatformUserData = (void *)bd;
     io.BackendPlatformName = "imGui_impl_2d_to_3d";
-    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;         // We can honor GetMouseCursor() values (optional)
-    io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;          // We can honor io.WantSetMousePos requests (optional, rarely used)
+    io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors; // We can honor GetMouseCursor() values (optional)
+    io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;  // We can honor io.WantSetMousePos requests (optional, rarely used)
 
     bd->Time = 0.0;
 
@@ -83,11 +82,10 @@ bool ImGui_Impl_2d_to_3d_InitForOpenGL()
     return true;
 }
 
-
-static void ImGui_Impl_2d_to_3d_UpdateMousePosAndButtons(const ImVec2& mouse_pos)
+static void ImGui_Impl_2d_to_3d_UpdateMousePosAndButtons(const ImVec2 &mouse_pos)
 {
-    ImGui_Impl_2d_to_3d_Data* bd = ImGui_Impl_2d_to_3d_GetBackendData();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGui_Impl_2d_to_3d_Data *bd = ImGui_Impl_2d_to_3d_GetBackendData();
+    ImGuiIO &io = ImGui::GetIO();
 
     const ImVec2 mouse_pos_prev = io.MousePos;
     io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
@@ -100,13 +98,11 @@ static void ImGui_Impl_2d_to_3d_UpdateMousePosAndButtons(const ImVec2& mouse_pos
     io.MousePos = mouse_pos;
 }
 
-
-
-void ImGui_Impl_2d_to_3d_NewFrame(const ImVec2& win_size, const ImVec2& mouse_pos)
+void ImGui_Impl_2d_to_3d_NewFrame(const ImVec2 &win_size, const ImVec2 &mouse_pos)
 {
-    //width height 
-    ImGuiIO& io = ImGui::GetIO();
-    ImGui_Impl_2d_to_3d_Data* bd = ImGui_Impl_2d_to_3d_GetBackendData();
+    // width height
+    ImGuiIO &io = ImGui::GetIO();
+    ImGui_Impl_2d_to_3d_Data *bd = ImGui_Impl_2d_to_3d_GetBackendData();
     IM_ASSERT(bd != NULL && "Did you call ImGui_Impl_2d_to_3d_InitForOpenGL()?");
 
     // Setup display size (every frame to accommodate for window resizing)
@@ -121,42 +117,45 @@ void ImGui_Impl_2d_to_3d_NewFrame(const ImVec2& win_size, const ImVec2& mouse_po
     ImGui_Impl_2d_to_3d_UpdateMousePosAndButtons(mouse_pos);
 }
 
-void     ImGui_Impl_2d_to_3d_WindowFocusCallback(int focused)
+void ImGui_Impl_2d_to_3d_WindowFocusCallback(int focused)
 {
-    ImGui_Impl_2d_to_3d_Data* bd = ImGui_Impl_2d_to_3d_GetBackendData();
+    ImGui_Impl_2d_to_3d_Data *bd = ImGui_Impl_2d_to_3d_GetBackendData();
     if (bd->PrevUserCallbackWindowFocus != NULL)
         bd->PrevUserCallbackWindowFocus(focused);
 
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     io.AddFocusEvent(focused != 0);
 }
 
-void     ImGui_Impl_2d_to_3d_MouseButtonCallback(int button, int action, int mods)
+void ImGui_Impl_2d_to_3d_MouseButtonCallback(int button, int action, int mods)
 {
-    ImGui_Impl_2d_to_3d_Data* bd = ImGui_Impl_2d_to_3d_GetBackendData();
+    ImGui_Impl_2d_to_3d_Data *bd = ImGui_Impl_2d_to_3d_GetBackendData();
     if (bd->PrevUserCallbackMousebutton != NULL)
         bd->PrevUserCallbackMousebutton(button, action, mods);
 
     if (action == PRESS && button >= 0 && button < IM_ARRAYSIZE(bd->MouseJustPressed))
         bd->MouseJustPressed[button] = true;
+
+    if (action == RELEASE && button >= 0 && button < IM_ARRAYSIZE(bd->MouseJustPressed))
+        bd->MouseJustPressed[button] = false;
 }
-void     ImGui_Impl_2d_to_3d_ScrollCallback(double xoffset, double yoffset)
+void ImGui_Impl_2d_to_3d_ScrollCallback(double xoffset, double yoffset)
 {
-    ImGui_Impl_2d_to_3d_Data* bd = ImGui_Impl_2d_to_3d_GetBackendData();
+    ImGui_Impl_2d_to_3d_Data *bd = ImGui_Impl_2d_to_3d_GetBackendData();
     if (bd->PrevUserCallbackScroll != NULL)
         bd->PrevUserCallbackScroll(xoffset, yoffset);
 
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     io.MouseWheelH += (float)xoffset;
     io.MouseWheel += (float)yoffset;
 }
-void     ImGui_Impl_2d_to_3d_KeyCallback(int key, int scancode, int action, int mods)
+void ImGui_Impl_2d_to_3d_KeyCallback(int key, int scancode, int action, int mods)
 {
-    ImGui_Impl_2d_to_3d_Data* bd = ImGui_Impl_2d_to_3d_GetBackendData();
+    ImGui_Impl_2d_to_3d_Data *bd = ImGui_Impl_2d_to_3d_GetBackendData();
     if (bd->PrevUserCallbackKey != NULL)
         bd->PrevUserCallbackKey(key, scancode, action, mods);
 
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     if (key >= 0 && key < IM_ARRAYSIZE(io.KeysDown))
     {
         if (action == PRESS)
@@ -165,12 +164,12 @@ void     ImGui_Impl_2d_to_3d_KeyCallback(int key, int scancode, int action, int 
             io.KeysDown[key] = false;
     }
 }
-void     ImGui_Impl_2d_to_3d_CharCallback(unsigned int c)
+void ImGui_Impl_2d_to_3d_CharCallback(unsigned int c)
 {
-    ImGui_Impl_2d_to_3d_Data* bd = ImGui_Impl_2d_to_3d_GetBackendData();
+    ImGui_Impl_2d_to_3d_Data *bd = ImGui_Impl_2d_to_3d_GetBackendData();
     if (bd->PrevUserCallbackChar != NULL)
         bd->PrevUserCallbackChar(c);
 
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO &io = ImGui::GetIO();
     io.AddInputCharacter(c);
 }

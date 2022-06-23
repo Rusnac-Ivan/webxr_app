@@ -38,13 +38,20 @@ namespace util
 
 		glm::vec3 mNormal;
 		glm::vec3 mOrigin;
+		glm::vec3 mUp;
+		glm::vec3 mRight;
 
 	public:
 		Plane();
 		~Plane();
 
+		float GetWidth() { return mWidth; }
+		float GetHeight() { return mHeight; }
+
 		glm::vec3 &GetNormal() { return mNormal; }
 		glm::vec3 &GetOrigin() { return mOrigin; }
+		glm::vec3 &GetUp() { return mUp; }
+		glm::vec3 &GetRight() { return mRight; }
 
 		void Generate(float width, float height, float hsd, float vsd, Direction dir = Direction::OZ_POS);
 		void Reset();

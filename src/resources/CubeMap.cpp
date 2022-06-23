@@ -136,8 +136,9 @@ namespace rsrc
                 }
                 assert(img_data && "stb not load texture");
             },
-            [](unsigned handle, void *arg, int error_code, const char *status) {
-
+            [](unsigned handle, void *arg, int error_code, const char *status)
+            {
+                fprintf(stderr, "Failed to load cube_map texture error_code: %d, status: %s\n", error_code, status);
             },
             [](unsigned handle, void *arg, int bytes_loaded, int total_size)
             {
@@ -162,8 +163,9 @@ namespace rsrc
                 }
                 assert(img_data && "stb not load texture");
             },
-            [](unsigned handle, void *arg, int error_code, const char *status) {
-
+            [](unsigned handle, void *arg, int error_code, const char *status)
+            {
+                fprintf(stderr, "Failed to load cube_map texture error_code: %d, status: %s\n", error_code, status);
             },
             [](unsigned handle, void *arg, int bytes_loaded, int total_size)
             {
@@ -187,8 +189,9 @@ namespace rsrc
                 }
                 assert(img_data && "stb not load texture");
             },
-            [](unsigned handle, void *arg, int error_code, const char *status) {
-
+            [](unsigned handle, void *arg, int error_code, const char *status)
+            {
+                fprintf(stderr, "Failed to load cube_map texture error_code: %d, status: %s\n", error_code, status);
             },
             [](unsigned handle, void *arg, int bytes_loaded, int total_size)
             {
@@ -212,8 +215,9 @@ namespace rsrc
                 }
                 assert(img_data && "stb not load texture");
             },
-            [](unsigned handle, void *arg, int error_code, const char *status) {
-
+            [](unsigned handle, void *arg, int error_code, const char *status)
+            {
+                fprintf(stderr, "Failed to load cube_map texture error_code: %d, status: %s\n", error_code, status);
             },
             [](unsigned handle, void *arg, int bytes_loaded, int total_size)
             {
@@ -237,8 +241,9 @@ namespace rsrc
                 }
                 assert(img_data && "stb not load texture");
             },
-            [](unsigned handle, void *arg, int error_code, const char *status) {
-
+            [](unsigned handle, void *arg, int error_code, const char *status)
+            {
+                fprintf(stderr, "Failed to load cube_map texture error_code: %d, status: %s\n", error_code, status);
             },
             [](unsigned handle, void *arg, int bytes_loaded, int total_size)
             {
@@ -262,8 +267,9 @@ namespace rsrc
                 }
                 assert(img_data && "stb not load texture");
             },
-            [](unsigned handle, void *arg, int error_code, const char *status) {
-
+            [](unsigned handle, void *arg, int error_code, const char *status)
+            {
+                fprintf(stderr, "Failed to load cube_map texture error_code: %d, status: %s\n", error_code, status);
             },
             [](unsigned handle, void *arg, int bytes_loaded, int total_size)
             {

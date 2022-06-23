@@ -88,7 +88,7 @@ namespace core
 	{
 		// Cleanup imgui
 		ImGui_ImplOpenGL3_Shutdown();
-		//ImGui_ImplGlfw_Shutdown();
+		// ImGui_ImplGlfw_Shutdown();
 		ImGui_Impl_2d_to_3d_Shutdown();
 		ImGui::DestroyContext();
 
@@ -177,7 +177,7 @@ namespace core
 		// ImGui::StyleColorsClassic();
 
 		// Setup Platform/Renderer backends
-		//ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
+		// ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
 		ImGui_Impl_2d_to_3d_InitForOpenGL();
 		ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 
@@ -268,7 +268,6 @@ namespace core
 		int canv_width, canv_height;
 		if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
 			return EXIT_FAILURE;
-
 
 		mWidth = canv_width;
 		mHeight = canv_height;

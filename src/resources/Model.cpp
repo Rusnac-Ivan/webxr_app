@@ -96,7 +96,7 @@ namespace rsrc
 
 		if (fileLoaded)
 		{
-			const tinygltf::Scene& scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
+			const tinygltf::Scene &scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
 
 			LoadTextures(gltfModel);
 			LoadMaterials(gltfModel);
@@ -109,8 +109,6 @@ namespace rsrc
 				mNodes[i].LoadFromTinyGLTF(nullptr, node, mMaterials, scene.nodes[i], gltfModel, scale);
 			}
 		}
-
-		
 
 		mIsReady = true;
 	}
@@ -132,8 +130,9 @@ namespace rsrc
 				Model *model = (Model *)arg;
 				model->LoadFromMemoryTinyGLTF((const uint8_t *)data, size, model->mIsBinary);
 			},
-			[](unsigned handle, void *arg, int error_code, const char *status) {
-
+			[](unsigned handle, void *arg, int error_code, const char *status)
+			{
+				fprintf(stderr, "Failed to load model error_code: %d, status: %s\n", error_code, status);
 			},
 			[](unsigned handle, void *arg, int bytes_loaded, int total_size)
 			{
@@ -142,7 +141,7 @@ namespace rsrc
 					model->mProgress = ((float)bytes_loaded / total_size) * 100.f;
 			});
 #else
-		
+
 		LoadFromFile(file);
 		mProgress = 100.f;
 		mIsReady = true;

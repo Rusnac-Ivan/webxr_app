@@ -41,8 +41,9 @@ namespace w3d
         mVAO.LinkIndexBuffer(mEBO);
     }
 
-    void Menu::Compose(WebXRInputSource *inputSource, const char *name, ComposeFun gui_fun)
+    void Menu::Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun)
     {
+        ImVec2 mouse_pos = ImVec2(-1.f, -1.f);
         if (inputSource)
         {
             float distance;
@@ -53,31 +54,47 @@ namespace w3d
             glm::vec3 &input_pose = glm::vec3(0.f, 0.f, 0.f);
             glm::vec3 input_dir = glm::vec3(0.f, 0.f, -1.f);
 #endif
-            glm::vec3 &plane_origin = mPlane.GetOrigin();
-            glm::vec3 &plane_normal = mPlane.GetNormal();
+            glm::vec3 plane_origin = glm::vec3(model * glm::vec4(mPlane.GetOrigin(), 1.f));
+            glm::vec3 plane_normal = glm::mat3(model) * mPlane.GetNormal();
+            glm::vec3 plane_up = glm::mat3(model) * mPlane.GetUp();
+            glm::vec3 plane_right = glm::mat3(model) * mPlane.GetRight();
             if (glm::intersectRayPlane(input_pose, input_dir, plane_origin, plane_normal, distance))
             {
                 glm::vec3 inter_pos = input_pose + input_dir * distance;
+
+                float h = glm::dot(inter_pos - plane_origin, plane_right);
+                float v = glm::dot(inter_pos - plane_origin, plane_up);
+
+                mouse_pos.x = mWidth / mPlane.GetWidth() * h;
+                mouse_pos.y = mHeight - mHeight / mPlane.GetHeight() * v;
             }
         }
 
         mFBO.Bind();
-        // mFBO.SetSize((uint32_t)mWidth, (uint32_t)mHeight);
-        ImGui_Impl_2d_to_3d_NewFrame(ImVec2(mWidth, mHeight), ImVec2(0.f, 0.f));
-        ImGui::NewFrame();
 
         gl::Render::SetClearColor(0.f, 0.f, 0.f, 0.f);
         gl::Render::Clear(gl::BufferBit::COLOR);
 
-        ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
-        if (ImGui::Begin(name, &mIsOpen, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNav))
+        if (mIsOpen)
         {
-            gui_fun();
+            ImGui_Impl_2d_to_3d_NewFrame(ImVec2(mWidth, mHeight), mouse_pos);
+            ImGui::NewFrame();
+
+            ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
+            if (ImGui::Begin(name, &mIsOpen, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNav))
+            {
+                ImDrawList *draw_list = ImGui::GetWindowDrawList();
+                draw_list->AddCircleFilled(ImVec2(mouse_pos.x, mouse_pos.y), 10.f, ImColor(ImVec4(0.f, 1.f, 1.f, 0.5f)));
+
+                gui_fun();
+            }
+            ImGui::End();
+
+            ImGui::Render();
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         }
-        ImGui::End();
-        ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         mFBO.UnBind();
     }
 

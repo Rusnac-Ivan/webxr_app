@@ -14,7 +14,7 @@
 #include <utilities/Emsc/webxr.h>
 
 #ifndef __EMSCRIPTEN__
-typedef void* WebXRInputSource;
+typedef void *WebXRInputSource;
 #endif
 
 namespace w3d
@@ -26,6 +26,7 @@ namespace w3d
             int32_t model = -1;
         };
         UniformLocations mUniformLocations;
+
     public:
         using ComposeFun = void (*)();
 
@@ -52,7 +53,7 @@ namespace w3d
 
         void Create(float width, float height);
 
-        void Compose(WebXRInputSource *inputSource, const char *name, ComposeFun gui_fun);
+        void Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun);
         void Draw(const glm::mat4 &model);
     };
 

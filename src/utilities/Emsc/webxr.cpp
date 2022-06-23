@@ -452,15 +452,12 @@ void WebXR::OnFrame(emscripten::val time, emscripten::val frame)
     mXRViews = viewPose["views"];
     mXRInputSources = session["inputSources"];
 
-    printf("WebXR::OnFrame\n");
-    // mFrameCallBack();
-
-    // Scene Update
-    core::Application::OnUpdate(mApplication);
-
     uint32_t id = session.call<uint32_t>("requestAnimationFrame", emscripten::val::module_property("WXROnFrame"));
     if (id == 0)
         printf("failed requestAnimationFrame id: %d\n", id);
+
+    // Scene Update
+    core::Application::OnUpdate(mApplication);
 }
 
 void WebXR::OnSessionEnd(emscripten::val session)

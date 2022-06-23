@@ -95,8 +95,9 @@ namespace rsrc
                     Program *program = (Program *)arg;
                     program->LoadVertSh((const char *)data, size);
                 },
-                [](unsigned handle, void *arg, int error_code, const char *status) {
-
+                [](unsigned handle, void *arg, int error_code, const char *status)
+                {
+                    fprintf(stderr, "Failed to load vert shader error_code: %d, status: %s\n", error_code, status);
                 },
                 [](unsigned handle, void *arg, int bytes_loaded, int total_size)
                 {
@@ -111,8 +112,9 @@ namespace rsrc
                     Program *program = (Program *)arg;
                     program->LoadFragSh((const char *)data, size);
                 },
-                [](unsigned handle, void *arg, int error_code, const char *status) {
-
+                [](unsigned handle, void *arg, int error_code, const char *status)
+                {
+                    fprintf(stderr, "Failed to load frag shader error_code: %d, status: %s\n", error_code, status);
                 },
                 [](unsigned handle, void *arg, int bytes_loaded, int total_size)
                 {
