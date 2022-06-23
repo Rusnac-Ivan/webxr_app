@@ -186,11 +186,13 @@ namespace core
 #ifdef __EMSCRIPTEN__
 		if (WebXR::IsWebXRSupported())
 		{
+			printf("WebXR Supported\n");
 			mIsSync = true; // from webxr
 			WebXR::Start(this);
 		}
 		else
 		{
+			printf("WebXR Not Supported\n");
 			// Initialize sample.
 			bool success = OnInitialize();
 			if (!success)

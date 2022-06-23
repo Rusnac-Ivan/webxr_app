@@ -368,7 +368,7 @@ public:
 			return true;
 
 		InitPrograms(mCamera.GetPosition(), mCamera.GetPosition(), mCamera.GetProjectionMat() * mCamera.GetViewMat());
-
+		gl::Render::SetClearColor(0.f, 0.f, 0.f, 1.f);
 		gl::Render::Clear(gl::BufferBit::COLOR, gl::BufferBit::DEPTH);
 #ifndef __EMSCRIPTEN__
 		util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), mCamera.GetViewMat(), mCamera.GetProjectionMat());
@@ -393,8 +393,8 @@ public:
 
 				util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), view.viewPose.matrix, view.projectionMatrix);
 
-				util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(-2.f, 0.f, 1.f)));
-				util::ResourceManager::GetModel1()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 1.f)));
+				//util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(-2.f, 0.f, 1.f)));
+				//util::ResourceManager::GetModel1()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 1.f)));
 
 				util::ResourceManager::GetW3DMenu()->Draw(mMenuModel);
 				// util::ResourceManager::GetW3DMenu()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f)));

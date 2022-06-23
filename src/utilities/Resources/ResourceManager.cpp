@@ -42,11 +42,11 @@ namespace util
         mCubeMap->Load(std::string(path + "/cube_maps/yokohama/").c_str());
 
         // loads models
-        mModel = std::make_unique<rsrc::Model>();
-        mModel->Load(std::string(path + "/models/Range_Rover.glb").c_str());
+        //mModel = std::make_unique<rsrc::Model>();
+        //mModel->Load(std::string(path + "/models/Range_Rover.glb").c_str());
 
-        mModel1 = std::make_unique<rsrc::Model>();
-        mModel1->Load(std::string(path + "/models/mini.glb").c_str());
+        //mModel1 = std::make_unique<rsrc::Model>();
+        //mModel1->Load(std::string(path + "/models/DamagedHelmet.glb").c_str());
 
         mController = std::make_unique<util::Controller>();
         mController->Create(path.c_str(), 1.5f, 0.01f);

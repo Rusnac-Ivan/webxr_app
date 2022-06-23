@@ -114,5 +114,6 @@ namespace w3d
         mVAO.Bind();
         gl::Pipeline::EnableBlending();
         gl::Render::DrawIndices(gl::Primitive::TRIANGLES, mPlane.GetIndicesCount(), mEBO.GetDataType(), 0);
+        gl::Pipeline::DisableBlending();
     }
 } // namespace w3d

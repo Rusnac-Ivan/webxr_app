@@ -109,7 +109,9 @@ WebXR::~WebXR()
 
 bool WebXR::IsWebXRSupported()
 {
-    if (mNavigator.hasOwnProperty("xr"))
+    mNavigator = emscripten::val::global("navigator");
+    emscripten::val::global("console").call<void>("log", mNavigator);
+    if (mNavigator["__proto__"].hasOwnProperty("xr"))
     {
         mXR = mNavigator["xr"];
         return true;
@@ -322,7 +324,12 @@ void convertJSDOMPointToQuat(const emscripten::val &domPoint, glm::quat &quat)
 void WebXR::GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode)
 {
     // emscripten::val::global("console").call<void>("log", mXRInputSources);
+
+    if(!mXRInputSources.hasOwnProperty("length"))
+        return;
+
     uint32_t inputSourcesCount = mXRInputSources["length"].as<uint32_t>();
+
     assert(inputSourcesCount <= MAX_SOURCE_COUNT);
 
     for (uint32_t i = 0; i < inputSourcesCount; i++)
@@ -383,6 +390,7 @@ void WebXR::GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize,
 
 void WebXR::GetViews(WebXRView **sourceArray, uint32_t *arraySize)
 {
+    emscripten::val::global("console").call<void>("log", mXRViews);
     uint32_t viewCount = mXRViews["length"].as<uint32_t>();
     assert(viewCount == MAX_VIEW_COUNT);
     for (uint32_t i = 0; i < viewCount; i++)
@@ -449,6 +457,7 @@ void WebXR::OnFrame(emscripten::val time, emscripten::val frame)
         mRenderContext.call<void>("bindFramebuffer", mRenderContext["FRAMEBUFFER"], framebuffer);
     }
 
+    emscripten::val::global("console").call<void>("log", viewPose);
     mXRViews = viewPose["views"];
     mXRInputSources = session["inputSources"];
 
@@ -518,7 +527,13 @@ void WebXR::RequestSession(XRSessionMode mode)
 void WebXR::RequestSession(XRSessionMode mode, XRSessionFeatures required)
 {
     emscripten::val option = emscripten::val::object();
-    option.set("requiredFeatures", _XRSessionFeatures[required]);
+    //emscripten::val sessionInit = emscripten::val::global("XRSessionInit").new_();
+    //sessionInit.set("requiredFeatures", _XRSessionFeatures[required]);
+    //option.set("requiredFeatures", _XRSessionFeatures[required]);
+    emscripten::val reqFeatArray = emscripten::val::array();
+    reqFeatArray.call<void>("push", emscripten::val("local-floor"));
+    option.set("requiredFeatures", reqFeatArray);
+    //option.set("requiredFeatures", "viewer");
     emscripten::val promise = mXR.call<emscripten::val>("requestSession", _XRSessionMode[mode], option);
     promise.call<void>("then", emscripten::val::module_property("WXROnSessionStarted"), emscripten::val::module_property("WXROnError"));
 }
