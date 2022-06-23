@@ -6,6 +6,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 #include <widgets3d/ImGui_Impl_2d_to_3d.h>
+#include "helvetica_font.inl"
 
 namespace core
 {
@@ -175,6 +176,18 @@ namespace core
 		// Setup Dear ImGui style
 		ImGui::StyleColorsDark();
 		// ImGui::StyleColorsClassic();
+
+		ImFontConfig imFontConf = {};
+		
+		//imFontConf.FontData = __Helvetica_ttf;
+		//imFontConf.FontDataSize = __Helvetica_ttf_len;
+		//imFontConf.SizePixels = 17.f;
+
+		//mDefaultFont = io.Fonts->AddFontFromMemoryTTF(__Helvetica_ttf, __Helvetica_ttf_len, 17.f, &imFontConf);
+		
+		//ImGui::MergeIconsWithLatestFont(17.f, false);
+		//io.Fonts->AddFontDefault(&imFontConf);
+		
 
 		// Setup Platform/Renderer backends
 		// ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);

@@ -17,12 +17,15 @@ namespace core
 		uint32_t mWidth;
 		uint32_t mHeight;
 
+		
+
 		bool mIsSync;
 
 		Application(Application &app) = delete;
 		Application &operator=(Application &app) = delete;
 
 	protected:
+
 		Application();
 		virtual ~Application();
 

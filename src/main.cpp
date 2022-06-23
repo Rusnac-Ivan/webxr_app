@@ -49,7 +49,7 @@ public:
 
 	virtual bool OnInitialize()
 	{
-		mCamera.SetViewState(glm::vec3(0.f, 1.5f, 3.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -1.f));
+		mCamera.SetViewState(glm::vec3(0.f, 0.5f, 2.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, 1.f));
 
 		printf("MyApp::OnInitialize\n");
 		util::ResourceManager::OnInitialize();
@@ -68,6 +68,7 @@ public:
 			->Compose(mInputSource, mMenuModel, "3DMenu",
 					  []()
 					  {
+						  // ImGui::PushFont(mDefaultFont);
 						  static float FPS[100] = {};
 						  float fps = (*GImGui).IO.Framerate;
 
@@ -359,8 +360,10 @@ public:
 
 	virtual bool OnRender()
 	{
-		// if (util::ResourceManager::GetProgress() < 99.999f)
-		// return true;
+#ifndef __EMSCRIPTEN__
+		if (util::ResourceManager::GetProgress() < 99.999f)
+			return true;
+#endif
 
 		rsrc::Shaders *shaders = util::ResourceManager::GetShaders();
 
@@ -372,7 +375,7 @@ public:
 		gl::Render::Clear(gl::BufferBit::COLOR, gl::BufferBit::DEPTH);
 #ifndef __EMSCRIPTEN__
 		util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), mCamera.GetViewMat(), mCamera.GetProjectionMat());
-		util::ResourceManager::GetModel()->Draw(glm::mat4(1.f));
+		util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 0.f)));
 
 		util::ResourceManager::GetController()->Draw(glm::vec3(0.f, 0.f, 0.f), glm::quat(1.f, 0.f, 0.f, 0.f));
 		util::ResourceManager::GetW3DMenu()->Draw(glm::mat4(1.f));
@@ -393,8 +396,8 @@ public:
 
 				util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), view.viewPose.matrix, view.projectionMatrix);
 
-				//util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(-2.f, 0.f, 1.f)));
-				//util::ResourceManager::GetModel1()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 1.f)));
+				util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(-2.f, 0.f, 1.f)));
+				// util::ResourceManager::GetModel1()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 1.f)));
 
 				util::ResourceManager::GetW3DMenu()->Draw(mMenuModel);
 				// util::ResourceManager::GetW3DMenu()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f)));
