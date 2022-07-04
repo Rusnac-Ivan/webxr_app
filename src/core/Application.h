@@ -17,9 +17,11 @@ namespace core
 		uint32_t mWidth;
 		uint32_t mHeight;
 
-		
+		static float mFPS;
 
 		bool mIsSync;
+
+		double Time;
 
 		Application(Application &app) = delete;
 		Application &operator=(Application &app) = delete;
@@ -47,6 +49,8 @@ namespace core
 
 	public:
 		int Run(int argc, char **argv, const char *version, uint32_t width, uint32_t height, const char *title);
+
+		static float GetFPS();
 
 		virtual bool OnInitialize() { return true; }
 		virtual bool OnGui() { return true; }

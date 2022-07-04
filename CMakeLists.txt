@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.12)
 
 project(gl_test C CXX)
 
+# Set standard
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+
 # Include cmake modules
 if(NOT DEFINED EMSCRIPTEN)
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")

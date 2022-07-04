@@ -12,7 +12,10 @@
 
 namespace w3d
 {
-    Menu::Menu() : mIsOpen(true), mProgram(nullptr) {}
+    Menu::Menu() : mIsOpen(true), mProgram(nullptr)
+    {
+        mModel = glm::mat4(1.f);
+    }
 
     Menu::~Menu() {}
 
@@ -21,10 +24,13 @@ namespace w3d
         mWidth = width;
         mHeight = height;
 
-        mBaseColor.SetWrapModeS(gl::Texture::WrapMode::CLAMP_TO_EDGE);
-        mBaseColor.SetWrapModeT(gl::Texture::WrapMode::CLAMP_TO_EDGE);
-        mBaseColor.SetMinFilterMode(gl::Texture::FilterMode::LINEAR);
-        mBaseColor.SetMagFilterMode(gl::Texture::FilterMode::LINEAR);
+        gl::Texture2D::Sampler sam;
+        sam.wrapS = gl::Texture::WrapMode::CLAMP_TO_EDGE;
+        sam.wrapT = gl::Texture::WrapMode::CLAMP_TO_EDGE;
+        sam.minFilter = gl::Texture::FilterMode::LINEAR;
+        sam.magFilter = gl::Texture::FilterMode::LINEAR;
+        mBaseColor.SetSampler(sam);
+
         mFBO.SetSize(mWidth, mHeight);
         mFBO.AttachTexture2D(gl::FrameBuffer::Attachment::COLOR0, &mBaseColor);
         // mBaseColor.GenerateMipmaps();
@@ -33,16 +39,12 @@ namespace w3d
         const float coef = 3.f;                  // Xmm per 1px
         float plane_w = (width * coef) / 1000.f; // convert from mm to m
         float plane_h = (height * coef) / 1000.f;
-        mPlane.Generate(plane_w, plane_h, 1.f, 1.f, util::Plane::Direction::OZ_POS);
-
-        mVBO.SetData(sizeof(util::Plane::Vertex) * mPlane.GetVertexCount(), mPlane.GetVertexData());
-        mEBO.Data(sizeof(uint32_t) * mPlane.GetIndicesCount(), mPlane.GetIndicesData(), gl::DataType::UNSIGNED_INT);
-        mVAO.AddVertexLayout(mVBO, {gl::VertexAttribute::Entry<glm::vec3>(), gl::VertexAttribute::Entry<glm::vec2>()});
-        mVAO.LinkIndexBuffer(mEBO);
+        mPlane.Generate(plane_w, plane_h, 1.f, 1.f, util::Plane<OPTIONS>::Direction::OZ_POS);
     }
 
     void Menu::Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun)
     {
+        mModel = model;
         ImVec2 mouse_pos = ImVec2(-1.f, -1.f);
         if (inputSource)
         {
@@ -82,6 +84,9 @@ namespace w3d
 
             ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
             ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
+
+            ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
             if (ImGui::Begin(name, &mIsOpen, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNav))
             {
                 ImDrawList *draw_list = ImGui::GetWindowDrawList();
@@ -98,7 +103,7 @@ namespace w3d
         mFBO.UnBind();
     }
 
-    void Menu::Draw(const glm::mat4 &model)
+    void Menu::Draw()
     {
         gl::Program *menu_prog = util::ResourceManager::GetShaders()->GetMenuProg();
         menu_prog->Use();
@@ -109,11 +114,10 @@ namespace w3d
             menu_prog->SetInt(menu_prog->Uniform("uAlbedo"), 0);
             mProgram = menu_prog;
         }
-        menu_prog->SetMatrix4(mUniformLocations.model, model);
+        menu_prog->SetMatrix4(mUniformLocations.model, mModel);
         mBaseColor.Activate(0);
-        mVAO.Bind();
         gl::Pipeline::EnableBlending();
-        gl::Render::DrawIndices(gl::Primitive::TRIANGLES, mPlane.GetIndicesCount(), mEBO.GetDataType(), 0);
+        mPlane.Draw();
         gl::Pipeline::DisableBlending();
     }
 } // namespace w3d

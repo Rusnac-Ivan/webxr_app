@@ -10,7 +10,7 @@
 
 namespace util
 {
-    Controller::Controller(/* args */) :  mRayProgram(nullptr){}
+    Controller::Controller(/* args */) : mRayProgram(nullptr) {}
 
     Controller::~Controller() {}
 
@@ -21,23 +21,11 @@ namespace util
         mRayLength = ray_length;
         mPrism.Generate(ray_width);
 
-        mVertexCount = mPrism.GetVertexCount();
-
-        mVBO.SetData(mPrism.GetVertexCount() * sizeof(Vertex), mPrism.GetVertexData());
-        mVAO.AddVertexLayout(
-            mVBO,
-            {
-                gl::VertexAttribute::Entry<glm::vec3>(), // position
-                gl::VertexAttribute::Entry<glm::vec3>(), // normal
-                gl::VertexAttribute::Entry<glm::vec2>(), // uv0 coords
-                gl::VertexAttribute::Entry<glm::vec2>()  // uv1 coords
-            },
-            gl::VertexAttributeRate::PER_VERTEX);
     }
 
     void Controller::Draw(const glm::vec3 &pos, const glm::quat &orient)
     {
-        gl::Program* pbr_prog = util::ResourceManager::GetShaders()->GetPBRProg();
+        gl::Program *pbr_prog = util::ResourceManager::GetShaders()->GetPBRProg();
         pbr_prog->Use();
 
         glm::mat4 model = glm::translate(glm::mat4(1.f), pos) * glm::toMat4(orient);
@@ -56,8 +44,7 @@ namespace util
 
         gl::Pipeline::EnableBlending();
 
-        mVAO.Bind();
-        gl::Render::DrawVertices(gl::Primitive::TRIANGLES, mVertexCount, 0);
-        //gl::Pipeline::DisableBlending();
+        mPrism.Draw();
+        // gl::Pipeline::DisableBlending();
     }
 }

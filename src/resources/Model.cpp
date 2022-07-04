@@ -1,6 +1,8 @@
 #include "Model.h"
 #include <fstream>
 #include <vector>
+#include <utilities/Resources/ResourceManager.h>
+//#include <utilities/Shape/Vertex.h>
 
 #ifndef __EMSCRIPTEN__
 #ifdef __GNUC__
@@ -96,18 +98,7 @@ namespace rsrc
 
 		if (fileLoaded)
 		{
-			const tinygltf::Scene &scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
-
-			LoadTextures(gltfModel);
-			LoadMaterials(gltfModel);
-
-			mNodes.clear();
-			mNodes.resize(scene.nodes.size());
-			for (size_t i = 0; i < scene.nodes.size(); i++)
-			{
-				const tinygltf::Node node = gltfModel.nodes[scene.nodes[i]];
-				mNodes[i].LoadFromTinyGLTF(nullptr, node, mMaterials, scene.nodes[i], gltfModel, scale);
-			}
+			LoadGltfModel(gltfModel, scale);
 		}
 
 		mIsReady = true;
@@ -164,21 +155,48 @@ namespace rsrc
 
 		if (fileLoaded)
 		{
-			const tinygltf::Scene &scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
-
-			LoadTextures(gltfModel);
-			LoadMaterials(gltfModel);
-
-			mNodes.clear();
-			mNodes.resize(scene.nodes.size());
-			for (size_t i = 0; i < scene.nodes.size(); i++)
-			{
-				const tinygltf::Node node = gltfModel.nodes[scene.nodes[i]];
-				mNodes[i].LoadFromTinyGLTF(nullptr, node, mMaterials, scene.nodes[i], gltfModel, scale);
-			}
+			LoadGltfModel(gltfModel, scale);
 		}
 
 		mIsReady = true;
+	}
+
+	void Model::LoadGltfModel(tinygltf::Model &gltfModel, float scale)
+	{
+		const tinygltf::Scene &scene = gltfModel.scenes[gltfModel.defaultScene > -1 ? gltfModel.defaultScene : 0];
+
+		LoadTextures(gltfModel);
+		LoadMaterials(gltfModel);
+
+		std::vector<uint32_t> indexBuffer;
+		std::vector<rsrc::Vertex> vertexBuffer;
+
+		mNodes.clear();
+		mNodes.resize(scene.nodes.size());
+		for (size_t i = 0; i < scene.nodes.size(); i++)
+		{
+			const tinygltf::Node node = gltfModel.nodes[scene.nodes[i]];
+			mNodes[i].LoadFromTinyGLTF(nullptr, node, mMaterials, indexBuffer, vertexBuffer, scene.nodes[i], gltfModel, scale);
+		}
+
+		mVBO.SetData(sizeof(rsrc::Vertex) * vertexBuffer.size(), vertexBuffer.data());
+
+		mVAO.AddVertexLayout(
+			mVBO,
+			{
+				gl::VertexAttribute::Entry<glm::vec3>(), // position
+				gl::VertexAttribute::Entry<glm::vec3>(), // normal
+				gl::VertexAttribute::Entry<glm::vec2>(), // uv0 coords
+				gl::VertexAttribute::Entry<glm::vec2>()	 // uv1 coords
+			},
+			gl::VertexAttributeRate::PER_VERTEX);
+
+		if (indexBuffer.size() > 0)
+		{
+			mIBO = std::make_unique<gl::IndexBuffer>();
+			mIBO->Data(sizeof(uint32_t) * indexBuffer.size(), indexBuffer.data(), gl::DataType::UNSIGNED_INT);
+			mVAO.LinkIndexBuffer(*mIBO);
+		}
 	}
 
 	void Model::CalculateBoundingBox(Node *node, Node *parent)
@@ -196,9 +214,13 @@ namespace rsrc
 	{
 		if (mIsReady)
 		{
+			gl::Program *pbr_prog = util::ResourceManager::GetShaders()->GetPBRProg();
+			pbr_prog->Use();
+
+			mVAO.Bind();
 			for (auto &node : mNodes)
 			{
-				node.Draw(model);
+				node.Draw(pbr_prog, model);
 			}
 		}
 	}

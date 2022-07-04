@@ -2,6 +2,7 @@
 #define _RSRC_NODE_H_
 
 #include "Mesh.h"
+#include <string>
 #include <glm/gtc/quaternion.hpp>
 
 namespace tinygltf
@@ -23,7 +24,8 @@ namespace rsrc
 		std::string mName;
 		std::vector<Mesh> mMeshes;
 
-		glm::mat4 mTransform;
+		glm::mat4 mLocalMatrix;
+		glm::mat4 mGlobalMatrix;
 
 	public:
 		Node();
@@ -34,22 +36,32 @@ namespace rsrc
 		Node(Node &&) noexcept;
 		Node &operator=(Node &&) noexcept;
 
-		const glm::mat4 &GetLocalMatrix() { return mTransform; }
+		const glm::mat4 &GetLocalMatrix() { return mLocalMatrix; }
 
-		void LoadFromTinyGLTF(Node *parent, const tinygltf::Node &node, std::vector<Material> &materials, uint32_t nodeIndex, tinygltf::Model &model, float globalscale);
+		void LoadFromTinyGLTF(Node *parent,
+							  const tinygltf::Node &node,
+							  std::vector<Material> &materials,
+							  std::vector<uint32_t> &indexBuffer,
+							  std::vector<rsrc::Vertex> &vertexBuffer,
+							  uint32_t nodeIndex,
+							  tinygltf::Model &model,
+							  float globalscale);
 
-		void Draw(const glm::mat4& model);
+		void Draw(gl::Program *program, const glm::mat4 &model);
 
-		glm::mat4 GetGlobalMatrix() 
+		glm::mat4 GetGlobalMatrix()
 		{
 			glm::mat4 m = GetLocalMatrix();
-			Node* p = mParent;
-			while (p) {
+			Node *p = mParent;
+			while (p)
+			{
 				m = p->GetLocalMatrix() * m;
 				p = p->mParent;
 			}
 			return m;
 		}
+
+		void Update();
 
 	private:
 	};

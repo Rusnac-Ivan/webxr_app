@@ -16,7 +16,7 @@ namespace rsrc
 				   mFirstIndex(0),
 				   mIndexCount(0),
 				   mVertexCount(0),
-				   mTransform(glm::mat4(1.f))
+				   mHasIndices(false)
 	{
 	}
 
@@ -27,12 +27,6 @@ namespace rsrc
 										mIndexCount(other.mIndexCount),
 										mVertexCount(other.mVertexCount),
 										mMaterial(std::move(other.mMaterial)),
-										mVertices(std::move(other.mVertices)),
-										mIndices(std::move(other.mIndices)),
-										mVBO(std::move(other.mVBO)),
-										mIBO(std::move(other.mIBO)),
-										mVAO(std::move(other.mVAO)),
-										mTransform(std::move(other.mTransform)),
 										mAABB(std::move(other.mAABB))
 	{
 	}
@@ -43,12 +37,6 @@ namespace rsrc
 		mIndexCount = other.mIndexCount;
 		mVertexCount = other.mVertexCount;
 		mMaterial = std::move(other.mMaterial);
-		mVertices = std::move(other.mVertices);
-		mIndices = std::move(other.mIndices);
-		mVBO = std::move(other.mVBO);
-		mIBO = std::move(other.mIBO);
-		mVAO = std::move(other.mVAO);
-		mTransform = std::move(other.mTransform);
 		mAABB = std::move(other.mAABB);
 
 		return *this;
@@ -91,13 +79,17 @@ namespace rsrc
 		}
 	}
 
-	void Mesh::LoadFromTinyGLTF(tinygltf::Model &model, const tinygltf::Primitive &primitive, std::vector<Material> &materials, const glm::mat4 &transform)
+	void Mesh::LoadFromTinyGLTF(tinygltf::Model &model,
+								const tinygltf::Primitive &primitive,
+								std::vector<Material> &materials,
+								std::vector<uint32_t> &indexBuffer,
+								std::vector<rsrc::Vertex> &vertexBuffer)
 	{
-		mTransform = transform;
 
 		gl::Primitive mode = static_cast<gl::Primitive>(primitive.mode);
-		uint32_t indexStart = static_cast<uint32_t>(mIndices.size());
-		uint32_t vertexStart = static_cast<uint32_t>(mVertices.size());
+		mIndexStart = static_cast<uint32_t>(indexBuffer.size());
+		uint32_t vertexStart = static_cast<uint32_t>(vertexBuffer.size());
+		mVertexStart = vertexStart;
 		uint32_t byteOffset;
 
 		const float *bufferPos = nullptr;
@@ -156,13 +148,13 @@ namespace rsrc
 
 		for (size_t v = 0; v < posAccessor.count; v++)
 		{
-			util::Vertex vert{};
+			rsrc::Vertex vert{};
 			vert.pos = glm::vec4(glm::make_vec3(&bufferPos[v * posByteStride]), 1.0f);
 			vert.normal = glm::normalize(glm::vec3(bufferNorm ? glm::make_vec3(&bufferNorm[v * normByteStride]) : glm::vec3(0.0f)));
 			vert.uv0 = bufferTexCoordSet0 ? glm::make_vec2(&bufferTexCoordSet0[v * uv0ByteStride]) : glm::vec3(0.0f);
 			vert.uv1 = bufferTexCoordSet1 ? glm::make_vec2(&bufferTexCoordSet1[v * uv1ByteStride]) : glm::vec3(0.0f);
 
-			mVertices.push_back(vert);
+			vertexBuffer.push_back(vert);
 		}
 
 		if (primitive.indices > -1)
@@ -172,6 +164,10 @@ namespace rsrc
 			const tinygltf::Buffer &buffer = model.buffers[bufferView.buffer];
 
 			mIndexCount = static_cast<uint32_t>(accessor.count);
+
+			if (mIndexCount > 0)
+				mHasIndices = true;
+
 			const void *dataPtr = &(buffer.data[accessor.byteOffset + bufferView.byteOffset]);
 
 			switch (accessor.componentType)
@@ -181,7 +177,7 @@ namespace rsrc
 				const uint32_t *buf = static_cast<const uint32_t *>(dataPtr);
 				for (size_t index = 0; index < accessor.count; index++)
 				{
-					mIndices.push_back((uint32_t)(buf[index] + vertexStart));
+					indexBuffer.push_back(buf[index] + vertexStart);
 				}
 				break;
 			}
@@ -190,7 +186,7 @@ namespace rsrc
 				const uint16_t *buf = static_cast<const uint16_t *>(dataPtr);
 				for (size_t index = 0; index < accessor.count; index++)
 				{
-					mIndices.push_back((uint16_t)(buf[index] + vertexStart));
+					indexBuffer.push_back(buf[index] + vertexStart);
 				}
 				break;
 			}
@@ -199,7 +195,7 @@ namespace rsrc
 				const uint8_t *buf = static_cast<const uint8_t *>(dataPtr);
 				for (size_t index = 0; index < accessor.count; index++)
 				{
-					mIndices.push_back((uint8_t)(buf[index] + vertexStart));
+					indexBuffer.push_back(buf[index] + vertexStart);
 				}
 				break;
 			}
@@ -208,57 +204,32 @@ namespace rsrc
 			}
 		}
 
-		mVBO.SetData(sizeof(util::Vertex) * mVertices.size(), mVertices.data());
-
-		mVAO.AddVertexLayout(
-			mVBO,
-			{
-				gl::VertexAttribute::Entry<glm::vec3>(), // position
-				gl::VertexAttribute::Entry<glm::vec3>(), // normal
-				gl::VertexAttribute::Entry<glm::vec2>(), // uv0 coords
-				gl::VertexAttribute::Entry<glm::vec2>()	 // uv1 coords
-			},
-			gl::VertexAttributeRate::PER_VERTEX);
-
-		if (mIndices.size() > 0)
-		{
-			mIBO = std::make_unique<gl::IndexBuffer>();
-			mIBO->Data(sizeof(uint32_t) * mIndices.size(), mIndices.data(), gl::DataType::UNSIGNED_INT);
-			mVAO.LinkIndexBuffer(*mIBO);
-		}
-
 		mMaterial = primitive.material > -1 ? &(materials[primitive.material]) : &(materials.back());
-
-		mVertices.clear();
-		mIndices.clear();
 	}
 
-	void Mesh::Draw(const glm::mat4 &model)
+	void Mesh::Draw(gl::Program *program, const glm::mat4 &model)
 	{
-		gl::Program* pbr_prog = util::ResourceManager::GetShaders()->GetPBRProg();
-		pbr_prog->Use();
 
 		int base_color_unit = 0;
 		int metallic_roughness_unit = 1;
 		int normal_unit = 2;
 		int emissive_unit = 3;
 
-		if (mProgram != pbr_prog)
+		if (mProgram != program)
 		{
-			mUniformLocations.model = pbr_prog->Uniform("model");
-			mUniformLocations.uMaterState = pbr_prog->Uniform("uMaterState");
-			mUniformLocations.uTexMapSets = pbr_prog->Uniform("uTexMapSets");
+			mUniformLocations.model = program->Uniform("model");
+			mUniformLocations.uMaterState = program->Uniform("uMaterState");
+			mUniformLocations.uTexMapSets = program->Uniform("uTexMapSets");
 
 			// must set once
-			pbr_prog->SetInt(pbr_prog->Uniform("uBaseColorMap"), base_color_unit);
-			pbr_prog->SetInt(pbr_prog->Uniform("uMetallicRoughnessMap"), metallic_roughness_unit);
-			pbr_prog->SetInt(pbr_prog->Uniform("uNormalMap"), normal_unit);
-			pbr_prog->SetInt(pbr_prog->Uniform("uEmissiveMap"), emissive_unit);
-			mProgram = pbr_prog;
+			program->SetInt(program->Uniform("uBaseColorMap"), base_color_unit);
+			program->SetInt(program->Uniform("uMetallicRoughnessMap"), metallic_roughness_unit);
+			program->SetInt(program->Uniform("uNormalMap"), normal_unit);
+			program->SetInt(program->Uniform("uEmissiveMap"), emissive_unit);
+			mProgram = program;
 		}
 
-		pbr_prog->SetMatrix4(mUniformLocations.model, model * mTransform);
-
+		program->SetMatrix4(mUniformLocations.model, model);
 
 		if (mMaterial)
 		{
@@ -271,10 +242,10 @@ namespace rsrc
 				gl::Pipeline::DisableBlending();
 			}
 
-			//program->SetFloat4(program->Uniform("uBaseColorFactor"), mMaterial->GetBaseColorFactor());
-			//program->SetFloat(program->Uniform("uMetalnessFactor"), mMaterial->GetMetallicFactor());
-			//program->SetFloat(program->Uniform("uRoughnessFactor"), mMaterial->GetRoughnessFactor());
-			//program->SetFloat4(program->Uniform("uEmissiveFactor"), mMaterial->GetEmissiveFactor());
+			// program->SetFloat4(program->Uniform("uBaseColorFactor"), mMaterial->GetBaseColorFactor());
+			// program->SetFloat(program->Uniform("uMetalnessFactor"), mMaterial->GetMetallicFactor());
+			// program->SetFloat(program->Uniform("uRoughnessFactor"), mMaterial->GetRoughnessFactor());
+			// program->SetFloat4(program->Uniform("uEmissiveFactor"), mMaterial->GetEmissiveFactor());
 
 			gl::Texture2D *baseColorMap = mMaterial->GetTextureByMap(Material::MapType::BASE_COLOR);
 			gl::Texture2D *metallicRoughnessMap = mMaterial->GetTextureByMap(Material::MapType::METALLIC_ROUGHNESS);
@@ -286,38 +257,36 @@ namespace rsrc
 			material_state[1] = glm::vec4(mMaterial->GetMetallicFactor(), mMaterial->GetRoughnessFactor(), glm::vec2(0.f));
 			material_state[3] = mMaterial->GetEmissiveFactor();
 
-			pbr_prog->SetMatrix4(mUniformLocations.uMaterState, material_state);
+			program->SetMatrix4(mUniformLocations.uMaterState, material_state);
 
 			glm::ivec4 texMapSets = glm::ivec4(
 				mMaterial->GetTextureCoordSets(Material::MapType::BASE_COLOR),
 				mMaterial->GetTextureCoordSets(Material::MapType::METALLIC_ROUGHNESS),
 				mMaterial->GetTextureCoordSets(Material::MapType::NORMAL),
-				mMaterial->GetTextureCoordSets(Material::MapType::EMISSIVE)
-			);
+				mMaterial->GetTextureCoordSets(Material::MapType::EMISSIVE));
 
-			pbr_prog->SetInt4(mUniformLocations.uTexMapSets, texMapSets);
+			program->SetInt4(mUniformLocations.uTexMapSets, texMapSets);
 
-			//program->SetInt(program->Uniform("uBaseColorMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::BASE_COLOR));
+			// program->SetInt(program->Uniform("uBaseColorMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::BASE_COLOR));
 			if (baseColorMap)
 				baseColorMap->Activate(base_color_unit);
 
-			//program->SetInt(program->Uniform("uMetallicRoughnessMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::METALLIC_ROUGHNESS));
+			// program->SetInt(program->Uniform("uMetallicRoughnessMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::METALLIC_ROUGHNESS));
 			if (metallicRoughnessMap)
 				metallicRoughnessMap->Activate(metallic_roughness_unit);
 
-			//program->SetInt(program->Uniform("uNormalMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::NORMAL));
+			// program->SetInt(program->Uniform("uNormalMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::NORMAL));
 			if (normalMap)
 				normalMap->Activate(normal_unit);
 
-			//program->SetInt(program->Uniform("uEmissiveMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::EMISSIVE));
+			// program->SetInt(program->Uniform("uEmissiveMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::EMISSIVE));
 			if (emissiveMap)
 				emissiveMap->Activate(emissive_unit);
 		}
-		mVAO.Bind();
-		if (mIBO.get() != nullptr)
-			gl::Render::DrawIndices(mPrimitiveMode, mIndexCount, gl::DataType::UNSIGNED_INT, 0);
+
+		if (mHasIndices)
+			gl::Render::DrawIndices(mPrimitiveMode, mIndexCount, gl::DataType::UNSIGNED_INT, mIndexStart);
 		else
-			gl::Render::DrawVertices(mPrimitiveMode, mVertexCount, 0);
-		mVAO.UnBind();
+			gl::Render::DrawVertices(mPrimitiveMode, mVertexCount, mVertexStart);
 	}
 }

@@ -19,6 +19,8 @@ typedef void *WebXRInputSource;
 
 namespace w3d
 {
+    constexpr util::Attrib::underlying_type OPTIONS = util::Attrib::POS | util::Attrib::UV;
+
     class Menu
     {
         struct UniformLocations
@@ -31,10 +33,6 @@ namespace w3d
         using ComposeFun = void (*)();
 
     private:
-        gl::VertexBuffer mVBO;
-        gl::VertexArray mVAO;
-        gl::IndexBuffer mEBO;
-
         gl::Program *mProgram;
 
         gl::FrameBuffer mFBO;
@@ -45,7 +43,9 @@ namespace w3d
 
         bool mIsOpen;
 
-        util::Plane mPlane;
+        util::Plane<OPTIONS> mPlane;
+
+        glm::mat4 mModel;
 
     public:
         Menu();
@@ -54,7 +54,7 @@ namespace w3d
         void Create(float width, float height);
 
         void Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun);
-        void Draw(const glm::mat4 &model);
+        void Draw();
     };
 
 }

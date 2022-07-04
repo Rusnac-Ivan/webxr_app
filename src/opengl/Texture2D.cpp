@@ -110,27 +110,17 @@ namespace gl
 		UnBind();
 	}
 
-	void Texture2D::SetWrapModeS(WrapMode mode)
+	void Texture2D::SetSampler(const Sampler& sampler)
 	{
-		mWrapModeS = mode;
-		Texture::SetIntParameter(mTarget, Parameter::WRAP_S, ParamValue(mWrapModeS));
-	}
+		mWrapModeS = sampler.wrapS;
+		mWrapModeT = sampler.wrapT;
+		mMinFilterMode = sampler.minFilter;
+		mMagFilterMode = sampler.magFilter;
 
-	void Texture2D::SetWrapModeT(WrapMode mode)
-	{
-		mWrapModeT = mode;
-		Texture::SetIntParameter(mTarget, Parameter::WRAP_T, ParamValue(mWrapModeT));
-	}
-
-	void Texture2D::SetMinFilterMode(FilterMode mode)
-	{
-		mMinFilterMode = mode;
-		Texture::SetIntParameter(mTarget, Parameter::MIN_FILTER, ParamValue(mMinFilterMode));
-	}
-
-	void Texture2D::SetMagFilterMode(FilterMode mode)
-	{
-		mMagFilterMode = mode;
-		Texture::SetIntParameter(mTarget, Parameter::MAG_FILTER, ParamValue(mMagFilterMode));
+		Bind();
+		GL(TexParameteri(static_cast<GLenum>(mTarget), static_cast<GLenum>(Parameter::WRAP_S), static_cast<GLint>(mWrapModeS)));
+		GL(TexParameteri(static_cast<GLenum>(mTarget), static_cast<GLenum>(Parameter::WRAP_T), static_cast<GLint>(mWrapModeT)));
+		GL(TexParameteri(static_cast<GLenum>(mTarget), static_cast<GLenum>(Parameter::MIN_FILTER), static_cast<GLint>(mMinFilterMode)));
+		GL(TexParameteri(static_cast<GLenum>(mTarget), static_cast<GLenum>(Parameter::MAG_FILTER), static_cast<GLint>(mMagFilterMode)));
 	}
 }

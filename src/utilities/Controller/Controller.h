@@ -18,23 +18,19 @@ namespace util
         };
         UniformLocations mUniformLocations;
 
-        gl::Program* mRayProgram;
+        gl::Program *mRayProgram;
 
         rsrc::Model mModel;
-        util::Prism mPrism;
+        util::Prism<util::Attrib::POS> mPrism;
 
         float mRayLength;
 
-        gl::VertexBuffer mVBO;
-        gl::VertexArray mVAO;
-
-        uint32_t mVertexCount;
 
     public:
         Controller(/* args */);
         ~Controller();
 
-        void Create(const char* path, float ray_length, float ray_width);
+        void Create(const char *path, float ray_length, float ray_width);
         float GetProgress() { return mModel.GetProgress(); }
 
         void Draw(const glm::vec3 &pos, const glm::quat &orient);

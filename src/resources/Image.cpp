@@ -172,21 +172,32 @@ namespace rsrc
 
 		if (sampler_idx == -1)
 		{
-			mTexture.SetMinFilterMode(gl::Texture::FilterMode::LINEAR);
-			mTexture.SetMagFilterMode(gl::Texture::FilterMode::LINEAR);
-			mTexture.SetWrapModeS(gl::Texture::WrapMode::CLAMP_TO_EDGE);
-			mTexture.SetWrapModeT(gl::Texture::WrapMode::CLAMP_TO_EDGE);
+			gl::Texture2D::Sampler sam;
+			sam.wrapS = gl::Texture::WrapMode::CLAMP_TO_EDGE;
+			sam.wrapT = gl::Texture::WrapMode::CLAMP_TO_EDGE;
+			sam.minFilter = gl::Texture::FilterMode::LINEAR;
+			sam.magFilter = gl::Texture::FilterMode::LINEAR;
+			mTexture.SetSampler(sam);
 		}
 		else
 		{
 			tinygltf::Sampler &sampler = samplers[sampler_idx];
-			
-			mTexture.SetMinFilterMode(static_cast<gl::Texture::FilterMode>(sampler.minFilter > -1 ? sampler.minFilter : GL_LINEAR));
-			mTexture.SetMagFilterMode(static_cast<gl::Texture::FilterMode>(sampler.magFilter > -1 ? sampler.magFilter : GL_LINEAR));
-			mTexture.SetWrapModeS(static_cast<gl::Texture::WrapMode>(sampler.wrapS));
-			mTexture.SetWrapModeT(static_cast<gl::Texture::WrapMode>(sampler.wrapT));
+
+			gl::Texture2D::Sampler sam;
+			sam.wrapS = static_cast<gl::Texture::WrapMode>(sampler.wrapS);
+			sam.wrapT = static_cast<gl::Texture::WrapMode>(sampler.wrapT);
+			sam.minFilter = static_cast<gl::Texture::FilterMode>(sampler.minFilter > -1 ? sampler.minFilter : GL_LINEAR);
+			sam.magFilter = static_cast<gl::Texture::FilterMode>(sampler.magFilter > -1 ? sampler.magFilter : GL_LINEAR);
+			mTexture.SetSampler(sam);
 		}
 
-		mTexture.GenerateMipmaps();
+		if (mTexture.GetMinFilterMode() == gl::Texture::FilterMode::LINEAR_MIPMAP_LINEAR ||
+			mTexture.GetMinFilterMode() == gl::Texture::FilterMode::LINEAR_MIPMAP_NEAREST ||
+			mTexture.GetMinFilterMode() == gl::Texture::FilterMode::NEAREST_MIPMAP_LINEAR ||
+			mTexture.GetMinFilterMode() == gl::Texture::FilterMode::NEAREST_MIPMAP_NEAREST)
+		{
+			mTexture.GenerateMipmaps();
+		}
+			
 	}
 }

@@ -3,9 +3,14 @@
 
 #include <vector>
 #include <utilities/BoundingObjects/AABB.h>
-#include <opengl/Texture.h>
+#include <opengl/VertexBuffer.h>
+#include <opengl/VertexArray.h>
+#include <opengl/IndexBuffer.h>
+#include <opengl/VertexAttribute.h>
+#include <opengl/Texture2D.h>
 #include <opengl/Program.h>
 #include <string>
+#include <memory>
 #include <cstdint>
 
 namespace tinygltf
@@ -22,21 +27,19 @@ namespace rsrc
 
 	class Model
 	{
-		struct TextureSampler
-		{
-			gl::Texture::FilterMode magFilter;
-			gl::Texture::FilterMode minFilter;
-			gl::Texture::WrapMode wrapS;
-			gl::Texture::WrapMode wrapT;
-		};
+		
 
 		std::vector<Node> mNodes;
 		util::AABB mAABB;
 
-		std::vector<TextureSampler> mSamplers;
+		std::vector<gl::Texture2D::Sampler> mSamplers;
 		std::vector<Mesh> mMeshes;
 		std::vector<Image> mTextures;
 		std::vector<Material> mMaterials;
+
+		gl::VertexBuffer mVBO;
+		std::unique_ptr<gl::IndexBuffer> mIBO;
+		gl::VertexArray mVAO;
 
 		bool mIsBinary;
 
@@ -63,6 +66,8 @@ namespace rsrc
 
 		void LoadFromFile(std::string filename, float scale = 1.0f);
 		void LoadFromMemoryTinyGLTF(const uint8_t *data, size_t dataSize, bool is_binary, float scale = 1.0f);
+
+		void LoadGltfModel(tinygltf::Model& gltfModel, float scale);
 	};
 
 }

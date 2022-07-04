@@ -5,13 +5,11 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-
 namespace rsrc
 {
-	Node::Node() :
-		mParent(nullptr),
-		mIndex(-1),
-		mTransform(1.f)
+	Node::Node() : mParent(nullptr),
+				   mIndex(-1),
+				   mLocalMatrix(1.f)
 	{
 	}
 
@@ -19,23 +17,22 @@ namespace rsrc
 	{
 	}
 
-	Node::Node(Node&& other) noexcept :
-		mParent(other.mParent),
-		mName(std::move(other.mName)),
-		mIndex(other.mIndex),
-		mTransform(std::move(other.mTransform)),
-		mMeshes(std::move(other.mMeshes)),
-		mChildrens(std::move(mChildrens))
+	Node::Node(Node &&other) noexcept : mParent(other.mParent),
+										mName(std::move(other.mName)),
+										mIndex(other.mIndex),
+										mLocalMatrix(std::move(other.mLocalMatrix)),
+										mMeshes(std::move(other.mMeshes)),
+										mChildrens(std::move(mChildrens))
 	{
 		other.mParent = nullptr;
 		other.mIndex = -1;
 	}
-	Node& Node::operator=(Node&& other) noexcept
+	Node &Node::operator=(Node &&other) noexcept
 	{
 		mParent = other.mParent;
 		mName = std::move(other.mName);
 		mIndex = other.mIndex;
-		mTransform = std::move(other.mTransform);
+		mLocalMatrix = std::move(other.mLocalMatrix);
 		mMeshes = std::move(mMeshes);
 		mChildrens = std::move(mChildrens);
 
@@ -45,21 +42,34 @@ namespace rsrc
 		return *this;
 	}
 
-	void Node::LoadFromTinyGLTF(Node* parent, const tinygltf::Node& node, std::vector<Material>& materials, uint32_t nodeIndex, tinygltf::Model& model, float globalscale)
+	void Node::LoadFromTinyGLTF(Node *parent,
+								const tinygltf::Node &node,
+								std::vector<Material> &materials,
+								std::vector<uint32_t> &indexBuffer,
+								std::vector<rsrc::Vertex> &vertexBuffer,
+								uint32_t nodeIndex,
+								tinygltf::Model &model,
+								float globalscale)
 	{
 		this->mIndex = nodeIndex;
 		this->mParent = parent;
 		this->mName = node.name;
-		this->mTransform = glm::mat4(1.0f);
+		this->mLocalMatrix = glm::mat4(1.0f);
 
 		// Generate local node matrix
 		glm::vec3 translation = glm::vec3(0.0f);
 		if (node.translation.size() == 3)
 			translation = glm::make_vec3(node.translation.data());
-		
-		glm::quat q = glm::quat(1.f, 0.f, 0.f, 0.0f);
+
+		glm::quat rotation = glm::identity<glm::quat>();
 		if (node.rotation.size() == 4)
-			q = glm::make_quat(node.rotation.data());
+		{
+			rotation.x = static_cast<float>(node.rotation[0]);
+			rotation.y = static_cast<float>(node.rotation[1]);
+			rotation.z = static_cast<float>(node.rotation[2]);
+			rotation.w = static_cast<float>(node.rotation[3]);
+			// rotation = glm::make_quat(node.rotation.data());
+		}
 
 		glm::vec3 scale = glm::vec3(1.0f);
 		if (node.scale.size() == 3)
@@ -69,7 +79,11 @@ namespace rsrc
 		if (node.matrix.size() == 16)
 			matrix = glm::make_mat4x4(node.matrix.data());
 
-		this->mTransform = glm::translate(glm::mat4(1.0f), translation) * glm::toMat4(q) * glm::scale(glm::mat4(1.0f), scale) * matrix;
+		// glm::mat4 m = glm::translate(glm::mat4(1.0f), translation)* glm::mat4(rotation)* glm::scale(glm::mat4(1.0f), scale) * matrix;
+		// make node local transform matrix
+		this->mLocalMatrix = glm::translate(glm::mat4(1.0f), translation) * glm::mat4(rotation) * glm::scale(glm::mat4(1.0f), scale) * matrix;
+
+		this->mGlobalMatrix = GetGlobalMatrix();
 
 		// Node with children
 		if (node.children.size() > 0)
@@ -77,7 +91,7 @@ namespace rsrc
 			mChildrens.resize(node.children.size());
 			for (size_t i = 0; i < node.children.size(); i++)
 			{
-				mChildrens[i].LoadFromTinyGLTF(this, model.nodes[node.children[i]], materials, node.children[i], model, globalscale);
+				mChildrens[i].LoadFromTinyGLTF(this, model.nodes[node.children[i]], materials, indexBuffer, vertexBuffer, node.children[i], model, globalscale);
 			}
 		}
 
@@ -90,23 +104,29 @@ namespace rsrc
 			mMeshes.resize(mesh.primitives.size());
 			for (size_t j = 0; j < mesh.primitives.size(); j++)
 			{
-				const tinygltf::Primitive& primitive = mesh.primitives[j];
+				const tinygltf::Primitive &primitive = mesh.primitives[j];
 
-				mMeshes[j].LoadFromTinyGLTF(model, primitive, materials, GetGlobalMatrix());
+				mMeshes[j].LoadFromTinyGLTF(model, primitive, materials, indexBuffer, vertexBuffer);
 			}
 		}
 	}
 
-	void Node::Draw(const glm::mat4& model)
+	/*void Node::Update()
 	{
-		for (auto& mesh : mMeshes)
+		mGlobalMatrix = GetGlobalMatrix();
+
+		for (auto& child : mChildrens)
+			child.Update();
+	}*/
+
+	void Node::Draw(gl::Program *program, const glm::mat4 &model)
+	{
+		for (auto &mesh : mMeshes)
 		{
-			mesh.Draw(model);
+			mesh.Draw(program, model * mGlobalMatrix);
 		}
 
-		for (auto& node : mChildrens)
-		{
-			node.Draw(model);
-		}
+		for (auto &child : mChildrens)
+			child.Draw(program, model);
 	}
 }

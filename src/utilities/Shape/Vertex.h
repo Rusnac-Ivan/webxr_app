@@ -4,7 +4,7 @@
 
 namespace util
 {
-	struct Vertex
+	/*struct Vertex
 	{
 		glm::vec3 pos;
 		glm::vec3 normal;
@@ -12,7 +12,7 @@ namespace util
 		glm::vec2 uv1;
 		//glm::vec4 joint;
 		//glm::vec4 weight;
-	};
+	};*/
 }
 
 #endif

@@ -90,8 +90,6 @@ namespace rsrc
 			glm::vec4 GetBaseColorFactor() const { return mBaseColorFactor; }
 			glm::vec4 GetEmissiveFactor() const { return mEmissiveFactor; }
 
-			
-			
 			float GetGlossinessFactor() const { return mExtension.glossinessFactor; }
 			glm::vec4 GetDiffuseFactor() const { return mExtension.diffuseFactor; }
 			glm::vec3 GetSpecularFactor() const { return mExtension.specularFactor; }

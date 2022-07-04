@@ -7,6 +7,14 @@ namespace gl
 {
 	class Texture2D : public Texture
 	{
+		public:
+			struct Sampler
+			{
+				gl::Texture::FilterMode magFilter;
+				gl::Texture::FilterMode minFilter;
+				gl::Texture::WrapMode wrapS;
+				gl::Texture::WrapMode wrapT;
+			};
 		private:
 			static constexpr Type mTarget = Type::TARGET_2D;
 
@@ -29,10 +37,12 @@ namespace gl
 			Texture2D(Texture2D&&) noexcept;
 			Texture2D& operator=(Texture2D&&) noexcept;
 
-			void SetWrapModeS(WrapMode mode);
-			void SetWrapModeT(WrapMode mode);
-			void SetMinFilterMode(FilterMode mode);
-			void SetMagFilterMode(FilterMode mode);
+			//void SetWrapModeS(WrapMode mode);
+			//void SetWrapModeT(WrapMode mode);
+			//void SetMinFilterMode(FilterMode mode);
+			//void SetMagFilterMode(FilterMode mode);
+
+			void SetSampler(const Sampler& sampler);
 
 			WrapMode GetWrapModeS() const { return mWrapModeS; }
 			WrapMode GetWrapModeT() const { return mWrapModeT; }

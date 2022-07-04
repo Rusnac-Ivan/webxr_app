@@ -107,11 +107,17 @@ namespace gl
 
 	inline void Render::DrawIndices(Primitive primitive, size_t indexCount, DataType type, size_t indexOffset)
 	{
-		GL(DrawElements(
+		/*GL(DrawElements(
 			static_cast<GLenum>(primitive),
 			indexCount,
 			static_cast<GLenum>(type),
 			(const void*)(indexOffset * DataSize(type))
+		));*/
+		GL(DrawElements(
+			static_cast<GLenum>(primitive),
+			indexCount,
+			static_cast<GLenum>(type),
+			BUFFER_OFFSET(indexOffset * DataSize(type))
 		));
 	}
 

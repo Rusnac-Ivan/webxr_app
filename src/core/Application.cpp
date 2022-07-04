@@ -11,7 +11,10 @@
 
 namespace core
 {
+	float Application::mFPS = 0.f;
 	static Application *thiz = nullptr;
+
+	float Application::GetFPS() { return mFPS; }
 
 	void Application::KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -84,6 +87,8 @@ namespace core
 	Application::Application() : mIsSync(false)
 	{
 		thiz = this;
+		mFPS = 0.f;
+		Time = 0.f;
 	}
 
 	Application::~Application()
@@ -182,7 +187,7 @@ namespace core
 		imFontConf.FontDataOwnedByAtlas = false;
 
 		//ImFont* font = io.Fonts->AddFontFromMemoryTTF(__roboto_medium_ttf, __roboto_medium_ttf_len, 17.f, &imFontConf);
-		ImFont* font = io.Fonts->AddFontFromMemoryTTF(__Helvetica_ttf, __Helvetica_ttf_len, 17.f, &imFontConf);
+		ImFont* font = io.Fonts->AddFontFromMemoryTTF(__Helvetica_ttf, __Helvetica_ttf_len, 16.f, &imFontConf);
 		
 		//ImGui::MergeIconsWithLatestFont(17.f, false);
 		//io.Fonts->AddFontDefault(&imFontConf);
@@ -241,6 +246,12 @@ namespace core
 	{
 		Application *app = reinterpret_cast<Application *>(_arg);
 
+		static double curr = 0.f;
+		static double prev = curr;
+		curr = glfwGetTime();
+		Application::mFPS = 1.0 / (curr - prev);
+		prev = curr;
+
 		if (!app->mIsSync)
 		{
 			glfwSwapInterval(1); // Enable vsync
@@ -269,6 +280,13 @@ namespace core
 		}
 
 		{ // render menu
+
+			// Setup time step
+			ImGuiIO& io = ImGui::GetIO();
+			double current_time = glfwGetTime();
+			io.DeltaTime = app->Time > 0.0 ? (float)(current_time - app->Time) : (float)(1.0f / 60.0f);
+			app->Time = current_time;
+
 			app->OnGui();
 		}
 

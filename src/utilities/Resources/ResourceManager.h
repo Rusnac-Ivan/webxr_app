@@ -7,6 +7,8 @@
 #include <resources/Model.h>
 #include <utilities/Controller/Controller.h>
 #include <widgets3d/Menu.h>
+#include <widgets3d/Video2D.h>
+#include <widgets3d/Video3D.h>
 
 namespace util
 {
@@ -19,6 +21,8 @@ namespace util
         static std::unique_ptr<rsrc::Model> mModel1;
         static std::unique_ptr<util::Controller> mController;
         static std::unique_ptr<w3d::Menu> mMenu;
+        static std::unique_ptr<w3d::Video2D> mVideo2D;
+        static std::unique_ptr<w3d::Video3D> mVideo3D;
 
         ResourceManager();
         ~ResourceManager();
@@ -33,6 +37,8 @@ namespace util
         static rsrc::Shaders *GetShaders();
         static util::Controller *GetController();
         static w3d::Menu *GetW3DMenu();
+        static w3d::Video2D *GetW3DVideo2D();
+        static w3d::Video3D *GetW3DVideo3D();
 
         static float GetProgress();
     };

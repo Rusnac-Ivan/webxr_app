@@ -9,6 +9,8 @@ namespace util
     std::unique_ptr<rsrc::Model> ResourceManager::mModel;
     std::unique_ptr<rsrc::Model> ResourceManager::mModel1;
     std::unique_ptr<w3d::Menu> ResourceManager::mMenu;
+    std::unique_ptr<w3d::Video2D> ResourceManager::mVideo2D;
+    std::unique_ptr<w3d::Video3D> ResourceManager::mVideo3D;
 
     ResourceManager::ResourceManager()
     {
@@ -20,6 +22,8 @@ namespace util
     rsrc::Model *ResourceManager::GetModel1() { return mModel1.get(); }
     rsrc::Shaders *ResourceManager::GetShaders() { return mShaders.get(); }
     w3d::Menu *ResourceManager::GetW3DMenu() { return mMenu.get(); }
+    w3d::Video2D *ResourceManager::GetW3DVideo2D() { return mVideo2D.get(); }
+    w3d::Video3D *ResourceManager::GetW3DVideo3D() { return mVideo3D.get(); }
 
     util::Controller *ResourceManager::GetController()
     {
@@ -42,8 +46,8 @@ namespace util
         mCubeMap->Load(std::string(path + "/cube_maps/yokohama/").c_str());
 
         // loads models
-        mModel = std::make_unique<rsrc::Model>();
-        mModel->Load(std::string(path + "/models/mini.glb").c_str());
+        // mModel = std::make_unique<rsrc::Model>();
+        // mModel->Load(std::string(path + "/models/Range_Rover.glb").c_str());
 
         // mModel1 = std::make_unique<rsrc::Model>();
         // mModel1->Load(std::string(path + "/models/mini.glb").c_str());
@@ -56,6 +60,14 @@ namespace util
 
         mMenu = std::make_unique<w3d::Menu>();
         mMenu->Create(500, 700);
+
+        mVideo2D = std::make_unique<w3d::Video2D>();
+        mVideo2D->Create("./resources/video/2d/test_2d_vid.mp4");
+
+        // mVideo3D = std::make_unique<w3d::Video3D>();
+        //  mVideo3D->Create(10.f, "./resources/video/3d/test_3d_vid.mp4");
+        //  mVideo3D->Create("./resources/video/3d/test_3d_vid.mp4");
+        //  mVideo3D->Create("https://vimeo.com/215984159");
     }
     void ResourceManager::OnFinalize()
     {
@@ -65,6 +77,8 @@ namespace util
         mModel1.release();
         mController.release();
         mMenu.release();
+        mVideo2D.release();
+        mVideo3D.release();
     }
 
     float ResourceManager::GetProgress()

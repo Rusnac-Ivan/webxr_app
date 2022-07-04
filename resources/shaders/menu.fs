@@ -7,10 +7,26 @@ out vec4 FragColor;
 in vec3 WorldPos;
 in vec2 UV;
 
+uniform bool uIsVideo;
+
 uniform sampler2D uAlbedo;
 
 void main()
 {
-    FragColor = texture(uAlbedo, UV);
-    //FragColor = vec4(UV, 0.0, 0.5);
+    vec4 col = texture(uAlbedo, UV);
+    
+    if(uIsVideo)
+    {
+        float alpha = 0.5;
+        
+        float rbAverage = (col.r + col.b) * alpha;
+        float gDelta = max(0.0, col.g - rbAverage);
+        
+        col.a = 1.0 - smoothstep(0.0, 0.3, gDelta);
+        
+        col.a = col.a * col.a;
+
+    }
+    
+    FragColor = col;
 }

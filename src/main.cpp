@@ -13,6 +13,7 @@
 #include <utilities/Controller/Controller.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
+#include <widgets3d/ImGui_Impl_2d_to_3d.h>
 
 class MyApp : public core::Application
 {
@@ -49,7 +50,7 @@ public:
 
 	virtual bool OnInitialize()
 	{
-		mCamera.SetViewState(glm::vec3(0.f, 0.5f, 2.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -1.f));
+		mCamera.SetViewState(glm::vec3(0.f, 0.f, 2.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -1.f));
 
 		printf("MyApp::OnInitialize\n");
 		util::ResourceManager::OnInitialize();
@@ -63,46 +64,59 @@ public:
 	};
 	virtual bool OnGui()
 	{
-		mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f));
+		/*ImGui_Impl_2d_to_3d_NewFrame(ImVec2(GetWidth(), GetHeight()), ImVec2(-1.f, -1.f));
+		ImGui::NewFrame();
+
+		ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
+		ImGui::SetNextWindowSize(ImVec2(300.f, 300.f), ImGuiCond_Always);
+		ImGui::Begin("Other Context", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration);
+		{
+			// ImGui::PushFont(mDefaultFont);
+			static float FPS[100] = {};
+
+			float fps = GetFPS();
+
+			float average_fps = 0.f;
+			for (uint32_t i = 1; i < 100; i++)
+			{
+				FPS[i - 1] = FPS[i];
+				FPS[99] = fps;
+				average_fps += FPS[i] / 100.f;
+			}
+
+			if (average_fps > 50.f)
+			{
+				ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.7f, 0.f, 0.5f));
+			}
+			else if (average_fps > 20.f)
+			{
+				ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.7f, 0.f, 0.5f));
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.f, 0.f, 0.5f));
+			}
+
+			char text[128] = {};
+
+			sprintf(text, "FPS: %.3f", average_fps);
+			ImGui::Text("%-64s", text);
+
+			ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 30.f);
+			ImGui::PlotLines("##Frame Times", &FPS[0], 100);
+
+			ImGui::PopStyleColor();
+		}
+		ImGui::End();
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());*/
+
+		mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, 0.f));
 		util::ResourceManager::GetW3DMenu()
-			->Compose(mInputSource, mMenuModel, "3DMenu",
+			->Compose(mInputSource, glm::mat4(1.f), "3DMenu",
 					  []()
 					  {
-						  // ImGui::PushFont(mDefaultFont);
-						  static float FPS[100] = {};
-						  float fps = (*GImGui).IO.Framerate;
-
-						  float average_fps = 0.f;
-						  for (uint32_t i = 1; i < 100; i++)
-						  {
-							  FPS[i - 1] = FPS[i];
-							  FPS[99] = fps;
-							  average_fps += FPS[i] / 100.f;
-						  }
-
-						  if (average_fps > 50.f)
-						  {
-							  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.7f, 0.f, 0.5f));
-						  }
-						  else if (average_fps > 20.f)
-						  {
-							  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.7f, 0.f, 0.5f));
-						  }
-						  else
-						  {
-							  ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.f, 0.f, 0.5f));
-						  }
-
-						  char text[128] = {};
-
-						  sprintf(text, "FPS: %.3f", average_fps);
-						  ImGui::Text("%-64s", text);
-
-						  ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 30.f);
-						  ImGui::PlotLines("##Frame Times", &FPS[0], 100);
-
-						  ImGui::PopStyleColor();
-
 						  if (ImGui::Button("Ok", ImVec2(90.f, 30.f)))
 						  {
 							  printf("Button Ok\n");
@@ -375,10 +389,12 @@ public:
 		gl::Render::Clear(gl::BufferBit::COLOR, gl::BufferBit::DEPTH);
 #ifndef __EMSCRIPTEN__
 		util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), mCamera.GetViewMat(), mCamera.GetProjectionMat());
-		util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 0.f)));
+		glm::mat4 model = glm::scale(glm::mat4(1.f), glm::vec3(0.25f, 0.25f, 0.25f));
+		// util::ResourceManager::GetModel()->Draw(glm::translate(model, glm::vec3(0.f, -0.5f, 0.f)));
 
 		util::ResourceManager::GetController()->Draw(glm::vec3(0.f, 0.f, 0.f), glm::quat(1.f, 0.f, 0.f, 0.f));
-		util::ResourceManager::GetW3DMenu()->Draw(glm::mat4(1.f));
+		// util::ResourceManager::GetW3DMenu()->Draw();
+		util::ResourceManager::GetW3DVideo3D()->Draw(glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f)));
 #else
 		const WebXRRigidTransform &headPose = WebXR::GetHeadPose();
 
@@ -396,11 +412,14 @@ public:
 
 				util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), view.viewPose.matrix, view.projectionMatrix);
 
-				util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(-2.f, 0.f, 1.f)));
-				// util::ResourceManager::GetModel1()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 1.f)));
+				// util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(-2.f, 0.f, 1.f)));
+				//  util::ResourceManager::GetModel1()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 1.f)));
 
-				util::ResourceManager::GetW3DMenu()->Draw(mMenuModel);
-				// util::ResourceManager::GetW3DMenu()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f)));
+				// util::ResourceManager::GetW3DMenu()->Draw();
+				//  util::ResourceManager::GetW3DMenu()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f)));
+				// util::ResourceManager::GetW3DVideo3D()->Draw(glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f)));
+				// util::ResourceManager::GetW3DVideo3D()->Draw(glm::mat4(1.f));
+				util::ResourceManager::GetW3DVideo2D()->Draw(glm::mat4(1.f));
 
 				WebXRInputSource *inputSourceArray = nullptr;
 				uint32_t inputCount = 0;
