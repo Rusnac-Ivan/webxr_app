@@ -218,18 +218,16 @@ namespace rsrc
 		if (mProgram != program)
 		{
 			mUniformLocations.model = program->Uniform("model");
-			mUniformLocations.uMaterState = program->Uniform("uMaterState");
-			mUniformLocations.uTexMapSets = program->Uniform("uTexMapSets");
-			mUniformLocations.uIsLightMap = program->Uniform("uIsLightMap");
+			mUniformLocations.uBaseColorFactor = program->Uniform("uBaseColorFactor");
+			mUniformLocations.uBaseColorMapSet = program->Uniform("uBaseColorMapSet");
 
 			// must set once
 			program->SetInt(program->Uniform("uBaseColorMap"), base_color_unit);
-			program->SetInt(program->Uniform("uMetallicRoughnessMap"), metallic_roughness_unit);
-			program->SetInt(program->Uniform("uNormalMap"), normal_unit);
-			program->SetInt(program->Uniform("uEmissiveMap"), emissive_unit);
+			//program->SetInt(program->Uniform("uMetallicRoughnessMap"), metallic_roughness_unit);
+			//program->SetInt(program->Uniform("uNormalMap"), normal_unit);
+			//program->SetInt(program->Uniform("uEmissiveMap"), emissive_unit);
 			mProgram = program;
 		}
-		program->SetInt(mUniformLocations.uIsLightMap, 1);
 
 		program->SetMatrix4(mUniformLocations.model, model);
 
@@ -244,32 +242,32 @@ namespace rsrc
 				gl::Pipeline::DisableBlending();
 			}
 
-			// program->SetFloat4(program->Uniform("uBaseColorFactor"), mMaterial->GetBaseColorFactor());
+			program->SetFloat4(mUniformLocations.uBaseColorFactor, mMaterial->GetBaseColorFactor());
 			// program->SetFloat(program->Uniform("uMetalnessFactor"), mMaterial->GetMetallicFactor());
 			// program->SetFloat(program->Uniform("uRoughnessFactor"), mMaterial->GetRoughnessFactor());
 			// program->SetFloat4(program->Uniform("uEmissiveFactor"), mMaterial->GetEmissiveFactor());
 
 			gl::Texture2D *baseColorMap = mMaterial->GetTextureByMap(Material::MapType::BASE_COLOR);
-			gl::Texture2D *metallicRoughnessMap = mMaterial->GetTextureByMap(Material::MapType::METALLIC_ROUGHNESS);
-			gl::Texture2D *normalMap = mMaterial->GetTextureByMap(Material::MapType::NORMAL);
-			gl::Texture2D *emissiveMap = mMaterial->GetTextureByMap(Material::MapType::EMISSIVE);
+			gl::Texture2D* metallicRoughnessMap = nullptr;// mMaterial->GetTextureByMap(Material::MapType::METALLIC_ROUGHNESS);
+			gl::Texture2D *normalMap = nullptr;// mMaterial->GetTextureByMap(Material::MapType::NORMAL);
+			gl::Texture2D *emissiveMap = nullptr;// mMaterial->GetTextureByMap(Material::MapType::EMISSIVE);
 
-			glm::mat4 material_state(0.f);
+			/*glm::mat4 material_state(0.f);
 			material_state[0] = mMaterial->GetBaseColorFactor();
 			material_state[1] = glm::vec4(mMaterial->GetMetallicFactor(), mMaterial->GetRoughnessFactor(), glm::vec2(0.f));
-			material_state[3] = mMaterial->GetEmissiveFactor();
+			material_state[3] = mMaterial->GetEmissiveFactor();*/
 
-			program->SetMatrix4(mUniformLocations.uMaterState, material_state);
+			//program->SetMatrix4(mUniformLocations.uMaterState, material_state);
 
-			glm::ivec4 texMapSets = glm::ivec4(
+			/*glm::ivec4 texMapSets = glm::ivec4(
 				mMaterial->GetTextureCoordSets(Material::MapType::BASE_COLOR),
 				mMaterial->GetTextureCoordSets(Material::MapType::METALLIC_ROUGHNESS),
 				mMaterial->GetTextureCoordSets(Material::MapType::NORMAL),
-				mMaterial->GetTextureCoordSets(Material::MapType::EMISSIVE));
+				mMaterial->GetTextureCoordSets(Material::MapType::EMISSIVE));*/
 
-			program->SetInt4(mUniformLocations.uTexMapSets, texMapSets);
+			//program->SetInt4(mUniformLocations.uTexMapSets, texMapSets);
 
-			// program->SetInt(program->Uniform("uBaseColorMapSet"), mMaterial->GetTextureCoordSets(Material::MapType::BASE_COLOR));
+			program->SetInt(mUniformLocations.uBaseColorMapSet, mMaterial->GetTextureCoordSets(Material::MapType::BASE_COLOR));
 			if (baseColorMap)
 				baseColorMap->Activate(base_color_unit);
 

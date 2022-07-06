@@ -49,6 +49,7 @@ namespace w3d
 
     void Video3D::operator()(IEvent &event)
     {
+#ifdef __EMSCRIPTEN__
         em::MediaEvent &media_event = dynamic_cast<em::MediaEvent &>(event);
 
         if (media_event.GetType() == em::MediaEvent::Type::ON_CANPLAY)
@@ -75,6 +76,7 @@ namespace w3d
         else if (media_event.GetType() == em::MediaEvent::Type::ON_ENDED)
         {
         }
+#endif
     }
 
     void Video3D::Draw(const glm::mat4 &model)
@@ -178,10 +180,9 @@ namespace w3d
             menu_prog->SetMatrix4(mUniformLocations.model, model);
             menu_prog->SetInt(mUniformLocations.is_video, 1);
             mResultCol.Activate(0);
-            mVAO.Bind();
+           
             gl::Pipeline::EnableBlending();
-            //  printf("DrawIndices mSphere\n");
-            gl::Render::DrawIndices(gl::Primitive::LINE_STRIP, mSphere.GetIndicesCount(), mEBO.GetDataType(), 0);
+            mSphere.Draw();
             gl::Pipeline::DisableBlending();
             menu_prog->SetInt(mUniformLocations.is_video, 0);
         }

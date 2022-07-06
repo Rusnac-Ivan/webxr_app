@@ -13,9 +13,7 @@
 #include <utilities/Shape/Plane.h>
 #include <utilities/Emsc/webxr.h>
 
-#ifndef __EMSCRIPTEN__
-typedef void *WebXRInputSource;
-#endif
+
 
 namespace w3d
 {

@@ -36,9 +36,8 @@ namespace rsrc
 		struct UniformLocations
 		{
 			int32_t model = -1;
-			int32_t uMaterState = -1;
-			int32_t uTexMapSets = -1;
-			int32_t uIsLightMap = -1;
+			int32_t uBaseColorFactor = -1;
+			int32_t uBaseColorMapSet = -1;
 		};
 
 		UniformLocations mUniformLocations;

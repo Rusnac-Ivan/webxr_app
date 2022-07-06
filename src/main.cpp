@@ -24,9 +24,12 @@ private:
 		int32_t cubemap_prog_proj_view = -1;
 		int32_t ray_prog_proj_view = -1;
 		int32_t menu_prog_proj_view = -1;
+		int32_t light_map_prog_proj_view = -1;
 
 		int32_t pbr_prog_ligh_pos = -1;
 		int32_t pbr_prog_view_pos = -1;
+
+		
 	};
 	bool is_init_uniforms = false;
 	UniformLocations mUniformLocations;
@@ -342,6 +345,7 @@ public:
 		gl::Program *cubemap_prog = shaders->GetCubeMapProg();
 		gl::Program *ray_prog = shaders->GetRayProg();
 		gl::Program *menu_prog = shaders->GetMenuProg();
+		gl::Program* light_map_prog = shaders->GetLightMapProg();
 
 		pbr_prog->Use();
 		if (!is_init_uniforms)
@@ -349,6 +353,7 @@ public:
 			mUniformLocations.pbr_prog_proj_view = pbr_prog->Uniform("proj_view");
 			mUniformLocations.pbr_prog_ligh_pos = pbr_prog->Uniform("uLightPos");
 			mUniformLocations.pbr_prog_view_pos = pbr_prog->Uniform("uViewPos");
+			
 		}
 		pbr_prog->SetMatrix4(mUniformLocations.pbr_prog_proj_view, proj_view);
 		pbr_prog->SetFloat3(mUniformLocations.pbr_prog_view_pos, view_pos);
@@ -368,6 +373,11 @@ public:
 		if (!is_init_uniforms)
 			mUniformLocations.menu_prog_proj_view = menu_prog->Uniform("proj_view");
 		menu_prog->SetMatrix4(mUniformLocations.menu_prog_proj_view, proj_view);
+
+		light_map_prog->Use();
+		if (!is_init_uniforms)
+			mUniformLocations.light_map_prog_proj_view = light_map_prog->Uniform("proj_view");
+		light_map_prog->SetMatrix4(mUniformLocations.light_map_prog_proj_view, proj_view);
 
 		is_init_uniforms = true;
 	}
@@ -390,11 +400,11 @@ public:
 #ifndef __EMSCRIPTEN__
 		util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), mCamera.GetViewMat(), mCamera.GetProjectionMat());
 		glm::mat4 model = glm::scale(glm::mat4(1.f), glm::vec3(0.25f, 0.25f, 0.25f));
-		// util::ResourceManager::GetModel()->Draw(glm::translate(model, glm::vec3(0.f, -0.5f, 0.f)));
+		util::ResourceManager::GetModel()->Draw(glm::translate(model, glm::vec3(0.f, -0.5f, 0.f)));
 
 		util::ResourceManager::GetController()->Draw(glm::vec3(0.f, 0.f, 0.f), glm::quat(1.f, 0.f, 0.f, 0.f));
 		// util::ResourceManager::GetW3DMenu()->Draw();
-		util::ResourceManager::GetW3DVideo3D()->Draw(glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f)));
+		//util::ResourceManager::GetW3DVideo3D()->Draw(glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f)));
 #else
 		const WebXRRigidTransform &headPose = WebXR::GetHeadPose();
 

@@ -35,6 +35,7 @@ namespace w3d
 
     void Video2D::operator()(IEvent &event)
     {
+#ifdef __EMSCRIPTEN__
         em::MediaEvent &media_event = dynamic_cast<em::MediaEvent &>(event);
 
         if (media_event.GetType() == em::MediaEvent::Type::ON_CANPLAY)
@@ -65,6 +66,7 @@ namespace w3d
 
             mIsReady = true;
         }
+#endif
     }
 
     void Video2D::Draw(WebXRInputSource *inputSource, const glm::mat4 &model)
@@ -117,7 +119,7 @@ namespace w3d
 
                     ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
                     ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
-                    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, 0.f));
+                    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, 0.5f));
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
                     if (ImGui::Begin("Video", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))

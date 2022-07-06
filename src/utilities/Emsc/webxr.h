@@ -195,4 +195,8 @@ public:
 };
 
 #endif
-#endif //__EMSCRIPTEN__
+#else //__EMSCRIPTEN__
+#ifndef __EMSCRIPTEN__
+typedef void* WebXRInputSource;
+#endif
+#endif

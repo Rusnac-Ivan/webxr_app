@@ -10,7 +10,7 @@ namespace rsrc
 						   mMetallicFactor(0.1f),
 						   mRoughnessFactor(0.5f),
 						   mAlphaCutoff(0.5f),
-						   mBaseColorFactor(0.8),
+						   mBaseColorFactor(0.5),
 						   mEmissiveFactor(0.f)
 	{
 		for (uint32_t i = 0; i < MapType::COUNT; i++)
@@ -108,10 +108,10 @@ namespace rsrc
 
 	gl::Texture2D *Material::GetTextureByMap(MapType type)
 	{
-		Image* img = mAttachedMaps[type];
-		gl::Texture2D* tex = nullptr;
+		Image *img = mAttachedMaps[type];
+		gl::Texture2D *tex = nullptr;
 
-		if(img)
+		if (img)
 			tex = img->GetTexture();
 
 		return tex;

@@ -214,7 +214,7 @@ namespace rsrc
 	{
 		if (mIsReady)
 		{
-			gl::Program *pbr_prog = util::ResourceManager::GetShaders()->GetPBRProg();
+			gl::Program *pbr_prog = util::ResourceManager::GetShaders()->GetLightMapProg();
 			pbr_prog->Use();
 
 			mVAO.Bind();
