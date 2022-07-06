@@ -125,11 +125,11 @@ namespace em
 
     void Multimedia::AddListener(IEventListener *listener)
     {
-        mEventListeners.insert(listener);
+        mEventListeners.push_back(listener);
     }
     void Multimedia::RemoveListener(IEventListener *listener)
     {
-        mEventListeners.erase(listener);
+        mEventListeners.remove(listener);
     }
 
     void Multimedia::Notify(IEvent &event)

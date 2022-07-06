@@ -112,7 +112,7 @@ public:
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());*/
 
-		mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, 0.f));
+		/*mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, 0.f));
 		util::ResourceManager::GetW3DMenu()
 			->Compose(mInputSource, glm::mat4(1.f), "3DMenu",
 					  []()
@@ -165,7 +165,7 @@ public:
 							  ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
 						  }
 						  ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
-					  });
+					  });*/
 
 		float progress = util::ResourceManager::GetProgress();
 		// if (progress < 99.999f)
@@ -412,14 +412,14 @@ public:
 
 				util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), view.viewPose.matrix, view.projectionMatrix);
 
-				// util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(-2.f, 0.f, 1.f)));
+				util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, -1.f, -3.f)));
 				//  util::ResourceManager::GetModel1()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 1.f)));
 
 				// util::ResourceManager::GetW3DMenu()->Draw();
 				//  util::ResourceManager::GetW3DMenu()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f)));
 				// util::ResourceManager::GetW3DVideo3D()->Draw(glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f)));
 				// util::ResourceManager::GetW3DVideo3D()->Draw(glm::mat4(1.f));
-				util::ResourceManager::GetW3DVideo2D()->Draw(glm::mat4(1.f));
+				util::ResourceManager::GetW3DVideo2D()->Draw(mInputSource, glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.1f, -4.f)));
 
 				WebXRInputSource *inputSourceArray = nullptr;
 				uint32_t inputCount = 0;

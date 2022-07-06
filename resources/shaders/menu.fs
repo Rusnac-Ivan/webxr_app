@@ -16,16 +16,13 @@ void main()
     vec4 col = texture(uAlbedo, UV);
     
     if(uIsVideo)
-    {
-        float alpha = 0.5;
-        
-        float rbAverage = (col.r + col.b) * alpha;
+    {        
+        float rbAverage = (col.r + col.b) / 2.0;
         float gDelta = max(0.0, col.g - rbAverage);
         
-        col.a = 1.0 - smoothstep(0.0, 0.3, gDelta);
+        col.a = (1.0 - smoothstep(0.0, 0.2, gDelta)) * col.a;
         
         col.a = col.a * col.a;
-
     }
     
     FragColor = col;

@@ -13,6 +13,7 @@
 #include <utilities/Shape/Plane.h>
 #include <utilities/Emsc/Multimedia.h>
 #include <events/IEventListener.h>
+#include <utilities/Emsc/webxr.h>
 
 namespace w3d
 {
@@ -41,6 +42,8 @@ namespace w3d
 
         glm::mat4 mModel;
 
+        bool mIsReady;
+
 #ifdef __EMSCRIPTEN__
         em::Video mEMVideo;
 #endif
@@ -53,7 +56,7 @@ namespace w3d
 
         virtual void operator()(IEvent &event);
 
-        void Draw(const glm::mat4 &model);
+        void Draw(WebXRInputSource *inputSource, const glm::mat4 &model);
     };
 
 } // namespace w3d

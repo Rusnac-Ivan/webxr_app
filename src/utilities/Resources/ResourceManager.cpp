@@ -46,8 +46,8 @@ namespace util
         mCubeMap->Load(std::string(path + "/cube_maps/yokohama/").c_str());
 
         // loads models
-        // mModel = std::make_unique<rsrc::Model>();
-        // mModel->Load(std::string(path + "/models/Range_Rover.glb").c_str());
+        mModel = std::make_unique<rsrc::Model>();
+        mModel->Load(std::string(path + "/models/xr_vr_space.glb").c_str());
 
         // mModel1 = std::make_unique<rsrc::Model>();
         // mModel1->Load(std::string(path + "/models/mini.glb").c_str());

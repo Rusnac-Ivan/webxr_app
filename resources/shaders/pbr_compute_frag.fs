@@ -28,6 +28,8 @@ uniform sampler2D uEmissiveMap;
 uniform ivec4   uTexMapSets;
 uniform mat4    uMaterState;
 
+uniform int    uIsLightMap;
+
 in vec3 WorldPos;
 in vec3 Normal;
 in vec2 UV0;
@@ -154,15 +156,26 @@ void main()
 	vec3 diffuseColor;
 	vec4 baseColor;
 	
-	vec3 f0 = vec3(0.04);
-	
-	metallic = uMaterState[1][0];
-	perceptualRoughness = uMaterState[1][1];
-	
-	if (uTexMapSets[0] > -1) 
+    if(uIsLightMap == 1)
+    {
+        if (uTexMapSets[0] > -1) 
+            baseColor = texture(uBaseColorMap, uTexMapSets[0] == 0 ? UV0 : UV1);
+        else 
+            baseColor = uMaterState[0];
+        FragColor = baseColor;
+        
+        return;
+    }
+    
+    if (uTexMapSets[0] > -1) 
         baseColor = SRGBtoLINEAR(texture(uBaseColorMap, uTexMapSets[0] == 0 ? UV0 : UV1)) * uMaterState[0];
     else 
         baseColor = uMaterState[0];
+    
+    vec3 f0 = vec3(0.04);
+	
+	metallic = uMaterState[1][0];
+	perceptualRoughness = uMaterState[1][1];
 	
 	if (uTexMapSets[1] > -1)
 	{

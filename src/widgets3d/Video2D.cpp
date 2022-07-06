@@ -5,10 +5,14 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <utilities/Resources/ResourceManager.h>
 #include "ImGui_Impl_2d_to_3d.h"
+#include "utilities/imgui_tools/imgui_util.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/intersect.hpp>
 
 namespace w3d
 {
-    Video2D::Video2D(/* args */)
+    Video2D::Video2D(/* args */) : mIsReady(false)
     {
     }
 
@@ -24,7 +28,7 @@ namespace w3d
         mEMVideo.SetAutoplay(true);
         mEMVideo.SetMute(true);
         mEMVideo.SetLoop(false);
-        mEMVideo.Play();
+        // mEMVideo.Play();
 
 #endif
     }
@@ -58,13 +62,44 @@ namespace w3d
             float plane_w = (mWidth * coef) / 1000.f; // convert from mm to m
             float plane_h = (mHeight * coef) / 1000.f;
             mPlane.Generate(plane_w, plane_h, 1.f, 1.f, util::Plane<OPTIONS>::Direction::OZ_POS);
+
+            mIsReady = true;
         }
     }
 
-    void Video2D::Draw(const glm::mat4 &model)
+    void Video2D::Draw(WebXRInputSource *inputSource, const glm::mat4 &model)
     {
+
+        ImVec2 mouse_pos = ImVec2(-1.f, -1.f);
+        if (inputSource)
+        {
+            float distance;
 #ifdef __EMSCRIPTEN__
-        if (mEMVideo.GetState() != MediaState::NONE)
+            glm::vec3 &input_pose = inputSource->rigidTransform.position;
+            glm::vec3 input_dir = glm::rotate(inputSource->rigidTransform.orientation, glm::vec3(0.f, 0.f, -1.f));
+#else
+            glm::vec3 &input_pose = glm::vec3(0.f, 0.f, 0.f);
+            glm::vec3 input_dir = glm::vec3(0.f, 0.f, -1.f);
+#endif
+            glm::vec3 plane_origin = glm::vec3(model * glm::vec4(mPlane.GetOrigin(), 1.f));
+            glm::vec3 plane_normal = glm::mat3(model) * mPlane.GetNormal();
+            glm::vec3 plane_up = glm::mat3(model) * mPlane.GetUp();
+            glm::vec3 plane_right = glm::mat3(model) * mPlane.GetRight();
+            if (glm::intersectRayPlane(input_pose, input_dir, plane_origin, plane_normal, distance))
+            {
+                glm::vec3 inter_pos = input_pose + input_dir * distance;
+
+                float h = glm::dot(inter_pos - plane_origin, plane_right);
+                float v = glm::dot(inter_pos - plane_origin, plane_up);
+
+                mouse_pos.x = mWidth / mPlane.GetWidth() * h;
+                mouse_pos.y = mHeight - mHeight / mPlane.GetHeight() * v;
+
+                // printf("mouse_pos[%.2f, %.2f]\n", mouse_pos.x, mouse_pos.y);
+            }
+        }
+#ifdef __EMSCRIPTEN__
+        if (mIsReady)
         {
             {
                 mEMVideo.UpdateFrame(mVideoCol);
@@ -75,16 +110,49 @@ namespace w3d
                 gl::Render::Clear(gl::BufferBit::COLOR);
 
                 {
-                    // ImGui_Impl_2d_to_3d_NewFrame(ImVec2(mWidth, mHeight), ImVec2(-1.f, -1.f));
+                    // ImDrawData *draw_data = ImGui::GetDrawData();
+
+                    ImGui_Impl_2d_to_3d_NewFrame(ImVec2(mWidth, mHeight), mouse_pos);
                     ImGui::NewFrame();
 
                     ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
                     ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
+                    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, 0.f));
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
+                    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
                     if (ImGui::Begin("Video", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
                     {
-                        ImGui::Image((ImTextureID)mVideoCol.GetID(), ImVec2(mWidth, mHeight));
+                        if (mEMVideo.GetMediaState() != em::MediaState::PLAYING && mEMVideo.GetMediaState() != em::MediaState::ENDED)
+                        {
+                            ImVec2 m_pos = ImGui::GetMousePos();
+                            // printf("mouse_pos[%.2f, %.2f]\n", m_pos.x, m_pos.y);
+                            ImVec2 button_size = ImVec2(170.f, 70.f);
+                            ImGui::SetCursorPos(ImVec2((mWidth - button_size.x) / 2.f, (mHeight - button_size.y) / 2.f));
+                            if (ImGui::Button("Play", button_size))
+                            {
+                                mEMVideo.Play();
+                            }
+                        }
+                        else if (mEMVideo.GetMediaState() == em::MediaState::WAITING)
+                        {
+                            float dim = mWidth < mHeight ? mWidth : mHeight;
+                            float radius = 0.2f * dim;
+                            const ImU32 color = ImColor(ImVec4(0.f, 1.f, 0.f, 0.f));
+                            const int circle_count = radius > 67 ? 0.12f * radius : 8;
+                            ImGui::SetCursorPos(ImVec2(mWidth / 2.f - radius, mHeight / 2.f - radius));
+                            ImGui::LoadingIndicatorCircle("Load", radius, ImVec4(1.f, 0.f, 0.f, 1.f), ImVec4(0.f, 0.f, 1.f, 1.f), 20, 12.f);
+                        }
+                        else if (mEMVideo.GetMediaState() == em::MediaState::PLAYING)
+                        {
+                            ImGui::Image((ImTextureID)mVideoCol.GetID(), ImVec2(mWidth, mHeight));
+                        }
+
+                        ImDrawList *draw_list = ImGui::GetWindowDrawList();
+                        draw_list->AddCircleFilled(ImVec2(mouse_pos.x, mouse_pos.y), 10.f, ImColor(ImVec4(1.f, 0.f, 1.f, 1.f)));
                     }
                     ImGui::End();
+                    ImGui::PopStyleVar(2);
+                    ImGui::PopStyleColor();
 
                     ImGui::Render();
                     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -107,6 +175,7 @@ namespace w3d
                 menu_prog->SetMatrix4(mUniformLocations.model, model);
                 menu_prog->SetInt(mUniformLocations.is_video, 1);
                 mResultCol.Activate(0);
+                gl::Pipeline::EnableBlending();
                 mPlane.Draw();
                 menu_prog->SetInt(mUniformLocations.is_video, 0);
             }

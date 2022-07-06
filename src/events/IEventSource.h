@@ -2,7 +2,7 @@
 #define _IEVENTSOURCE_H_
 
 #include "IEventListener.h"
-#include <set>
+#include <list>
 
 class IEventSource
 {

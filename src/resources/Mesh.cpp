@@ -220,6 +220,7 @@ namespace rsrc
 			mUniformLocations.model = program->Uniform("model");
 			mUniformLocations.uMaterState = program->Uniform("uMaterState");
 			mUniformLocations.uTexMapSets = program->Uniform("uTexMapSets");
+			mUniformLocations.uIsLightMap = program->Uniform("uIsLightMap");
 
 			// must set once
 			program->SetInt(program->Uniform("uBaseColorMap"), base_color_unit);
@@ -228,6 +229,7 @@ namespace rsrc
 			program->SetInt(program->Uniform("uEmissiveMap"), emissive_unit);
 			mProgram = program;
 		}
+		program->SetInt(mUniformLocations.uIsLightMap, 1);
 
 		program->SetMatrix4(mUniformLocations.model, model);
 

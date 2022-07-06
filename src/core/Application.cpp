@@ -186,13 +186,12 @@ namespace core
 		ImFontConfig imFontConf = {};
 		imFontConf.FontDataOwnedByAtlas = false;
 
-		//ImFont* font = io.Fonts->AddFontFromMemoryTTF(__roboto_medium_ttf, __roboto_medium_ttf_len, 17.f, &imFontConf);
-		ImFont* font = io.Fonts->AddFontFromMemoryTTF(__Helvetica_ttf, __Helvetica_ttf_len, 16.f, &imFontConf);
-		
-		//ImGui::MergeIconsWithLatestFont(17.f, false);
-		//io.Fonts->AddFontDefault(&imFontConf);
-		//io.Fonts->AddFontDefault(&imFontConf);
-		
+		// ImFont* font = io.Fonts->AddFontFromMemoryTTF(__roboto_medium_ttf, __roboto_medium_ttf_len, 17.f, &imFontConf);
+		ImFont *font = io.Fonts->AddFontFromMemoryTTF(__Helvetica_ttf, __Helvetica_ttf_len, 32.f, &imFontConf);
+
+		// ImGui::MergeIconsWithLatestFont(17.f, false);
+		// io.Fonts->AddFontDefault(&imFontConf);
+		// io.Fonts->AddFontDefault(&imFontConf);
 
 		// Setup Platform/Renderer backends
 		// ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
@@ -282,7 +281,7 @@ namespace core
 		{ // render menu
 
 			// Setup time step
-			ImGuiIO& io = ImGui::GetIO();
+			ImGuiIO &io = ImGui::GetIO();
 			double current_time = glfwGetTime();
 			io.DeltaTime = app->Time > 0.0 ? (float)(current_time - app->Time) : (float)(1.0f / 60.0f);
 			app->Time = current_time;
