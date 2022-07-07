@@ -53,7 +53,7 @@ public:
 
 	virtual bool OnInitialize()
 	{
-		mCamera.SetViewState(glm::vec3(0.f, 0.7f, 1.5f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(-1.f, 0.f, 0.f));
+		mCamera.SetViewState(glm::vec3(0.f, 1.6f, 0.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(-1.f, 0.f, 0.f));
 
 		printf("MyApp::OnInitialize\n");
 		util::ResourceManager::OnInitialize();
@@ -117,7 +117,7 @@ public:
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());*/
 
-		mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(1.f, 0.7f, 1.f));
+		mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(1.f, 1.6f, 0.f));
 		mMenuModel = glm::rotate(mMenuModel, glm::radians(-90.f), glm::vec3(0.f, 1.f, 0.f));
 		util::ResourceManager::GetW3DMenu()->Compose(mInputSource, mMenuModel, "3DMenu",
 			[]()
@@ -173,7 +173,7 @@ public:
 			}
 		);
 
-		glm::mat4 model = glm::translate(glm::mat4(1.f), glm::vec3(-1.f, 0.7f, 1.f));
+		glm::mat4 model = glm::translate(glm::mat4(1.f), glm::vec3(-1.f, 1.6f, 0.f));
 		model = glm::rotate(model, glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
 		util::ResourceManager::GetW3DMenu1()->Compose(mInputSource, model, "Second 3DMenu",
 			[]()

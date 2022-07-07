@@ -61,10 +61,10 @@ namespace util
         // mController->Load(std::string(path + "/models/space_war_c.glb").c_str());
 
         mMenu = std::make_unique<w3d::Menu>();
-        mMenu->Create(300, 420, 2.f);
+        mMenu->Create(300, 420, 3.f);
 
         mMenu1 = std::make_unique<w3d::Menu>();
-        mMenu1->Create(300, 420, 2.f);
+        mMenu1->Create(300, 420, 3.f);
 
         mVideo2D = std::make_unique<w3d::Video2D>();
         mVideo2D->Create("./resources/video/2d/test_2d_vid.mp4");
