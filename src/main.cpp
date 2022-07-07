@@ -53,7 +53,7 @@ public:
 
 	virtual bool OnInitialize()
 	{
-		mCamera.SetViewState(glm::vec3(0.f, 0.7f, 1.5f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(1.f, 0.f, 0.f));
+		mCamera.SetViewState(glm::vec3(0.f, 0.7f, 1.5f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(-1.f, 0.f, 0.f));
 
 		printf("MyApp::OnInitialize\n");
 		util::ResourceManager::OnInitialize();
@@ -117,60 +117,117 @@ public:
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());*/
 
-		/*mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, 0.f));
-		util::ResourceManager::GetW3DMenu()
-			->Compose(mInputSource, glm::mat4(1.f), "3DMenu",
-					  []()
-					  {
-						  if (ImGui::Button("Ok", ImVec2(90.f, 30.f)))
-						  {
-							  printf("Button Ok\n");
-						  }
-						  if (ImGui::Button("Save", ImVec2(90.f, 30.f)))
-						  {
-							  printf("Button Save\n");
-						  }
-						  if (ImGui::Button("Cancel", ImVec2(90.f, 30.f)))
-						  {
-							  printf("Button Cancel\n");
-						  }
-						  static float slider = 0.5f;
-						  ImGui::SliderFloat("Clouds Speed", &slider, 0.f, 1.f, "%.3f");
+		mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(1.f, 0.7f, 1.f));
+		mMenuModel = glm::rotate(mMenuModel, glm::radians(-90.f), glm::vec3(0.f, 1.f, 0.f));
+		util::ResourceManager::GetW3DMenu()->Compose(mInputSource, mMenuModel, "3DMenu",
+			[]()
+			{
+				if (ImGui::Button("Ok", ImVec2(90.f, 30.f)))
+				{
+					printf("Button Ok\n");
+				}
+				if (ImGui::Button("Save", ImVec2(90.f, 30.f)))
+				{
+					printf("Button Save\n");
+				}
+				if (ImGui::Button("Cancel", ImVec2(90.f, 30.f)))
+				{
+					printf("Button Cancel\n");
+				}
+				static float slider = 0.5f;
+				ImGui::SliderFloat("Speed", &slider, 0.f, 1.f, "%.3f");
 
-						  static char buff[64] = {};
-						  ImGui::InputText("in text", buff, IM_ARRAYSIZE(buff));
+				static char buff[64] = {};
+				ImGui::InputText("in text", buff, IM_ARRAYSIZE(buff));
 
-						  static bool animate = true;
-						  ImGui::Checkbox("Animate", &animate);
+				static bool animate = true;
+				ImGui::Checkbox("Animate", &animate);
 
-						  static float arr[] = {0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f};
-						  ImGui::PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr));
+				static float arr[] = {0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f};
+				ImGui::PlotLines("Line", arr, IM_ARRAYSIZE(arr));
 
-						  static float values[90] = {};
-						  static int values_offset = 0;
-						  static double refresh_time = 0.0;
-						  if (!animate || refresh_time == 0.0)
-							  refresh_time = ImGui::GetTime();
-						  while (refresh_time < ImGui::GetTime()) // Create data at fixed 60 Hz rate for the demo
-						  {
-							  static float phase = 0.0f;
-							  values[values_offset] = cosf(phase);
-							  values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
-							  phase += 0.10f * values_offset;
-							  refresh_time += 1.0f / 60.0f;
-						  }
+				static float values[90] = {};
+				static int values_offset = 0;
+				static double refresh_time = 0.0;
+				if (!animate || refresh_time == 0.0)
+					refresh_time = ImGui::GetTime();
+				while (refresh_time < ImGui::GetTime()) // Create data at fixed 60 Hz rate for the demo
+				{
+					static float phase = 0.0f;
+					values[values_offset] = cosf(phase);
+					values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
+					phase += 0.10f * values_offset;
+					refresh_time += 1.0f / 60.0f;
+				}
 
-						  {
-							  float average = 0.0f;
-							  for (int n = 0; n < IM_ARRAYSIZE(values); n++)
-								  average += values[n];
-							  average /= (float)IM_ARRAYSIZE(values);
-							  char overlay[32];
-							  sprintf(overlay, "avg %f", average);
-							  ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
-						  }
-						  ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
-					  });*/
+				{
+					float average = 0.0f;
+					for (int n = 0; n < IM_ARRAYSIZE(values); n++)
+						average += values[n];
+					average /= (float)IM_ARRAYSIZE(values);
+					char overlay[32];
+					sprintf(overlay, "avg %f", average);
+					ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
+				}
+				ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
+			}
+		);
+
+		glm::mat4 model = glm::translate(glm::mat4(1.f), glm::vec3(-1.f, 0.7f, 1.f));
+		model = glm::rotate(model, glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
+		util::ResourceManager::GetW3DMenu1()->Compose(mInputSource, model, "Second 3DMenu",
+			[]()
+			{
+				if (ImGui::Button("Ok", ImVec2(90.f, 30.f)))
+				{
+					printf("Button Ok\n");
+				}
+				if (ImGui::Button("Save", ImVec2(90.f, 30.f)))
+				{
+					printf("Button Save\n");
+				}
+				if (ImGui::Button("Cancel", ImVec2(90.f, 30.f)))
+				{
+					printf("Button Cancel\n");
+				}
+				static float slider = 0.5f;
+				ImGui::SliderFloat("Speed", &slider, 0.f, 1.f, "%.3f");
+
+				static char buff[64] = {};
+				ImGui::InputText("in text", buff, IM_ARRAYSIZE(buff));
+
+				static bool animate = true;
+				ImGui::Checkbox("Animate", &animate);
+
+				static float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };
+				ImGui::PlotLines("Line", arr, IM_ARRAYSIZE(arr));
+
+				static float values[90] = {};
+				static int values_offset = 0;
+				static double refresh_time = 0.0;
+				if (!animate || refresh_time == 0.0)
+					refresh_time = ImGui::GetTime();
+				while (refresh_time < ImGui::GetTime()) // Create data at fixed 60 Hz rate for the demo
+				{
+					static float phase = 0.0f;
+					values[values_offset] = cosf(phase);
+					values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
+					phase += 0.10f * values_offset;
+					refresh_time += 1.0f / 60.0f;
+				}
+
+				{
+					float average = 0.0f;
+					for (int n = 0; n < IM_ARRAYSIZE(values); n++)
+						average += values[n];
+					average /= (float)IM_ARRAYSIZE(values);
+					char overlay[32];
+					sprintf(overlay, "avg %f", average);
+					ImGui::PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
+				}
+				ImGui::PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
+			}
+		);
 
 		float progress = util::ResourceManager::GetProgress();
 		// if (progress < 99.999f)
@@ -405,7 +462,8 @@ public:
 		util::ResourceManager::GetModel()->Draw(glm::translate(model, glm::vec3(0.f, -0.5f, 0.f)));
 
 		util::ResourceManager::GetController()->Draw(glm::vec3(0.f, 0.f, 0.f), glm::quat(1.f, 0.f, 0.f, 0.f));
-		// util::ResourceManager::GetW3DMenu()->Draw();
+		util::ResourceManager::GetW3DMenu()->Draw();
+		util::ResourceManager::GetW3DMenu1()->Draw();
 		//util::ResourceManager::GetW3DVideo3D()->Draw(glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f)));
 #else
 		const WebXRRigidTransform &headPose = WebXR::GetHeadPose();

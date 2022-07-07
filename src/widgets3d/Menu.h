@@ -49,7 +49,7 @@ namespace w3d
         Menu();
         ~Menu();
 
-        void Create(float width, float height);
+        void Create(float widthPX, float heightPX, float mm_per_px);
 
         void Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun);
         void Draw();

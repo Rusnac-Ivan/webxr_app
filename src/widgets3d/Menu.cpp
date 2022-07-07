@@ -19,7 +19,7 @@ namespace w3d
 
     Menu::~Menu() {}
 
-    void Menu::Create(float width, float height)
+    void Menu::Create(float width, float height, float mm_per_px)
     {
         mWidth = width;
         mHeight = height;
@@ -36,7 +36,7 @@ namespace w3d
         // mBaseColor.GenerateMipmaps();
         assert(mFBO.IsComplete());
 
-        const float coef = 3.f;                  // Xmm per 1px
+        const float coef = mm_per_px;                  // Xmm per 1px
         float plane_w = (width * coef) / 1000.f; // convert from mm to m
         float plane_h = (height * coef) / 1000.f;
         mPlane.Generate(plane_w, plane_h, 1.f, 1.f, util::Plane<OPTIONS>::Direction::OZ_POS);

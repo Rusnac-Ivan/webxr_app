@@ -9,6 +9,7 @@ namespace util
     std::unique_ptr<rsrc::Model> ResourceManager::mModel;
     std::unique_ptr<rsrc::Model> ResourceManager::mModel1;
     std::unique_ptr<w3d::Menu> ResourceManager::mMenu;
+    std::unique_ptr<w3d::Menu> ResourceManager::mMenu1;
     std::unique_ptr<w3d::Video2D> ResourceManager::mVideo2D;
     std::unique_ptr<w3d::Video3D> ResourceManager::mVideo3D;
 
@@ -22,6 +23,7 @@ namespace util
     rsrc::Model *ResourceManager::GetModel1() { return mModel1.get(); }
     rsrc::Shaders *ResourceManager::GetShaders() { return mShaders.get(); }
     w3d::Menu *ResourceManager::GetW3DMenu() { return mMenu.get(); }
+    w3d::Menu* ResourceManager::GetW3DMenu1() { return mMenu1.get(); }
     w3d::Video2D *ResourceManager::GetW3DVideo2D() { return mVideo2D.get(); }
     w3d::Video3D *ResourceManager::GetW3DVideo3D() { return mVideo3D.get(); }
 
@@ -59,7 +61,10 @@ namespace util
         // mController->Load(std::string(path + "/models/space_war_c.glb").c_str());
 
         mMenu = std::make_unique<w3d::Menu>();
-        mMenu->Create(500, 700);
+        mMenu->Create(300, 420, 2.f);
+
+        mMenu1 = std::make_unique<w3d::Menu>();
+        mMenu1->Create(300, 420, 2.f);
 
         mVideo2D = std::make_unique<w3d::Video2D>();
         mVideo2D->Create("./resources/video/2d/test_2d_vid.mp4");
@@ -77,6 +82,7 @@ namespace util
         mModel1.release();
         mController.release();
         mMenu.release();
+        mMenu1.release();
         mVideo2D.release();
         mVideo3D.release();
     }
