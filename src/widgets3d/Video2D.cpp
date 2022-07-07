@@ -127,12 +127,13 @@ namespace w3d
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
                     if (ImGui::Begin("Video", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
                     {
+                        ImVec2 button_size = ImVec2(170.f, 70.f);
 #ifdef __EMSCRIPTEN__
                         if (mEMVideo.GetMediaState() != em::MediaState::PLAYING && mEMVideo.GetMediaState() != em::MediaState::ENDED)
                         {
                             ImVec2 m_pos = ImGui::GetMousePos();
                             // printf("mouse_pos[%.2f, %.2f]\n", m_pos.x, m_pos.y);
-                            ImVec2 button_size = ImVec2(170.f, 70.f);
+                            
                             ImGui::SetCursorPos(ImVec2((mWidth - button_size.x) / 2.f, (mHeight - button_size.y) / 2.f));
                             if (ImGui::Button("Play", button_size))
                             {
