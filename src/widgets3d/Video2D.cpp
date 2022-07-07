@@ -25,10 +25,10 @@ namespace w3d
 #ifdef __EMSCRIPTEN__
         mEMVideo.AddListener(this);
         mEMVideo.Load(url);
-        mEMVideo.SetAutoplay(true);
+        mEMVideo.SetAutoplay(false);
         mEMVideo.SetMute(true);
         mEMVideo.SetLoop(false);
-        // mEMVideo.Play();
+        mEMVideo.Play();
 
 #endif
     }
@@ -69,42 +69,43 @@ namespace w3d
 #endif
     }
 
-    void Video2D::Draw(WebXRInputSource *inputSource, const glm::mat4 &model)
+    void Video2D::Compose(WebXRInputSource *inputSource, const glm::mat4 &model)
     {
-
-        ImVec2 mouse_pos = ImVec2(-1.f, -1.f);
-        if (inputSource)
-        {
-            float distance;
-#ifdef __EMSCRIPTEN__
-            glm::vec3 &input_pose = inputSource->rigidTransform.position;
-            glm::vec3 input_dir = glm::rotate(inputSource->rigidTransform.orientation, glm::vec3(0.f, 0.f, -1.f));
-#else
-            glm::vec3 &input_pose = glm::vec3(0.f, 0.f, 0.f);
-            glm::vec3 input_dir = glm::vec3(0.f, 0.f, -1.f);
-#endif
-            glm::vec3 plane_origin = glm::vec3(model * glm::vec4(mPlane.GetOrigin(), 1.f));
-            glm::vec3 plane_normal = glm::mat3(model) * mPlane.GetNormal();
-            glm::vec3 plane_up = glm::mat3(model) * mPlane.GetUp();
-            glm::vec3 plane_right = glm::mat3(model) * mPlane.GetRight();
-            if (glm::intersectRayPlane(input_pose, input_dir, plane_origin, plane_normal, distance))
-            {
-                glm::vec3 inter_pos = input_pose + input_dir * distance;
-
-                float h = glm::dot(inter_pos - plane_origin, plane_right);
-                float v = glm::dot(inter_pos - plane_origin, plane_up);
-
-                mouse_pos.x = mWidth / mPlane.GetWidth() * h;
-                mouse_pos.y = mHeight - mHeight / mPlane.GetHeight() * v;
-
-                // printf("mouse_pos[%.2f, %.2f]\n", mouse_pos.x, mouse_pos.y);
-            }
-        }
-#ifdef __EMSCRIPTEN__
+        mModel = model;
         if (mIsReady)
         {
+
+            ImVec2 mouse_pos = ImVec2(-1.f, -1.f);
+            if (inputSource)
             {
-                mEMVideo.UpdateFrame(mVideoCol);
+                float distance;
+    #ifdef __EMSCRIPTEN__
+                glm::vec3 &input_pose = inputSource->rigidTransform.position;
+                glm::vec3 input_dir = glm::rotate(inputSource->rigidTransform.orientation, glm::vec3(0.f, 0.f, -1.f));
+    #else
+                glm::vec3 &input_pose = glm::vec3(0.f, 0.f, 0.f);
+                glm::vec3 input_dir = glm::vec3(0.f, 0.f, -1.f);
+    #endif
+                glm::vec3 plane_origin = glm::vec3(model * glm::vec4(mPlane.GetOrigin(), 1.f));
+                glm::vec3 plane_normal = glm::mat3(model) * mPlane.GetNormal();
+                glm::vec3 plane_up = glm::mat3(model) * mPlane.GetUp();
+                glm::vec3 plane_right = glm::mat3(model) * mPlane.GetRight();
+                if (glm::intersectRayPlane(input_pose, input_dir, plane_origin, plane_normal, distance))
+                {
+                    glm::vec3 inter_pos = input_pose + input_dir * distance;
+
+                    float h = glm::dot(inter_pos - plane_origin, plane_right);
+                    float v = glm::dot(inter_pos - plane_origin, plane_up);
+
+                    mouse_pos.x = mWidth / mPlane.GetWidth() * h;
+                    mouse_pos.y = mHeight - mHeight / mPlane.GetHeight() * v;
+
+                    // printf("mouse_pos[%.2f, %.2f]\n", mouse_pos.x, mouse_pos.y);
+                }
+            }
+            {
+                if (mEMVideo.GetMediaState() == em::MediaState::PLAYING)
+                    mEMVideo.UpdateFrame(mVideoCol);
 
                 mFBO.Bind();
 
@@ -119,7 +120,7 @@ namespace w3d
 
                     ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
                     ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
-                    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, 0.5f));
+                    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, 0.7f));
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
                     if (ImGui::Begin("Video", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
@@ -159,10 +160,17 @@ namespace w3d
                     ImGui::Render();
                     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                 }
-
+                //GL(Flush());
                 mFBO.UnBind();
             }
+        }
+    }
 
+    void Video2D::Draw()
+    {
+#ifdef __EMSCRIPTEN__
+        if (mIsReady)
+        {
             {
                 gl::Program *menu_prog = util::ResourceManager::GetShaders()->GetMenuProg();
                 menu_prog->Use();
@@ -174,7 +182,7 @@ namespace w3d
                     menu_prog->SetInt(menu_prog->Uniform("uAlbedo"), 0);
                     mProgram = menu_prog;
                 }
-                menu_prog->SetMatrix4(mUniformLocations.model, model);
+                menu_prog->SetMatrix4(mUniformLocations.model, mModel);
                 menu_prog->SetInt(mUniformLocations.is_video, 1);
                 mResultCol.Activate(0);
                 gl::Pipeline::EnableBlending();

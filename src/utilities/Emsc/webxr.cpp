@@ -328,13 +328,10 @@ void convertJSDOMPointToQuat(const emscripten::val &domPoint, glm::quat &quat)
 
 void WebXR::GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode)
 {
-    // emscripten::val::global("console").call<void>("log", mXRInputSources);
-
-    if (!mXRInputSources.hasOwnProperty("length"))
-        return;
+    //emscripten::val::global("console").call<void>("log", mXRInputSources);
 
     uint32_t inputSourcesCount = mXRInputSources["length"].as<uint32_t>();
-
+    
     assert(inputSourcesCount <= MAX_SOURCE_COUNT);
 
     for (uint32_t i = 0; i < inputSourcesCount; i++)

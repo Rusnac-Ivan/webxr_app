@@ -67,6 +67,8 @@ public:
 	};
 	virtual bool OnGui()
 	{
+		util::ResourceManager::GetW3DVideo2D()->Compose(mInputSource, glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.1f, -4.f)));
+
 		/*ImGui_Impl_2d_to_3d_NewFrame(ImVec2(GetWidth(), GetHeight()), ImVec2(-1.f, -1.f));
 		ImGui::NewFrame();
 
@@ -395,7 +397,7 @@ public:
 			return true;
 
 		InitPrograms(mCamera.GetPosition(), mCamera.GetPosition(), mCamera.GetProjectionMat() * mCamera.GetViewMat());
-		gl::Render::SetClearColor(0.f, 0.f, 0.f, 1.f);
+		gl::Render::SetClearColor(0.f, 0.7f, 0.f, 1.f);
 		gl::Render::Clear(gl::BufferBit::COLOR, gl::BufferBit::DEPTH);
 #ifndef __EMSCRIPTEN__
 		util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), mCamera.GetViewMat(), mCamera.GetProjectionMat());
@@ -411,14 +413,32 @@ public:
 		WebXRView *viewArray;
 		uint32_t viewCount;
 		WebXR::GetViews(&viewArray, &viewCount);
+		//printf("viewCount: %d\n", viewCount);
 		for (uint32_t i = 0; i < viewCount; i++)
 		{
-			WebXRView &view = viewArray[i];
+			//if(i == 1)
+				//continue;
 
+			WebXRView &view = viewArray[i];
+			//printf("view%d, viewPort[%d, %d, %d, %d]\n", i, view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.width);
 			gl::Render::SetViewport(view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height);
 			if (shaders->IsReady())
 			{
 				InitPrograms(headPose.position, headPose.position, view.projectionMatrix * view.viewPose.matrix);
+
+				/*char text[128] = {};
+				for (uint32_t r = 0; r < 4; r++)
+				{
+					for (uint32_t c = 0; c < 4; c++)
+					{
+						if (c == 3)
+							sprintf(text + (c + r * 4) * 7, " %5.2f\n", view.projectionMatrix[r][c]);
+						else
+							sprintf(text + (c + r * 4) * 7, " %5.2f ", view.projectionMatrix[r][c]);
+					}
+				}
+				printf("projM%d:%s\n", i, text);*/
+
 
 				util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), view.viewPose.matrix, view.projectionMatrix);
 
@@ -429,11 +449,12 @@ public:
 				//  util::ResourceManager::GetW3DMenu()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f)));
 				// util::ResourceManager::GetW3DVideo3D()->Draw(glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f)));
 				// util::ResourceManager::GetW3DVideo3D()->Draw(glm::mat4(1.f));
-				util::ResourceManager::GetW3DVideo2D()->Draw(mInputSource, glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.1f, -4.f)));
+				util::ResourceManager::GetW3DVideo2D()->Draw();
 
 				WebXRInputSource *inputSourceArray = nullptr;
 				uint32_t inputCount = 0;
 				WebXR::GetInputSources(&inputSourceArray, &inputCount);
+				
 				for (uint32_t j = 0; j < inputCount; j++)
 				{
 					WebXRInputSource &inputSource = inputSourceArray[j];
@@ -449,6 +470,7 @@ public:
 				}
 			}
 		}
+		GL(Flush());
 #endif
 		return true;
 	};

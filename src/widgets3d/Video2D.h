@@ -56,7 +56,9 @@ namespace w3d
 
         virtual void operator()(IEvent &event);
 
-        void Draw(WebXRInputSource *inputSource, const glm::mat4 &model);
+        void Compose(WebXRInputSource *inputSource, const glm::mat4 &model);
+
+        void Draw();
     };
 
 } // namespace w3d
