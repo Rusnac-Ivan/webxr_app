@@ -53,7 +53,7 @@ public:
 
 	virtual bool OnInitialize()
 	{
-		mCamera.SetViewState(glm::vec3(0.f, 0.f, 2.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -1.f));
+		mCamera.SetViewState(glm::vec3(0.f, 0.7f, 1.5f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(1.f, 0.f, 0.f));
 
 		printf("MyApp::OnInitialize\n");
 		util::ResourceManager::OnInitialize();

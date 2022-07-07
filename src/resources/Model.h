@@ -25,9 +25,15 @@ namespace rsrc
 	class Mesh;
 	class Node;
 
+	
+
 	class Model
 	{
-		
+		struct Dimensions {
+			glm::vec3 min = glm::vec3(FLT_MAX);
+			glm::vec3 max = glm::vec3(-FLT_MAX);
+		} dimensions;
+
 
 		std::vector<Node> mNodes;
 		util::AABB mAABB;
@@ -40,6 +46,8 @@ namespace rsrc
 		gl::VertexBuffer mVBO;
 		std::unique_ptr<gl::IndexBuffer> mIBO;
 		gl::VertexArray mVAO;
+
+		glm::mat4 mAABBScale;
 
 		bool mIsBinary;
 

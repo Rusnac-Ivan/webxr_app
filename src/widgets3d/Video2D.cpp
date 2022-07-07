@@ -104,8 +104,10 @@ namespace w3d
                 }
             }
             {
+#ifdef __EMSCRIPTEN__
                 if (mEMVideo.GetMediaState() == em::MediaState::PLAYING)
                     mEMVideo.UpdateFrame(mVideoCol);
+#endif
 
                 mFBO.Bind();
 
@@ -125,6 +127,7 @@ namespace w3d
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
                     if (ImGui::Begin("Video", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
                     {
+#ifdef __EMSCRIPTEN__
                         if (mEMVideo.GetMediaState() != em::MediaState::PLAYING && mEMVideo.GetMediaState() != em::MediaState::ENDED)
                         {
                             ImVec2 m_pos = ImGui::GetMousePos();
@@ -149,6 +152,7 @@ namespace w3d
                         {
                             ImGui::Image((ImTextureID)mVideoCol.GetID(), ImVec2(mWidth, mHeight));
                         }
+#endif
 
                         ImDrawList *draw_list = ImGui::GetWindowDrawList();
                         draw_list->AddCircleFilled(ImVec2(mouse_pos.x, mouse_pos.y), 10.f, ImColor(ImVec4(1.f, 0.f, 1.f, 1.f)));

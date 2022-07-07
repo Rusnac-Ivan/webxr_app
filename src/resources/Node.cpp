@@ -108,6 +108,13 @@ namespace rsrc
 
 				mMeshes[j].LoadFromTinyGLTF(model, primitive, materials, indexBuffer, vertexBuffer);
 			}
+
+			// Node BB from BBs of meshes
+			for (auto& mesh : mMeshes) 
+			{
+				this->mAABB.Align(mesh.GetBoundingBox().GetMin(), mesh.GetBoundingBox().GetMax());
+			}
+			
 		}
 	}
 

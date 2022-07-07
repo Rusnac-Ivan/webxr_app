@@ -197,13 +197,49 @@ namespace rsrc
 			mIBO->Data(sizeof(uint32_t) * indexBuffer.size(), indexBuffer.data(), gl::DataType::UNSIGNED_INT);
 			mVAO.LinkIndexBuffer(*mIBO);
 		}
+
+		GetSceneDimensions();
 	}
 
 	void Model::CalculateBoundingBox(Node *node, Node *parent)
 	{
+		util::AABB parentBvh = parent ? parent->GetBoundingVolumeHierarchy() : util::AABB();
+
+		if (node->HaveMesh()) 
+		{
+			if (node->GetBoundingBox().IsValid()) 
+			{
+				node->GetBoundingBox().SetState(node->GetLocalMatrix());
+				if (node->GetChildrens().size() == 0)
+					node->GetBoundingVolumeHierarchy().Align(node->GetBoundingBox().GetMin(), node->GetBoundingBox().GetMax());
+			}
+		}
+
+		if (node->GetBoundingVolumeHierarchy().IsValid()) 
+		{
+			dimensions.min = glm::min(dimensions.min, node->GetBoundingVolumeHierarchy().GetMin());
+			dimensions.max = glm::max(dimensions.max, node->GetBoundingVolumeHierarchy().GetMax());
+		}
+
+		for (auto& child : node->GetChildrens()) 
+			CalculateBoundingBox(&child, node);
+		
 	}
 	void Model::GetSceneDimensions()
 	{
+		dimensions.min = glm::vec3(FLT_MAX);
+		dimensions.max = glm::vec3(-FLT_MAX);
+
+		// Calculate binary volume hierarchy for all nodes in the scene
+		for (auto& node : mNodes) {
+			CalculateBoundingBox(&node, nullptr);
+		}
+
+		// Calculate scene aabb
+		mAABBScale = glm::scale(glm::mat4(1.0f), glm::vec3(dimensions.max[0] - dimensions.min[0], dimensions.max[1] - dimensions.min[1], dimensions.max[2] - dimensions.min[2]));
+		mAABBScale[3][0] = dimensions.min[0];
+		mAABBScale[3][1] = dimensions.min[1];
+		mAABBScale[3][2] = dimensions.min[2];
 	}
 
 	void Model::DrawNode(Node *node)

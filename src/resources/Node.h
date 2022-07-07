@@ -24,6 +24,9 @@ namespace rsrc
 		std::string mName;
 		std::vector<Mesh> mMeshes;
 
+		util::AABB mAABB;
+		util::AABB mBVH;
+
 		glm::mat4 mLocalMatrix;
 		glm::mat4 mGlobalMatrix;
 
@@ -37,6 +40,12 @@ namespace rsrc
 		Node &operator=(Node &&) noexcept;
 
 		const glm::mat4 &GetLocalMatrix() { return mLocalMatrix; }
+
+		util::AABB& GetBoundingBox() { return mAABB; }
+		util::AABB& GetBoundingVolumeHierarchy() { return mBVH; }
+
+		bool HaveMesh() { return mMeshes.size() > 0; }
+		std::vector<Node>& GetChildrens() { return mChildrens; }
 
 		void LoadFromTinyGLTF(Node *parent,
 							  const tinygltf::Node &node,
