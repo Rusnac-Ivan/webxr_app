@@ -503,7 +503,8 @@ public:
 				util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, -1.f, -3.f)));
 				//  util::ResourceManager::GetModel1()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(2.f, 0.f, 1.f)));
 
-				// util::ResourceManager::GetW3DMenu()->Draw();
+				util::ResourceManager::GetW3DMenu()->Draw();
+				util::ResourceManager::GetW3DMenu1()->Draw();
 				//  util::ResourceManager::GetW3DMenu()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.6f, -1.5f)));
 				// util::ResourceManager::GetW3DVideo3D()->Draw(glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f)));
 				// util::ResourceManager::GetW3DVideo3D()->Draw(glm::mat4(1.f));
