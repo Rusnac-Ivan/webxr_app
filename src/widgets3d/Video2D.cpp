@@ -30,7 +30,34 @@ namespace w3d
         mEMVideo.SetLoop(false);
         mEMVideo.Play();
 
+#else   
+        printf("Video2D::operator()\n");
+        mWidth = 800.f;
+        mHeight = 500.f;
+
+        const void* pixels[3] = { 0, 0, 0 };
+        mVideoCol.LoadData(0, gl::Texture::Format::RGB, 1, 1, 0, gl::Texture::Format::RGB, gl::DataType::UNSIGNED_BYTE, pixels);
+
+        gl::Texture2D::Sampler sam;
+        sam.wrapS = gl::Texture::WrapMode::CLAMP_TO_EDGE;
+        sam.wrapT = gl::Texture::WrapMode::CLAMP_TO_EDGE;
+        sam.minFilter = gl::Texture::FilterMode::LINEAR;
+        sam.magFilter = gl::Texture::FilterMode::LINEAR;
+        mVideoCol.SetSampler(sam);
+        mResultCol.SetSampler(sam);
+
+        mFBO.SetSize(mWidth, mHeight);
+        mFBO.AttachTexture2D(gl::FrameBuffer::Attachment::COLOR0, &mResultCol);
+        assert(mFBO.IsComplete());
+
+        const float coef = 2.f;                   // Xmm per 1px
+        float plane_w = (mWidth * coef) / 1000.f; // convert from mm to m
+        float plane_h = (mHeight * coef) / 1000.f;
+        mPlane.Generate(plane_w, plane_h, 1.f, 1.f, util::Plane<OPTIONS>::Direction::OZ_POS);
+
+        mIsReady = true;
 #endif
+
     }
 
     void Video2D::operator()(IEvent &event)
@@ -40,31 +67,7 @@ namespace w3d
 
         if (media_event.GetType() == em::MediaEvent::Type::ON_CANPLAY)
         {
-            printf("Video2D::operator()\n");
-            mWidth = mEMVideo.GetWidth();
-            mHeight = mEMVideo.GetHeight();
-
-            const void *pixels[3] = {0, 0, 0};
-            mVideoCol.LoadData(0, gl::Texture::Format::RGB, 1, 1, 0, gl::Texture::Format::RGB, gl::DataType::UNSIGNED_BYTE, pixels);
-
-            gl::Texture2D::Sampler sam;
-            sam.wrapS = gl::Texture::WrapMode::CLAMP_TO_EDGE;
-            sam.wrapT = gl::Texture::WrapMode::CLAMP_TO_EDGE;
-            sam.minFilter = gl::Texture::FilterMode::LINEAR;
-            sam.magFilter = gl::Texture::FilterMode::LINEAR;
-            mVideoCol.SetSampler(sam);
-            mResultCol.SetSampler(sam);
-
-            mFBO.SetSize(mWidth, mHeight);
-            mFBO.AttachTexture2D(gl::FrameBuffer::Attachment::COLOR0, &mResultCol);
-            assert(mFBO.IsComplete());
-
-            const float coef = 3.f;                   // Xmm per 1px
-            float plane_w = (mWidth * coef) / 1000.f; // convert from mm to m
-            float plane_h = (mHeight * coef) / 1000.f;
-            mPlane.Generate(plane_w, plane_h, 1.f, 1.f, util::Plane<OPTIONS>::Direction::OZ_POS);
-
-            mIsReady = true;
+            
         }
 #endif
     }
@@ -153,6 +156,12 @@ namespace w3d
                         {
                             ImGui::Image((ImTextureID)mVideoCol.GetID(), ImVec2(mWidth, mHeight));
                         }
+#else                   
+                        ImGui::SetCursorPos(ImVec2((mWidth - button_size.x) / 2.f, (mHeight - button_size.y) / 2.f));
+                        if (ImGui::Button("Play", button_size))
+                        {
+                            
+                        }
 #endif
 
                         ImDrawList *draw_list = ImGui::GetWindowDrawList();
@@ -173,7 +182,6 @@ namespace w3d
 
     void Video2D::Draw()
     {
-#ifdef __EMSCRIPTEN__
         if (mIsReady)
         {
             {
@@ -188,14 +196,13 @@ namespace w3d
                     mProgram = menu_prog;
                 }
                 menu_prog->SetMatrix4(mUniformLocations.model, mModel);
-                menu_prog->SetInt(mUniformLocations.is_video, 1);
+                //menu_prog->SetInt(mUniformLocations.is_video, 1);
                 mResultCol.Activate(0);
                 gl::Pipeline::EnableBlending();
                 mPlane.Draw();
                 menu_prog->SetInt(mUniformLocations.is_video, 0);
             }
         }
-#endif
     }
 
 }
