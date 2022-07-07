@@ -28,7 +28,7 @@ namespace w3d
         mEMVideo.SetAutoplay(false);
         mEMVideo.SetMute(true);
         mEMVideo.SetLoop(false);
-        mEMVideo.Play();
+        //mEMVideo.Play();
 
 #endif
     }
@@ -122,7 +122,6 @@ namespace w3d
 
                     ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
                     ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
-                    ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.f, 0.f, 0.7f));
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
                     if (ImGui::Begin("Video", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
@@ -160,7 +159,6 @@ namespace w3d
                     }
                     ImGui::End();
                     ImGui::PopStyleVar(2);
-                    ImGui::PopStyleColor();
 
                     ImGui::Render();
                     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
