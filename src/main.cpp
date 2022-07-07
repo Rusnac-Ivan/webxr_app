@@ -53,7 +53,7 @@ public:
 
 	virtual bool OnInitialize()
 	{
-		mCamera.SetViewState(glm::vec3(0.f, 1.6f, 0.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(-1.f, 0.f, 0.f));
+		mCamera.SetViewState(glm::vec3(0.f, 0.5f, 1.f), glm::vec3(0.f, 1.f, 0.f), glm::vec3(0.f, 0.f, -1.f));
 
 		printf("MyApp::OnInitialize\n");
 		util::ResourceManager::OnInitialize();
@@ -67,7 +67,7 @@ public:
 	};
 	virtual bool OnGui()
 	{
-		util::ResourceManager::GetW3DVideo2D()->Compose(mInputSource, glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.1f, -4.f)));
+		util::ResourceManager::GetW3DVideo2D()->Compose(mInputSource, glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.3f, -1.f)));
 
 		/*ImGui_Impl_2d_to_3d_NewFrame(ImVec2(GetWidth(), GetHeight()), ImVec2(-1.f, -1.f));
 		ImGui::NewFrame();
@@ -464,7 +464,7 @@ public:
 		util::ResourceManager::GetController()->Draw(glm::vec3(0.f, 0.f, 0.f), glm::quat(1.f, 0.f, 0.f, 0.f));
 		util::ResourceManager::GetW3DMenu()->Draw();
 		util::ResourceManager::GetW3DMenu1()->Draw();
-		//util::ResourceManager::GetW3DVideo3D()->Draw(glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3(1.f, 0.f, 0.f)));
+		util::ResourceManager::GetW3DVideo2D()->Draw();
 #else
 		const WebXRRigidTransform &headPose = WebXR::GetHeadPose();
 
