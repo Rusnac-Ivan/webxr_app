@@ -67,9 +67,9 @@ public:
 	};
 	virtual bool OnGui()
 	{
-		util::ResourceManager::GetW3DVideo2D()->Compose(mInputSource, glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.3f, -1.f)));
+		util::ResourceManager::GetW3DVideo2D()->Compose(mInputSource, glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.1f, -4.f)));
 
-		/*ImGui_Impl_2d_to_3d_NewFrame(ImVec2(GetWidth(), GetHeight()), ImVec2(-1.f, -1.f));
+		ImGui_Impl_2d_to_3d_NewFrame(ImVec2(GetWidth(), GetHeight()), ImVec2(-1.f, -1.f));
 		ImGui::NewFrame();
 
 		ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
@@ -115,7 +115,7 @@ public:
 		ImGui::End();
 
 		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());*/
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(1.f, 1.6f, 0.f));
 		mMenuModel = glm::rotate(mMenuModel, glm::radians(-90.f), glm::vec3(0.f, 1.f, 0.f));
