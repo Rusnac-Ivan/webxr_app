@@ -12,12 +12,25 @@
 
 namespace w3d
 {
+
     Menu::Menu() : mIsOpen(true), mProgram(nullptr)
     {
         mModel = glm::mat4(1.f);
+        // mImGuiContext = ImGui::CreateContext();
+
+        /*ImGuiIO& io = mImGuiContext->IO;
+
+        StyleColors(mImGuiContext->Style);
+
+        ImFontConfig imFontConf = {};
+        imFontConf.FontDataOwnedByAtlas = false;
+        ImFont* font = io.Fonts->AddFontFromMemoryTTF(__Helvetica_ttf, __Helvetica_ttf_len, 17.f, &imFontConf);*/
     }
 
-    Menu::~Menu() {}
+    Menu::~Menu()
+    {
+        // ImGui::DestroyContext(mImGuiContext);
+    }
 
     void Menu::Create(float width, float height, float mm_per_px)
     {
@@ -36,15 +49,16 @@ namespace w3d
         // mBaseColor.GenerateMipmaps();
         assert(mFBO.IsComplete());
 
-        const float coef = mm_per_px;                  // Xmm per 1px
+        const float coef = mm_per_px;            // Xmm per 1px
         float plane_w = (width * coef) / 1000.f; // convert from mm to m
         float plane_h = (height * coef) / 1000.f;
         mPlane.Generate(plane_w, plane_h, 1.f, 1.f, util::Plane<OPTIONS>::Direction::OZ_POS);
     }
 
-    void Menu::Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun)
+    void Menu::Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun, ImGuiWindowFlags window_flags)
     {
         mModel = model;
+        bool is_hovered = false;
         ImVec2 mouse_pos = ImVec2(-1.f, -1.f);
         if (inputSource)
         {
@@ -69,9 +83,12 @@ namespace w3d
 
                 mouse_pos.x = mWidth / mPlane.GetWidth() * h;
                 mouse_pos.y = mHeight - mHeight / mPlane.GetHeight() * v;
+
+                is_hovered = true;
             }
         }
-
+        // mouse_pos = ImVec2(50.f, 300.f);
+        // ImGui_Impl_2d_to_3d_MouseButtonCallback(MOUSEBUTTON_LEFT, PRESS, 0);
         mFBO.Bind();
 
         gl::Render::SetClearColor(0.f, 0.f, 0.f, 0.f);
@@ -85,14 +102,24 @@ namespace w3d
             ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
             ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
 
-            ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
-            ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
-            if (ImGui::Begin(name, &mIsOpen, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoNav))
+            ImGuiContext &g = *GImGui;
+            g.ActiveIdNoClearOnFocusLoss = true;
+            if (ImGui::Begin(name, &mIsOpen, window_flags))
             {
-                ImDrawList *draw_list = ImGui::GetWindowDrawList();
-                draw_list->AddCircleFilled(ImVec2(mouse_pos.x, mouse_pos.y), 10.f, ImColor(ImVec4(0.f, 1.f, 1.f, 0.5f)));
+
+                if (is_hovered)
+                    g.HoveredWindow = ImGui::GetCurrentWindow();
+
+                // g.HoveredIdAllowOverlap = true;
+                // g.ActiveIdAllowOverlap = true;
 
                 gui_fun();
+
+                ImDrawList *draw_list = ImGui::GetWindowDrawList();
+                if (is_hovered)
+                    draw_list->AddCircleFilled(ImVec2(mouse_pos.x, mouse_pos.y), 10.f, ImColor(ImVec4(1.f, 0.f, 1.f, 1.f)));
+
+                g.HoveredWindow = nullptr;
             }
             ImGui::End();
 

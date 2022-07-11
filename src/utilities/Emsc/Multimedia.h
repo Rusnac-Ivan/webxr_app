@@ -122,7 +122,7 @@ namespace em
     class Video : public Multimedia
     {
 
-        bool mIsFirstFrame;
+        // bool mIsFirstFrame;
 
         uint32_t mWidth;
         uint32_t mHeight;
@@ -147,17 +147,17 @@ namespace em
         {
             if (mIsReady)
             {
-                if (mIsFirstFrame)
+                // if (mIsFirstFrame)
                 {
                     frame.Bind();
                     emscripten::val::global("Module")["canvas"].call<emscripten::val>("getContext", std::string("webgl2")).call<void>("texImage2D", GL_TEXTURE_2D, 0, GL_RGB, mWidth, mHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, mMedia);
-                    mIsFirstFrame = false;
+                    // mIsFirstFrame = false;
                 }
-                else
+                /*else
                 {
                     frame.Bind();
                     emscripten::val::global("Module")["canvas"].call<emscripten::val>("getContext", std::string("webgl2")).call<void>("texSubImage2D", GL_TEXTURE_2D, 0, 0, 0, GL_RGB, GL_UNSIGNED_BYTE, mMedia);
-                }
+                }*/
             }
 
             // mTimeupdate = false;

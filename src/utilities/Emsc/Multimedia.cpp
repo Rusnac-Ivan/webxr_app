@@ -195,7 +195,7 @@ namespace em
 
     Video::Video()
     {
-        mIsFirstFrame = true;
+        // mIsFirstFrame = true;
 
         Create(MediaType::VIDEO);
 
@@ -219,7 +219,7 @@ namespace em
         player->mWidth = player->mMedia["videoWidth"].as<uint32_t>();
         player->mHeight = player->mMedia["videoHeight"].as<uint32_t>();
 
-        player->mIsFirstFrame = true;
+        // player->mIsFirstFrame = true;
     }
 
     void Video::Load(const char *url)

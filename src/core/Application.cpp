@@ -91,9 +91,23 @@ namespace core
 		Time = 0.f;
 	}
 
+	Application::~Application()
+	{
+		// Cleanup imgui
+		ImGui_ImplOpenGL3_Shutdown();
+		// ImGui_ImplGlfw_Shutdown();
+		ImGui_Impl_2d_to_3d_Shutdown();
+		ImGui::DestroyContext();
+
+		// Destroy glfw
+		glfwDestroyWindow(mGLFWWindow);
+		glfwTerminate();
+	}
+
 	static void StyleColors()
 	{
 		ImGuiStyle& style = ImGui::GetStyle();
+
 		style.Alpha = 1.0;
 		style.FrameBorderSize = 1.f;
 		style.WindowRounding = 10.f;
@@ -136,19 +150,6 @@ namespace core
 		style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
 		style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
 		style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.00f, 1.00f, 1.00f, 0.22f);
-	}
-
-	Application::~Application()
-	{
-		// Cleanup imgui
-		ImGui_ImplOpenGL3_Shutdown();
-		// ImGui_ImplGlfw_Shutdown();
-		ImGui_Impl_2d_to_3d_Shutdown();
-		ImGui::DestroyContext();
-
-		// Destroy glfw
-		glfwDestroyWindow(mGLFWWindow);
-		glfwTerminate();
 	}
 
 	int Application::Run(int argc, char **argv, const char *version, uint32_t width, uint32_t height, const char *title)
@@ -222,19 +223,12 @@ namespace core
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
 		ImGuiIO &io = ImGui::GetIO();
-		(void)io;
-		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-		// io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 
-		// Setup Dear ImGui style
 		//ImGui::StyleColorsDark();
-		// ImGui::StyleColorsClassic();
 		StyleColors();
 
 		ImFontConfig imFontConf = {};
 		imFontConf.FontDataOwnedByAtlas = false;
-
-		// ImFont* font = io.Fonts->AddFontFromMemoryTTF(__roboto_medium_ttf, __roboto_medium_ttf_len, 17.f, &imFontConf);
 		ImFont *font = io.Fonts->AddFontFromMemoryTTF(__Helvetica_ttf, __Helvetica_ttf_len, 17.f, &imFontConf);
 
 		// ImGui::MergeIconsWithLatestFont(17.f, false);
@@ -242,7 +236,7 @@ namespace core
 		// io.Fonts->AddFontDefault(&imFontConf);
 
 		// Setup Platform/Renderer backends
-		// ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
+		//ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
 		ImGui_Impl_2d_to_3d_InitForOpenGL();
 		ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 

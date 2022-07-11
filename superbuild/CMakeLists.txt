@@ -60,6 +60,11 @@ ExternalProject_Add_Step(imgui replace_imgui_impl_opengl3
     DEPENDERS configure
     COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/patches/imgui/imgui_impl_opengl3.cpp" "${LIBRARIES_PREFIX}/imgui/src/imgui/backends/imgui_impl_opengl3.cpp"
 )
+ExternalProject_Add_Step(imgui replace_imgui
+    DEPENDEES download
+    DEPENDERS configure
+    COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/patches/imgui/imgui.cpp" "${LIBRARIES_PREFIX}/imgui/src/imgui/imgui.cpp"
+)
 ExternalProject_Get_property(imgui SOURCE_DIR)
 set(IMGUI_SOURCE_DIR ${SOURCE_DIR})
 

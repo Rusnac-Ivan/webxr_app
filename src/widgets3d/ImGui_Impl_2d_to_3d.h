@@ -46,6 +46,7 @@ enum Action
 IMGUI_IMPL_API bool     ImGui_Impl_2d_to_3d_InitForOpenGL();
 IMGUI_IMPL_API void     ImGui_Impl_2d_to_3d_Shutdown();
 IMGUI_IMPL_API void     ImGui_Impl_2d_to_3d_NewFrame(const ImVec2& win_size, const ImVec2& mouse_pos);
+//IMGUI_IMPL_API void     ImGui_Impl_2d_to_3d_Render();
 
 //call backs
 IMGUI_IMPL_API void     ImGui_Impl_2d_to_3d_WindowFocusCallback(int focused);

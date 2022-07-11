@@ -1,12 +1,15 @@
 #include "Image.h"
 #include <tiny_gltf.h>
+#include <stb_image.h>
 
 namespace rsrc
 {
 	Image::Image() : mWidth(0),
 					 mHeight(0),
 					 mChannels(0),
-					 mIsFloatingPoint(false)
+					 mIsFloatingPoint(false),
+					 mProgress(-1.f),
+					 mIsReady(false)
 	{
 	}
 	Image::Image(uint8_t *data, size_t width, size_t height, size_t channels, bool isFloatingPoint)
@@ -198,6 +201,69 @@ namespace rsrc
 		{
 			mTexture.GenerateMipmaps();
 		}
-			
+	}
+
+	void Image::Load(const char *file_name)
+	{
+#ifdef __EMSCRIPTEN__
+		emscripten_async_wget2_data(
+			file_name, "GET", NULL, this, true,
+			[](unsigned handle, void *arg, void *data, unsigned size)
+			{
+				Image *image = (Image *)arg;
+
+				int width, height, nrChannels;
+				unsigned char *img_data = stbi_load_from_memory((unsigned char *)data, size, &width, &height, &nrChannels, 0);
+				printf("load Image w: %d, h: %d, c: %d\n", width, height, nrChannels);
+				if (img_data)
+				{
+					printf("load image w: %d, h: %d, c: %d\n", width, height, nrChannels);
+					gl::Texture2D::Sampler sam;
+					sam.wrapS = gl::Texture::WrapMode::CLAMP_TO_EDGE;
+					sam.wrapT = gl::Texture::WrapMode::CLAMP_TO_EDGE;
+					sam.minFilter = gl::Texture::FilterMode::LINEAR;
+					sam.magFilter = gl::Texture::FilterMode::LINEAR;
+					image->mTexture.SetSampler(sam);
+					image->SetData(img_data, width, height, nrChannels, false);
+
+					stbi_image_free(img_data);
+
+					image->mIsReady = true;
+				}
+				assert(img_data && "stb not load texture");
+			},
+			[](unsigned handle, void *arg, int error_code, const char *status)
+			{
+				fprintf(stderr, "Failed to load image error_code: %d, status: %s\n", error_code, status);
+			},
+			[](unsigned handle, void *arg, int bytes_loaded, int total_size)
+			{
+				Image *image = (Image *)arg;
+				if (total_size)
+					image->mProgress = ((float)bytes_loaded / total_size) * 100.f;
+			});
+#else
+
+		int width, height, nrChannels;
+		unsigned char *img_data = stbi_load(file_name, &width, &height, &nrChannels, 0);
+		if (img_data)
+		{
+			printf("load image w: %d, h: %d, c: %d\n", width, height, nrChannels);
+			gl::Texture2D::Sampler sam;
+			sam.wrapS = gl::Texture::WrapMode::CLAMP_TO_EDGE;
+			sam.wrapT = gl::Texture::WrapMode::CLAMP_TO_EDGE;
+			sam.minFilter = gl::Texture::FilterMode::LINEAR;
+			sam.magFilter = gl::Texture::FilterMode::LINEAR;
+			mTexture.SetSampler(sam);
+			SetData(img_data, width, height, nrChannels, false);
+
+			stbi_image_free(img_data);
+			mProgress = 100.f;
+			mIsReady = true;
+		}
+		else
+			assert(img_data && "stb not load texture");
+
+#endif
 	}
 }

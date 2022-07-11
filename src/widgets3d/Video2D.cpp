@@ -28,14 +28,14 @@ namespace w3d
         mEMVideo.SetAutoplay(false);
         mEMVideo.SetMute(true);
         mEMVideo.SetLoop(false);
-        //mEMVideo.Play();
+        // mEMVideo.Play();
 
-#else   
+#else
         printf("Video2D::operator()\n");
         mWidth = 800.f;
         mHeight = 500.f;
 
-        const void* pixels[3] = { 0, 0, 0 };
+        const void *pixels[3] = {0, 0, 0};
         mVideoCol.LoadData(0, gl::Texture::Format::RGB, 1, 1, 0, gl::Texture::Format::RGB, gl::DataType::UNSIGNED_BYTE, pixels);
 
         gl::Texture2D::Sampler sam;
@@ -57,7 +57,6 @@ namespace w3d
 
         mIsReady = true;
 #endif
-
     }
 
     void Video2D::operator()(IEvent &event)
@@ -71,7 +70,7 @@ namespace w3d
             mWidth = mEMVideo.GetWidth();
             mHeight = mEMVideo.GetHeight();
 
-            const void* pixels[3] = { 0, 0, 0 };
+            const void *pixels[3] = {0, 0, 0};
             mVideoCol.LoadData(0, gl::Texture::Format::RGB, 1, 1, 0, gl::Texture::Format::RGB, gl::DataType::UNSIGNED_BYTE, pixels);
 
             gl::Texture2D::Sampler sam;
@@ -101,18 +100,18 @@ namespace w3d
         mModel = model;
         if (mIsReady)
         {
-
+            bool is_hovered = false;
             ImVec2 mouse_pos = ImVec2(-1.f, -1.f);
             if (inputSource)
             {
                 float distance;
-    #ifdef __EMSCRIPTEN__
+#ifdef __EMSCRIPTEN__
                 glm::vec3 &input_pose = inputSource->rigidTransform.position;
                 glm::vec3 input_dir = glm::rotate(inputSource->rigidTransform.orientation, glm::vec3(0.f, 0.f, -1.f));
-    #else
+#else
                 glm::vec3 &input_pose = glm::vec3(0.f, 0.f, 0.f);
                 glm::vec3 input_dir = glm::vec3(0.f, 0.f, -1.f);
-    #endif
+#endif
                 glm::vec3 plane_origin = glm::vec3(model * glm::vec4(mPlane.GetOrigin(), 1.f));
                 glm::vec3 plane_normal = glm::mat3(model) * mPlane.GetNormal();
                 glm::vec3 plane_up = glm::mat3(model) * mPlane.GetUp();
@@ -128,6 +127,7 @@ namespace w3d
                     mouse_pos.y = mHeight - mHeight / mPlane.GetHeight() * v;
 
                     // printf("mouse_pos[%.2f, %.2f]\n", mouse_pos.x, mouse_pos.y);
+                    is_hovered = true;
                 }
             }
             {
@@ -143,7 +143,7 @@ namespace w3d
 
                 {
                     // ImDrawData *draw_data = ImGui::GetDrawData();
-
+                    // mouse_pos = ImVec2(400.f, 250.f);
                     ImGui_Impl_2d_to_3d_NewFrame(ImVec2(mWidth, mHeight), mouse_pos);
                     ImGui::NewFrame();
 
@@ -151,15 +151,20 @@ namespace w3d
                     ImGui::SetNextWindowSize(ImVec2(mWidth, mHeight), ImGuiCond_Always);
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+                    ImGuiContext &g = *GImGui;
+                    g.ActiveIdNoClearOnFocusLoss = true;
                     if (ImGui::Begin("Video", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
                     {
+                        if (is_hovered)
+                            g.HoveredWindow = ImGui::GetCurrentWindow();
+
                         ImVec2 button_size = ImVec2(170.f, 70.f);
 #ifdef __EMSCRIPTEN__
                         if (mEMVideo.GetMediaState() != em::MediaState::PLAYING && mEMVideo.GetMediaState() != em::MediaState::ENDED)
                         {
                             ImVec2 m_pos = ImGui::GetMousePos();
                             // printf("mouse_pos[%.2f, %.2f]\n", m_pos.x, m_pos.y);
-                            
+
                             ImGui::SetCursorPos(ImVec2((mWidth - button_size.x) / 2.f, (mHeight - button_size.y) / 2.f));
                             if (ImGui::Button("Play", button_size))
                             {
@@ -179,16 +184,16 @@ namespace w3d
                         {
                             ImGui::Image((ImTextureID)mVideoCol.GetID(), ImVec2(mWidth, mHeight));
                         }
-#else                   
+#else
                         ImGui::SetCursorPos(ImVec2((mWidth - button_size.x) / 2.f, (mHeight - button_size.y) / 2.f));
                         if (ImGui::Button("Play", button_size))
                         {
-                            
                         }
 #endif
 
                         ImDrawList *draw_list = ImGui::GetWindowDrawList();
-                        draw_list->AddCircleFilled(ImVec2(mouse_pos.x, mouse_pos.y), 10.f, ImColor(ImVec4(1.f, 0.f, 1.f, 1.f)));
+                        if (is_hovered)
+                            draw_list->AddCircleFilled(ImVec2(mouse_pos.x, mouse_pos.y), 10.f, ImColor(ImVec4(1.f, 0.f, 1.f, 0.7f)));
                     }
                     ImGui::End();
                     ImGui::PopStyleVar(2);
@@ -196,7 +201,7 @@ namespace w3d
                     ImGui::Render();
                     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
                 }
-                //GL(Flush());
+                // GL(Flush());
                 mFBO.UnBind();
             }
         }

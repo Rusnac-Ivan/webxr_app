@@ -121,7 +121,16 @@ void ImGui_Impl_2d_to_3d_NewFrame(const ImVec2 &win_size, const ImVec2 &mouse_po
     bd->Time = current_time;*/
 
     ImGui_Impl_2d_to_3d_UpdateMousePosAndButtons(mouse_pos);
+
+    for (int i = 0; i < IM_ARRAYSIZE(io.MouseDownDuration); i++) io.MouseDownDuration[i] = io.MouseDownDurationPrev[i] = -1.0f;
+    for (int i = 0; i < IM_ARRAYSIZE(io.KeysDownDuration); i++) io.KeysDownDuration[i] = io.KeysDownDurationPrev[i] = -1.0f;
+    for (int i = 0; i < IM_ARRAYSIZE(io.NavInputsDownDuration); i++) io.NavInputsDownDuration[i] = -1.0f;
 }
+
+/*void ImGui_Impl_2d_to_3d_Render()
+{
+
+}*/
 
 void ImGui_Impl_2d_to_3d_WindowFocusCallback(int focused)
 {

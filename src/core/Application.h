@@ -5,6 +5,7 @@
 #include <string>
 
 struct GLFWwindow;
+struct ImGuiContext;
 
 namespace core
 {
@@ -17,6 +18,8 @@ namespace core
 		uint32_t mWidth;
 		uint32_t mHeight;
 
+		//ImGuiContext* mImGuiContext;
+
 		static float mFPS;
 
 		bool mIsSync;
@@ -27,6 +30,8 @@ namespace core
 		Application &operator=(Application &app) = delete;
 
 	protected:
+
+		
 
 		Application();
 		virtual ~Application();
@@ -51,6 +56,8 @@ namespace core
 		int Run(int argc, char **argv, const char *version, uint32_t width, uint32_t height, const char *title);
 
 		static float GetFPS();
+
+		//ImGuiContext* GetMainImGuiContext() { return mImGuiContext; }
 
 		virtual bool OnInitialize() { return true; }
 		virtual bool OnGui() { return true; }

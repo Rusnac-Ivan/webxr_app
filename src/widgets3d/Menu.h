@@ -36,6 +36,8 @@ namespace w3d
         gl::FrameBuffer mFBO;
         gl::Texture2D mBaseColor;
 
+        //ImGuiContext* mImGuiContext;
+
         float mWidth;
         float mHeight;
 
@@ -51,7 +53,7 @@ namespace w3d
 
         void Create(float widthPX, float heightPX, float mm_per_px);
 
-        void Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun);
+        void Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun, ImGuiWindowFlags window_flags = 0);
         void Draw();
     };
 

@@ -3,6 +3,8 @@
 #include <vector>
 #include <utilities/Resources/ResourceManager.h>
 //#include <utilities/Shape/Vertex.h>
+#include <ImGuizmo.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #ifndef __EMSCRIPTEN__
 #ifdef __GNUC__
@@ -41,8 +43,9 @@ errno_t _wfopen_s(FILE **f, const wchar_t *name, const wchar_t *mode)
 
 namespace rsrc
 {
-	Model::Model() : mProgress(0.f), mIsReady(false), mIsBinary(false)
+	Model::Model() : mProgress(0.f), mIsReady(false), mIsBinary(false), mIsEditable(false)
 	{
+		mTransform = glm::mat4(1.f);
 	}
 
 	Model::~Model()
@@ -104,8 +107,9 @@ namespace rsrc
 		mIsReady = true;
 	}
 
-	void Model::Load(const char *file)
+	void Model::Load(const char *file, bool is_editable)
 	{
+		mIsEditable = is_editable;
 		std::string fileName = std::string(file);
 		mIsBinary = false;
 		size_t extpos = fileName.rfind('.', fileName.length());
@@ -246,18 +250,51 @@ namespace rsrc
 	{
 	}
 
-	void Model::Draw(const glm::mat4 &model)
+	void Model::Draw(const glm::mat4& model)
 	{
+		mModel = model;
 		if (mIsReady)
 		{
-			gl::Program *pbr_prog = util::ResourceManager::GetShaders()->GetLightMapProg();
+			gl::Program* pbr_prog = util::ResourceManager::GetShaders()->GetLightMapProg();
 			pbr_prog->Use();
 
 			mVAO.Bind();
-			for (auto &node : mNodes)
+			for (auto& node : mNodes)
 			{
-				node.Draw(pbr_prog, model);
+				node.Draw(pbr_prog, mTransform * mModel);
 			}
 		}
 	}
+
+	void Model::DrawEditor(const glm::mat4& view, const glm::mat4& proj)
+	{
+		if (mIsReady && mIsEditable)
+		{
+			{
+				//ImGuizmo::Enable(true);
+
+				ImGuizmo::OPERATION operation = ImGuizmo::TRANSLATE_X | ImGuizmo::TRANSLATE_Y | ImGuizmo::TRANSLATE_Z;
+				glm::vec3 snap = glm::vec3(0.1f, 0.1f, 0.1f);
+
+				glm::mat4 matrix = mTransform * mModel;
+
+				if (ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), operation, ImGuizmo::LOCAL, (float*)glm::value_ptr(matrix), NULL, (float*)glm::value_ptr(snap), NULL, NULL))
+				{
+					mTransform = matrix * glm::inverse(mModel);
+				}
+
+				//ImGuizmo::DrawCube(glm::value_ptr(view), glm::value_ptr(proj), mModel);
+				
+				
+
+				/*float matrixTranslation[3], matrixRotation[3], matrixScale[3];
+				ImGuizmo::DecomposeMatrixToComponents(gizmoMatrix.m16, matrixTranslation, matrixRotation, matrixScale);
+				ImGui::InputFloat3("Tr", matrixTranslation, 3);
+				ImGui::InputFloat3("Rt", matrixRotation, 3);
+				ImGui::InputFloat3("Sc", matrixScale, 3);
+				ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, gizmoMatrix.m16);*/
+
+			}
+		}
+	}	
 }

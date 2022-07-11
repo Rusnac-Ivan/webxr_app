@@ -25,15 +25,13 @@ namespace rsrc
 	class Mesh;
 	class Node;
 
-	
-
 	class Model
 	{
-		struct Dimensions {
+		struct Dimensions
+		{
 			glm::vec3 min = glm::vec3(FLT_MAX);
 			glm::vec3 max = glm::vec3(-FLT_MAX);
 		} dimensions;
-
 
 		std::vector<Node> mNodes;
 		util::AABB mAABB;
@@ -48,21 +46,27 @@ namespace rsrc
 		gl::VertexArray mVAO;
 
 		glm::mat4 mAABBScale;
+		glm::mat4 mTransform;
+		glm::mat4 mModel;
 
 		bool mIsBinary;
 
 		float mProgress;
 		bool mIsReady;
 
+		bool mIsEditable;
+
 	public:
 		Model();
 		~Model();
 
-		void Load(const char *file);
+		void Load(const char *file, bool is_editable = false);
 
 		float GetProgress() { return mProgress; }
+		bool IsReady() { return mIsReady; }
 
 		void Draw(const glm::mat4 &model);
+		void DrawEditor(const glm::mat4 &view, const glm::mat4 &proj);
 		void CalculateBoundingBox(Node *node, Node *parent);
 		void GetSceneDimensions();
 
@@ -75,7 +79,7 @@ namespace rsrc
 		void LoadFromFile(std::string filename, float scale = 1.0f);
 		void LoadFromMemoryTinyGLTF(const uint8_t *data, size_t dataSize, bool is_binary, float scale = 1.0f);
 
-		void LoadGltfModel(tinygltf::Model& gltfModel, float scale);
+		void LoadGltfModel(tinygltf::Model &gltfModel, float scale);
 	};
 
 }
