@@ -128,6 +128,8 @@ namespace util
         mVerticesCount = mVertices.size();
         mIndicesCount = mIndices.size();
 
+        printf("mVerticesCount: %d, mIndicesCount: %d\n", mVerticesCount, mIndicesCount);
+
         mVBO.SetData(mVerticesCount * sizeof(vertex_t), reinterpret_cast<const void *>(mVertices.size() > 0 ? mVertices.data() : nullptr));
         mEBO.Data(sizeof(uint32_t) * mIndicesCount, reinterpret_cast<const uint32_t *>(mIndices.size() > 0 ? mIndices.data() : nullptr), gl::DataType::UNSIGNED_INT);
         switch (Options)
@@ -160,7 +162,10 @@ namespace util
             break;
         }
         if (mIndicesCount > 0)
+        {
+            printf("LinkIndexBuffer\n");
             mVAO.LinkIndexBuffer(mEBO);
+        }
 
         Reset();
     }

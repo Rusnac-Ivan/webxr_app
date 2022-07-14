@@ -8,7 +8,7 @@
 
 namespace w3d
 {
-    Video3D::Video3D(/* args */) : mProgram(nullptr)
+    Video3D::Video3D(/* args */) : mProgram(nullptr), mIsReady(false)
     {
     }
 
@@ -21,10 +21,10 @@ namespace w3d
 #ifdef __EMSCRIPTEN__
         mEMVideo.AddListener(this);
         mEMVideo.Load(url);
-        mEMVideo.SetAutoplay(true);
+        mEMVideo.SetAutoplay(false);
         mEMVideo.SetMute(true);
-        mEMVideo.SetLoop(false);
-        mEMVideo.Play();
+        mEMVideo.SetLoop(true);
+        // mEMVideo.Play();
 #else
         mWidth = 500.f;
         mHeight = 500.f;
@@ -54,6 +54,7 @@ namespace w3d
 
         if (media_event.GetType() == em::MediaEvent::Type::ON_CANPLAY)
         {
+            printf("Video3D::operator()\n");
             mWidth = mEMVideo.GetWidth();
             mHeight = mEMVideo.GetHeight();
 
@@ -72,70 +73,98 @@ namespace w3d
             // mResultCol.GenerateMipmaps();
 
             mSphere.Generate(50.f, 20, 20);
+
+            mIsReady = true;
         }
-        else if (media_event.GetType() == em::MediaEvent::Type::ON_ENDED)
-        {
-        }
+
 #endif
     }
 
-    void Video3D::Draw(const glm::mat4 &model)
+    void Video3D::Play()
+    {
+#ifdef __EMSCRIPTEN__
+        mEMVideo.Play();
+        printf("Video3D::Play\n");
+#endif
+    }
+
+    void Video3D::Pause()
+    {
+#ifdef __EMSCRIPTEN__
+        mEMVideo.Pause();
+        printf("Video3D::Pause\n");
+#endif
+    }
+
+    void Video3D::Compose(WebXRInputSource *inputSource, const glm::mat4 &model)
+    {
+        if (mIsReady)
+        {
+#ifdef __EMSCRIPTEN__
+            if (mEMVideo.GetMediaState() == em::MediaState::PLAYING)
+                mEMVideo.UpdateFrame(mVideoCol);
+#endif
+
+            mFBO.Bind();
+
+            gl::Render::SetClearColor(1.f, 0.f, 0.f, 1.f);
+            gl::Render::Clear(gl::BufferBit::COLOR);
+
+            {
+                ImVec2 video_size = ImVec2(mWidth, mHeight);
+
+                ImGui_Impl_2d_to_3d_NewFrame(video_size, ImVec2(-1.f, -1.f));
+                ImGui::NewFrame();
+
+                ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
+                ImGui::SetNextWindowSize(video_size, ImGuiCond_Always);
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+                ImGuiContext &g = *GImGui;
+                g.ActiveIdNoClearOnFocusLoss = true;
+                if (ImGui::Begin("Video3D", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
+                {
+                    g.HoveredWindow = ImGui::GetCurrentWindow();
+
+                    ImGui::Image((ImTextureID)mVideoCol.GetID(), video_size);
+
+                    g.HoveredWindow = nullptr;
+                }
+                ImGui::End();
+                ImGui::PopStyleVar(2);
+
+                ImGui::Render();
+                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            }
+
+            mFBO.UnBind();
+        }
+    }
+
+    void Video3D::Draw()
     {
 
 #ifdef __EMSCRIPTEN__
-        if (mEMVideo.IsReady())
+        if (mIsReady)
         {
-            mEMVideo.UpdateFrame(mVideoCol);
+            gl::Program *menu_prog = util::ResourceManager::GetShaders()->GetMenuProg();
+            menu_prog->Use();
+            if (mProgram != menu_prog)
             {
-                mFBO.Bind();
-
-                gl::Render::SetClearColor(1.f, 0.f, 0.f, 1.f);
-                gl::Render::Clear(gl::BufferBit::COLOR);
-
-                {
-                    ImVec2 video_size = ImVec2(mWidth, mHeight);
-
-                    ImGui_Impl_2d_to_3d_NewFrame(video_size, ImVec2(-1.f, -1.f));
-                    ImGui::NewFrame();
-
-                    ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
-                    ImGui::SetNextWindowSize(video_size, ImGuiCond_Always);
-                    if (ImGui::Begin("Video", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
-                    {
-                        ImGui::Image((ImTextureID)mVideoCol.GetID(), video_size);
-                    }
-                    ImGui::End();
-
-                    ImGui::Render();
-                    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-                }
-
-                mFBO.UnBind();
+                mUniformLocations.model = menu_prog->Uniform("model");
+                mUniformLocations.is_video = menu_prog->Uniform("uIsVideo");
+                // must set once
+                menu_prog->SetInt(menu_prog->Uniform("uAlbedo"), 0);
+                mProgram = menu_prog;
             }
+            menu_prog->SetMatrix4(mUniformLocations.model, glm::mat4(1.f));
+            // menu_prog->SetInt(mUniformLocations.is_video, 0);
+            mResultCol.Activate(0);
 
-            {
-                gl::Program *menu_prog = util::ResourceManager::GetShaders()->GetMenuProg();
-                menu_prog->Use();
-                if (mProgram != menu_prog)
-                {
-                    mUniformLocations.model = menu_prog->Uniform("model");
-                    mUniformLocations.is_video = menu_prog->Uniform("uIsVideo");
-                    // must set once
-                    menu_prog->SetInt(menu_prog->Uniform("uAlbedo"), 0);
-                    mProgram = menu_prog;
-                }
-                menu_prog->SetMatrix4(mUniformLocations.model, glm::mat4(1.f));
-                menu_prog->SetInt(mUniformLocations.is_video, 0);
-                mResultCol.Activate(0);
-
-                gl::Pipeline::DisableBlending();
-                // gl::Pipeline::EnableBlending();
-                gl::Pipeline::DisableCullFace();
-                //  printf("DrawIndices mSphere\n");
-                mSphere.Draw();
-                gl::Pipeline::DisableBlending();
-                menu_prog->SetInt(mUniformLocations.is_video, 0);
-            }
+            gl::Pipeline::DisableBlending();
+            // gl::Pipeline::EnableBlending();
+            mSphere.Draw();
+            // menu_prog->SetInt(mUniformLocations.is_video, 0);
         }
 #else
         return;
@@ -177,10 +206,10 @@ namespace w3d
                 menu_prog->SetInt(menu_prog->Uniform("uAlbedo"), 0);
                 mProgram = menu_prog;
             }
-            menu_prog->SetMatrix4(mUniformLocations.model, model);
+            menu_prog->SetMatrix4(mUniformLocations.model, glm::mat4(1.f));
             menu_prog->SetInt(mUniformLocations.is_video, 1);
             mResultCol.Activate(0);
-           
+
             gl::Pipeline::EnableBlending();
             mSphere.Draw();
             gl::Pipeline::DisableBlending();

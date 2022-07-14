@@ -34,6 +34,7 @@ namespace w3d
 
     void Menu::Create(float width, float height, float mm_per_px)
     {
+        printf("Menu::Create width: %f, height: %f\n", width, height);
         mWidth = width;
         mHeight = height;
 
@@ -87,8 +88,7 @@ namespace w3d
                 is_hovered = true;
             }
         }
-        // mouse_pos = ImVec2(50.f, 300.f);
-        // ImGui_Impl_2d_to_3d_MouseButtonCallback(MOUSEBUTTON_LEFT, PRESS, 0);
+
         mFBO.Bind();
 
         gl::Render::SetClearColor(0.f, 0.f, 0.f, 0.f);
@@ -106,7 +106,6 @@ namespace w3d
             g.ActiveIdNoClearOnFocusLoss = true;
             if (ImGui::Begin(name, &mIsOpen, window_flags))
             {
-
                 if (is_hovered)
                     g.HoveredWindow = ImGui::GetCurrentWindow();
 
@@ -145,6 +144,5 @@ namespace w3d
         mBaseColor.Activate(0);
         gl::Pipeline::EnableBlending();
         mPlane.Draw();
-        gl::Pipeline::DisableBlending();
     }
 } // namespace w3d

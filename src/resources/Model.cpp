@@ -209,9 +209,9 @@ namespace rsrc
 	{
 		util::AABB parentBvh = parent ? parent->GetBoundingVolumeHierarchy() : util::AABB();
 
-		if (node->HaveMesh()) 
+		if (node->HaveMesh())
 		{
-			if (node->GetBoundingBox().IsValid()) 
+			if (node->GetBoundingBox().IsValid())
 			{
 				node->GetBoundingBox().SetState(node->GetLocalMatrix());
 				if (node->GetChildrens().size() == 0)
@@ -219,23 +219,24 @@ namespace rsrc
 			}
 		}
 
-		if (node->GetBoundingVolumeHierarchy().IsValid()) 
+		if (node->GetBoundingVolumeHierarchy().IsValid())
 		{
 			dimensions.min = glm::min(dimensions.min, node->GetBoundingVolumeHierarchy().GetMin());
 			dimensions.max = glm::max(dimensions.max, node->GetBoundingVolumeHierarchy().GetMax());
 		}
 
-		for (auto& child : node->GetChildrens()) 
+		for (auto &child : node->GetChildrens())
 			CalculateBoundingBox(&child, node);
-		
 	}
+
 	void Model::GetSceneDimensions()
 	{
 		dimensions.min = glm::vec3(FLT_MAX);
 		dimensions.max = glm::vec3(-FLT_MAX);
 
 		// Calculate binary volume hierarchy for all nodes in the scene
-		for (auto& node : mNodes) {
+		for (auto &node : mNodes)
+		{
 			CalculateBoundingBox(&node, nullptr);
 		}
 
@@ -250,42 +251,40 @@ namespace rsrc
 	{
 	}
 
-	void Model::Draw(const glm::mat4& model)
+	void Model::Draw(const glm::mat4 &model)
 	{
 		mModel = model;
 		if (mIsReady)
 		{
-			gl::Program* pbr_prog = util::ResourceManager::GetShaders()->GetLightMapProg();
+			gl::Program *pbr_prog = util::ResourceManager::GetShaders()->GetLightMapProg();
 			pbr_prog->Use();
 
 			mVAO.Bind();
-			for (auto& node : mNodes)
+			for (auto &node : mNodes)
 			{
 				node.Draw(pbr_prog, mTransform * mModel);
 			}
 		}
 	}
 
-	void Model::DrawEditor(const glm::mat4& view, const glm::mat4& proj)
+	void Model::DrawEditor(const glm::mat4 &view, const glm::mat4 &proj)
 	{
 		if (mIsReady && mIsEditable)
 		{
 			{
-				//ImGuizmo::Enable(true);
+				// ImGuizmo::Enable(true);
 
 				ImGuizmo::OPERATION operation = ImGuizmo::TRANSLATE_X | ImGuizmo::TRANSLATE_Y | ImGuizmo::TRANSLATE_Z;
 				glm::vec3 snap = glm::vec3(0.1f, 0.1f, 0.1f);
 
 				glm::mat4 matrix = mTransform * mModel;
 
-				if (ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), operation, ImGuizmo::LOCAL, (float*)glm::value_ptr(matrix), NULL, (float*)glm::value_ptr(snap), NULL, NULL))
+				if (ImGuizmo::Manipulate(glm::value_ptr(view), glm::value_ptr(proj), operation, ImGuizmo::LOCAL, (float *)glm::value_ptr(matrix), NULL, (float *)glm::value_ptr(snap), NULL, NULL))
 				{
 					mTransform = matrix * glm::inverse(mModel);
 				}
 
-				//ImGuizmo::DrawCube(glm::value_ptr(view), glm::value_ptr(proj), mModel);
-				
-				
+				// ImGuizmo::DrawCube(glm::value_ptr(view), glm::value_ptr(proj), mModel);
 
 				/*float matrixTranslation[3], matrixRotation[3], matrixScale[3];
 				ImGuizmo::DecomposeMatrixToComponents(gizmoMatrix.m16, matrixTranslation, matrixRotation, matrixScale);
@@ -293,8 +292,7 @@ namespace rsrc
 				ImGui::InputFloat3("Rt", matrixRotation, 3);
 				ImGui::InputFloat3("Sc", matrixScale, 3);
 				ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, gizmoMatrix.m16);*/
-
 			}
 		}
-	}	
+	}
 }

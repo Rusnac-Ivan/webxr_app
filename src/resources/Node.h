@@ -41,11 +41,11 @@ namespace rsrc
 
 		const glm::mat4 &GetLocalMatrix() { return mLocalMatrix; }
 
-		util::AABB& GetBoundingBox() { return mAABB; }
-		util::AABB& GetBoundingVolumeHierarchy() { return mBVH; }
+		util::AABB &GetBoundingBox() { return mAABB; }
+		util::AABB &GetBoundingVolumeHierarchy() { return mBVH; }
 
 		bool HaveMesh() { return mMeshes.size() > 0; }
-		std::vector<Node>& GetChildrens() { return mChildrens; }
+		std::vector<Node> &GetChildrens() { return mChildrens; }
 
 		void LoadFromTinyGLTF(Node *parent,
 							  const tinygltf::Node &node,

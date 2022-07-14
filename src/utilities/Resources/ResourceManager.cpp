@@ -63,15 +63,13 @@ namespace util
         mMenu->Create(440, 440, 2.f);
 
         mMenu1 = std::make_unique<w3d::Menu>();
-        mMenu1->Create(400, 500, 2.f);
+        mMenu1->Create(300, 350, 2.f);
 
         mVideo2D = std::make_unique<w3d::Video2D>();
         mVideo2D->Create("./resources/video/2d/test_2d_vid.mp4");
 
-        // mVideo3D = std::make_unique<w3d::Video3D>();
-        //  mVideo3D->Create(10.f, "./resources/video/3d/test_3d_vid.mp4");
-        //  mVideo3D->Create("./resources/video/3d/test_3d_vid.mp4");
-        //  mVideo3D->Create("https://vimeo.com/215984159");
+        mVideo3D = std::make_unique<w3d::Video3D>();
+        mVideo3D->Create("./resources/video/3d/test_3d_vid.mp4");
 
         mImage = std::make_unique<rsrc::Image>();
         mImage->Load(std::string(path + "/models/Porsche/porche.png").c_str());

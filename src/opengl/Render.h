@@ -38,10 +38,10 @@ namespace gl
 
 		static void SetViewport(unsigned int width, unsigned int height);
 		static void SetViewport(unsigned int x, unsigned int y, unsigned int width, unsigned int height);
-		static void SetClearColor(const float &red, const float &green, const float &blue, const float &alpha);
+		static void SetClearColor(const float red, const float green, const float blue, const float alpha);
 		static void SetClearColor(const glm::vec4 &color);
-		static void SetClearDepth(const float &val);
-		static void SetClearStencil(const int &val);
+		static void SetClearDepth(const float val);
+		static void SetClearStencil(const int val);
 
 		static void DrawVertices(Primitive primitive, size_t vertexCount, size_t vertexOffset);
 		static void DrawIndices(Primitive primitive, size_t indexCount, DataType type, size_t indexOffset);
@@ -80,7 +80,7 @@ namespace gl
 		GL(Viewport(x, y, width, height));
 	}
 
-	inline void Render::SetClearColor(const float &red, const float &green, const float &blue, const float &alpha)
+	inline void Render::SetClearColor(const float red, const float green, const float blue, const float alpha)
 	{
 		GL(ClearColor(red, green, blue, alpha));
 	}
@@ -90,12 +90,12 @@ namespace gl
 		GL(ClearColor(color.r, color.g, color.b, color.a));
 	}
 
-	inline void Render::SetClearDepth(const float &val)
+	inline void Render::SetClearDepth(const float val)
 	{
 		GL(ClearDepth(val));
 	}
 
-	inline void Render::SetClearStencil(const int &val)
+	inline void Render::SetClearStencil(const int val)
 	{
 		GL(ClearStencil(val));
 	}
@@ -107,12 +107,6 @@ namespace gl
 
 	inline void Render::DrawIndices(Primitive primitive, size_t indexCount, DataType type, size_t indexOffset)
 	{
-		/*GL(DrawElements(
-			static_cast<GLenum>(primitive),
-			indexCount,
-			static_cast<GLenum>(type),
-			(const void*)(indexOffset * DataSize(type))
-		));*/
 		GL(DrawElements(
 			static_cast<GLenum>(primitive),
 			indexCount,

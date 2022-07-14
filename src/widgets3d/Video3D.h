@@ -13,6 +13,7 @@
 #include <utilities/Shape/Sphere.h>
 #include <utilities/Emsc/Multimedia.h>
 #include <events/IEventListener.h>
+#include <utilities/Emsc/webxr.h>
 
 namespace w3d
 {
@@ -43,13 +44,23 @@ namespace w3d
         float mWidth;
         float mHeight;
 
+        bool mIsReady;
+
     public:
         Video3D(/* args */);
         ~Video3D();
 
+        void Play();
+        void Pause();
+#ifdef __EMSCRIPTEN__
+        bool IsPlaying() { return mEMVideo.GetMediaState() == em::MediaState::PLAYING; }
+#endif
+
         void Create(const char *url);
 
-        void Draw(const glm::mat4 &model);
+        void Compose(WebXRInputSource *inputSource, const glm::mat4 &model);
+
+        void Draw();
 
         virtual void operator()(IEvent &event);
     };

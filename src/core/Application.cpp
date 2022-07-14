@@ -106,7 +106,7 @@ namespace core
 
 	static void StyleColors()
 	{
-		ImGuiStyle& style = ImGui::GetStyle();
+		ImGuiStyle &style = ImGui::GetStyle();
 
 		style.Alpha = 1.0;
 		style.FrameBorderSize = 1.f;
@@ -115,6 +115,15 @@ namespace core
 		style.GrabMinSize = 20.f;
 		style.FrameRounding = 10.f;
 
+		ImVec4 defaultColor = ImVec4(0.96f, 0.96f, 0.96f, 0.7f);
+		ImVec4 hoverColor = ImVec4(0.96f, 0.96f, 0.96f, 0.8f);
+		ImVec4 activeColor = ImVec4(0.96f, 0.96f, 0.96f, 0.9f);
+
+		ImVec4 bgColor = ImVec4(0.96f, 0.96f, 0.96f, 0.5f);
+		ImVec4 textColor = ImVec4(0.f, 0.f, 0.f, 1.f);
+		ImVec4 titleBgColor = ImVec4(0.96f, 0.96f, 0.96f, 0.7f);
+		ImVec4 titleBgCollapsedColor = ImVec4(0.96f, 0.96f, 0.96f, 0.5f);
+		ImVec4 titleBgActiveColor = ImVec4(0.96f, 0.96f, 0.96f, 0.8f);
 
 		style.Colors[ImGuiCol_Text] = ImVec4(0.00f, 1.00f, 1.00f, 1.00f);
 		style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.00f, 0.40f, 0.41f, 1.00f);
@@ -224,8 +233,9 @@ namespace core
 		ImGui::CreateContext();
 		ImGuiIO &io = ImGui::GetIO();
 
-		//ImGui::StyleColorsDark();
-		StyleColors();
+		// ImGui::StyleColorsDark();
+		ImGui::StyleColorsClassic();
+		// StyleColors();
 
 		ImFontConfig imFontConf = {};
 		imFontConf.FontDataOwnedByAtlas = false;
@@ -236,7 +246,7 @@ namespace core
 		// io.Fonts->AddFontDefault(&imFontConf);
 
 		// Setup Platform/Renderer backends
-		//ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
+		// ImGui_ImplGlfw_InitForOpenGL(mGLFWWindow, true);
 		ImGui_Impl_2d_to_3d_InitForOpenGL();
 		ImGui_ImplOpenGL3_Init(GLSL_VERSION);
 

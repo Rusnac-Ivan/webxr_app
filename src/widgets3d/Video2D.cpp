@@ -153,7 +153,7 @@ namespace w3d
                     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
                     ImGuiContext &g = *GImGui;
                     g.ActiveIdNoClearOnFocusLoss = true;
-                    if (ImGui::Begin("Video", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
+                    if (ImGui::Begin("Video2D", NULL, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDecoration))
                     {
                         if (is_hovered)
                             g.HoveredWindow = ImGui::GetCurrentWindow();
@@ -194,6 +194,8 @@ namespace w3d
                         ImDrawList *draw_list = ImGui::GetWindowDrawList();
                         if (is_hovered)
                             draw_list->AddCircleFilled(ImVec2(mouse_pos.x, mouse_pos.y), 10.f, ImColor(ImVec4(1.f, 0.f, 1.f, 0.7f)));
+
+                        g.HoveredWindow = nullptr;
                     }
                     ImGui::End();
                     ImGui::PopStyleVar(2);
@@ -223,7 +225,7 @@ namespace w3d
                     mProgram = menu_prog;
                 }
                 menu_prog->SetMatrix4(mUniformLocations.model, mModel);
-                menu_prog->SetInt(mUniformLocations.is_video, 0);
+                menu_prog->SetInt(mUniformLocations.is_video, 1);
                 mResultCol.Activate(0);
                 gl::Pipeline::EnableBlending();
                 mPlane.Draw();
