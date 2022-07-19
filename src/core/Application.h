@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <string>
+#include <glm/glm.hpp>
 
 struct GLFWwindow;
 struct ImGuiContext;
@@ -18,7 +19,7 @@ namespace core
 		uint32_t mWidth;
 		uint32_t mHeight;
 
-		//ImGuiContext* mImGuiContext;
+		// ImGuiContext* mImGuiContext;
 
 		static float mFPS;
 
@@ -30,9 +31,6 @@ namespace core
 		Application &operator=(Application &app) = delete;
 
 	protected:
-
-		
-
 		Application();
 		virtual ~Application();
 
@@ -57,11 +55,12 @@ namespace core
 
 		static float GetFPS();
 
-		//ImGuiContext* GetMainImGuiContext() { return mImGuiContext; }
+		// ImGuiContext* GetMainImGuiContext() { return mImGuiContext; }
 
 		virtual bool OnInitialize() { return true; }
-		virtual bool OnGui() { return true; }
-		virtual bool OnRender() { return true; }
+		virtual bool OnGUICompose() { return true; }
+		virtual bool OnRender(int x, int y, int width, int height, const glm::mat4 &view, const glm::mat4 &proj) { return true; }
+		virtual bool OnGUI(int x, int y, int width, int height, const glm::mat4 &view, const glm::mat4 &proj) { return true; }
 		virtual bool OnFinalize() { return true; }
 
 		static void OnUpdate(void *_arg);

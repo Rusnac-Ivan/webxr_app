@@ -7,6 +7,10 @@
 #include <backends/imgui_impl_opengl3.h>
 #include <widgets3d/ImGui_Impl_2d_to_3d.h>
 #include "helvetica_font.inl"
+#include <utilities/Emsc/webxr.h>
+#include <opengl/Render.h>
+#include <imgui_internal.h>
+#include <ImGuizmo.h>
 //#include "roboto_medium.inl"
 
 namespace core
@@ -297,11 +301,13 @@ namespace core
 	{
 		Application *app = reinterpret_cast<Application *>(_arg);
 
-		static double curr = 0.f;
-		static double prev = curr;
-		curr = glfwGetTime();
-		Application::mFPS = 1.0 / (curr - prev);
-		prev = curr;
+		{ // calc FPS
+			static double curr = 0.f;
+			static double prev = curr;
+			curr = glfwGetTime();
+			Application::mFPS = 1.0 / (curr - prev);
+			prev = curr;
+		}
 
 		if (!app->mIsSync)
 		{
@@ -326,11 +332,7 @@ namespace core
 		}
 #endif
 
-		{ // render scene
-			app->OnRender();
-		}
-
-		{ // render menu
+		{ // compose gui menus
 
 			// Setup time step
 			ImGuiIO &io = ImGui::GetIO();
@@ -338,7 +340,124 @@ namespace core
 			io.DeltaTime = app->Time > 0.0 ? (float)(current_time - app->Time) : (float)(1.0f / 60.0f);
 			app->Time = current_time;
 
-			app->OnGui();
+			app->OnGUICompose();
+		}
+
+		{ // prepare webxr frame buffer
+			emscripten::val &xr_gl_layer = WebXR::GetGLLayer();
+			emscripten::val gl_render_context = WebXR::GetGLRenderContext();
+			emscripten::val xr_session = WebXR::GetSession();
+
+			// Assumed to be a XRWebGLLayer for now.
+			if (xr_gl_layer.isNull() || xr_gl_layer.isUndefined())
+			{
+				emscripten::val renderState = xr_session["renderState"];
+
+				if (renderState["__proto__"].hasOwnProperty("layers") || renderState.hasOwnProperty("layers"))
+				{
+					emscripten::val layers = renderState["layers"];
+					xr_gl_layer = layers[0];
+					printf("layer = session.renderState.layers[0];\n");
+				}
+			}
+			else
+			{
+				// only baseLayer has framebuffer and we need to bind it
+				// even if it is null (for inline sessions)
+				emscripten::val framebuffer = xr_gl_layer["framebuffer"];
+
+				// if (!(framebuffer.isNull() || framebuffer.isUndefined()))
+				{
+					gl_render_context.call<void>("bindFramebuffer", gl_render_context["FRAMEBUFFER"], framebuffer);
+				}
+				printf("gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);\n");
+			}
+
+			if (!(xr_gl_layer["colorTexture"].isNull() || xr_gl_layer["colorTexture"].isUndefined()))
+			{
+				gl_render_context.call<void>("framebufferTexture2D", gl_render_context["FRAMEBUFFER"], gl_render_context["COLOR_ATTACHMENT0"], gl_render_context["TEXTURE_2D"], xr_gl_layer["colorTexture"], 0);
+			}
+			if (!(xr_gl_layer["depthStencilTexture"].isNull() || xr_gl_layer["depthStencilTexture"].isUndefined()))
+			{
+				gl_render_context.call<void>("framebufferTexture2D", gl_render_context["FRAMEBUFFER"], gl_render_context["DEPTH_ATTACHMENT"], gl_render_context["TEXTURE_2D"], xr_gl_layer["depthStencilTexture"], 0);
+			}
+
+			gl::Render::SetClearColor(0.f, 0.f, 0.4f, 1.f);
+			gl::Render::Clear(gl::BufferBit::COLOR, gl::BufferBit::DEPTH);
+		}
+
+		{ // render webxr viewes
+			// WebXRRigidTransform &headPose = WebXR::GetHeadPose();
+			WebXRView *viewArray;
+			uint32_t viewCount;
+			WebXR::GetViews(&viewArray, &viewCount);
+
+			/*static glm::vec4 view_ports[2];
+			view_ports[0] = glm::vec4(0.f, 0.f, app->GetWidth() / 2.f, app->GetHeight());
+			view_ports[1] = glm::vec4(app->GetWidth() / 2.f, 0.f, app->GetWidth() / 2.f, app->GetHeight());
+			static glm::mat4 proj_mats[2];
+			proj_mats[0] = glm::perspective(glm::radians(60.f), view_ports[0].z / view_ports[0].w, 0.01f, 100.f);
+			proj_mats[1] = glm::perspective(glm::radians(60.f), view_ports[1].z / view_ports[1].w, 0.01f, 100.f);
+
+			viewCount = 2;*/
+
+			for (uint32_t i = 0; i < viewCount; i++)
+			{
+				WebXRView &view = viewArray[i];
+
+				{ // render scene
+					app->OnRender(view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height, view.viewPose.matrix, view.projectionMatrix);
+					// app->OnRender(view_ports[i].x, view_ports[i].y, view_ports[i].z, view_ports[i].w, glm::mat4(1.f), proj_mats[i]);
+				}
+
+				{ // render surface gui
+					ImGui_Impl_2d_to_3d_NewFrame(ImVec2(width, height), ImVec2(-1.f, -1.f));
+					ImGui::NewFrame();
+
+					ImGuiContext &g = *GImGui;
+
+					ImGuiViewportP *main_viewport = g.Viewports[0];
+					main_viewport->Flags = ImGuiViewportFlags_IsPlatformWindow | ImGuiViewportFlags_OwnedByApp;
+					main_viewport->Pos = ImVec2(view.viewport.x, view.viewport.y);
+					main_viewport->Size = ImVec2(view.viewport.width, view.viewport.height);
+					for (int n = 0; n < g.Viewports.Size; n++)
+					{
+						ImGuiViewportP *viewport = g.Viewports[n];
+						// Lock down space taken by menu bars and status bars, reset the offset for fucntions like BeginMainMenuBar() to alter them again.
+						viewport->WorkOffsetMin = ImVec2(0.f, 0.f);
+						viewport->WorkOffsetMax = ImVec2(0.f, 0.f);
+						viewport->BuildWorkOffsetMin = viewport->BuildWorkOffsetMax = ImVec2(0.0f, 0.0f);
+						viewport->UpdateWorkRect();
+					}
+
+					g.ActiveIdNoClearOnFocusLoss = true;
+					ImGuizmo::BeginFrame();
+
+					char win_name[8] = {};
+					sprintf(win_name, "gui_%d", i);
+
+					ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
+					ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+					ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
+
+					ImGui::SetNextWindowPos(ImVec2(view.viewport.x, view.viewport.y), ImGuiCond_Always);
+					ImGui::SetNextWindowSize(ImVec2(view.viewport.width, view.viewport.height), ImGuiCond_Always);
+
+					ImGui::Begin(win_name, nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground);
+					{
+						app->OnGUI(view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height, view.viewPose.matrix, view.projectionMatrix);
+						// app->OnGUI(view_ports[i].x, view_ports[i].y, view_ports[i].z, view_ports[i].w, glm::mat4(1.f), proj_mats[i]);
+					}
+					ImGui::End();
+
+					ImGui::PopStyleVar(3);
+
+					ImGui::Render();
+					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+				}
+
+				gl::Render::Flush();
+			}
 		}
 
 		glfwSwapBuffers(app->mGLFWWindow);

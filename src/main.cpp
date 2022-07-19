@@ -66,7 +66,7 @@ public:
 
 		return true;
 	};
-	virtual bool OnGui()
+	virtual bool OnGUICompose()
 	{
 
 		util::ResourceManager::GetW3DVideo2D()->Compose(mInputSource, glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.1f, -4.f)));
@@ -413,22 +413,22 @@ public:
 		is_init_uniforms = true;
 	}
 
-	virtual bool OnRender()
+	virtual bool OnRender(int x, int y, int width, int height, const glm::mat4 &view, const glm::mat4 &proj)
 	{
-#ifndef __EMSCRIPTEN__
-		if (util::ResourceManager::GetProgress() < 99.999f)
-			return true;
-#endif
+		/*#ifndef __EMSCRIPTEN__
+				if (util::ResourceManager::GetProgress() < 99.999f)
+					return true;
+		#endif*/
 
 		rsrc::Shaders *shaders = util::ResourceManager::GetShaders();
 
-		if (!shaders->IsReady())
-			return true;
+		// if (!shaders->IsReady())
+		// return true;
 
-		gl::Render::SetClearColor(0.f, 0.f, 0.4f, 1.f);
-		gl::Render::Clear(gl::BufferBit::COLOR, gl::BufferBit::DEPTH);
 #ifndef __EMSCRIPTEN__
-		InitPrograms(mCamera.GetPosition(), mCamera.GetPosition(), mCamera.GetProjectionMat() * mCamera.GetViewMat());
+
+		gl::Render::SetViewport(view_ports[i].x, view_ports[i].y, view_ports[i].z, view_ports[i].w);
+		InitPrograms(mCamera.GetPosition(), mCamera.GetPosition(), proj_mats[i] * mCamera.GetViewMat());
 		util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), mCamera.GetViewMat(), mCamera.GetProjectionMat());
 		glm::mat4 model = glm::scale(glm::mat4(1.f), glm::vec3(0.25f, 0.25f, 0.25f));
 		util::ResourceManager::GetModel()->Draw(glm::translate(model, glm::vec3(0.f, 1.6f, 0.f)));
@@ -440,286 +440,194 @@ public:
 		util::ResourceManager::GetW3DMenu()->Draw();
 		util::ResourceManager::GetW3DMenu1()->Draw();
 		// util::ResourceManager::GetW3DVideo2D()->Draw();
-
-		ImGui_Impl_2d_to_3d_NewFrame(ImVec2(GetWidth(), GetHeight()), ImVec2(-1.f, -1.f));
-		ImGui::NewFrame();
-
-		ImGuiContext &g = *GImGui;
-		ImGuiViewportP *main_viewport = g.Viewports[0];
-		main_viewport->Flags = ImGuiViewportFlags_IsPlatformWindow | ImGuiViewportFlags_OwnedByApp;
-		main_viewport->Pos = ImVec2(GetWidth() / 2.f, 0.f);
-		main_viewport->Size = ImVec2(GetWidth() / 2.f, GetHeight());
-
-		for (int n = 0; n < g.Viewports.Size; n++)
-		{
-			ImGuiViewportP *viewport = g.Viewports[n];
-
-			// Lock down space taken by menu bars and status bars, reset the offset for fucntions like BeginMainMenuBar() to alter them again.
-			viewport->WorkOffsetMin = ImVec2(0.f, 0.f);
-			viewport->WorkOffsetMax = ImVec2(0.f, 0.f);
-			viewport->BuildWorkOffsetMin = viewport->BuildWorkOffsetMax = ImVec2(0.0f, 0.0f);
-			// viewport->WorkPos = ImVec2(0.f, 0.f);
-			// viewport->WorkSize = ImVec2(GetWidth() / 2.f, GetHeight());
-			viewport->UpdateWorkRect();
-		}
-
-		// gl::Render::SetViewport(main_viewport->Pos.x, main_viewport->Pos.y, main_viewport->Size.x, main_viewport->Size.y);
-
-		ImGuizmo::BeginFrame();
-		{
-
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
-			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
-			ImGui::SetNextWindowPos(ImVec2(0.f, 0.f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(GetWidth(), GetHeight()), ImGuiCond_Always);
-
-			g.ActiveIdNoClearOnFocusLoss = true;
-			ImGui::Begin("Edit", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground);
-			{
-				ImGuizmo::SetDrawlist();
-				float windowWidth = (float)ImGui::GetWindowWidth();
-				float windowHeight = (float)ImGui::GetWindowHeight();
-				ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-
-				if (util::ResourceManager::GetModel1())
-					util::ResourceManager::GetModel1()->DrawEditor(mCamera.GetViewMat(), mCamera.GetProjectionMat());
-
-				ImGuizmo::DrawGrid(glm::value_ptr(mCamera.GetViewMat()), glm::value_ptr(mCamera.GetProjectionMat()), glm::value_ptr(glm::mat4(1.f)), 10.f);
-			}
-			ImGui::End();
-			ImGui::PopStyleVar(3);
-		}
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 		// gl::Render::SetViewport(GetWidth(), GetHeight());
 #else
 		const WebXRRigidTransform &headPose = WebXR::GetHeadPose();
 
-		WebXRView *viewArray;
-		uint32_t viewCount;
-		WebXR::GetViews(&viewArray, &viewCount);
-		// printf("viewCount: %d\n", viewCount);
-		for (uint32_t i = 0; i < viewCount; i++)
+		gl::Render::SetViewport(x, y, width, height);
+		if (shaders->IsReady())
 		{
-			// if(i == 1)
-			// continue;
+			InitPrograms(headPose.position, headPose.position, proj * view);
 
-			WebXRView &view = viewArray[i];
-			// printf("view%d, viewPort[%d, %d, %d, %d]\n", i, view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.width);
-			gl::Render::SetViewport(view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height);
-			if (shaders->IsReady())
+			if (!util::ResourceManager::GetW3DVideo3D()->IsPlaying())
 			{
-				InitPrograms(headPose.position, headPose.position, view.projectionMatrix * view.viewPose.matrix);
+				util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), view, proj);
 
-				if (!util::ResourceManager::GetW3DVideo3D()->IsPlaying())
-				{
-					util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), view.viewPose.matrix, view.projectionMatrix);
+				util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, -1.f, -3.f)));
+				util::ResourceManager::GetModel1()->Draw(mMenuModel);
+				if (!util::ResourceManager::GetModel1()->IsReady())
+					util::ResourceManager::GetW3DMenu()->Draw();
 
-					util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, -1.f, -3.f)));
-					util::ResourceManager::GetModel1()->Draw(mMenuModel);
-					if (!util::ResourceManager::GetModel1()->IsReady())
-						util::ResourceManager::GetW3DMenu()->Draw();
+				util::ResourceManager::GetW3DVideo2D()->Draw();
+			}
 
-					util::ResourceManager::GetW3DVideo2D()->Draw();
-				}
+			if (util::ResourceManager::GetW3DVideo3D()->IsPlaying())
+				util::ResourceManager::GetW3DVideo3D()->Draw();
 
-				if (util::ResourceManager::GetW3DVideo3D()->IsPlaying())
-					util::ResourceManager::GetW3DVideo3D()->Draw();
+			util::ResourceManager::GetW3DMenu1()->Draw();
 
-				util::ResourceManager::GetW3DMenu1()->Draw();
+			WebXRInputSource *inputSourceArray = nullptr;
+			uint32_t inputCount = 0;
+			WebXR::GetInputSources(&inputSourceArray, &inputCount);
+			for (uint32_t j = 0; j < inputCount; j++)
+			{
+				WebXRInputSource &inputSource = inputSourceArray[j];
+				WebXRRigidTransform &transform = inputSource.rigidTransform;
 
-				WebXRInputSource *inputSourceArray = nullptr;
-				uint32_t inputCount = 0;
-				WebXR::GetInputSources(&inputSourceArray, &inputCount);
-				for (uint32_t j = 0; j < inputCount; j++)
-				{
-					WebXRInputSource &inputSource = inputSourceArray[j];
-					WebXRRigidTransform &transform = inputSource.rigidTransform;
+				if (inputSource.handedness == XRHandedness::RIGHT)
+					mInputSource = &inputSource;
 
-					if (inputSource.handedness == XRHandedness::RIGHT)
-						mInputSource = &inputSource;
-
-					util::ResourceManager::GetController()->Draw(transform.position, transform.orientation);
-				}
-
-				ImGui_Impl_2d_to_3d_NewFrame(ImVec2(view.viewport.width, view.viewport.height), ImVec2(-1.f, -1.f));
-				// ImGui::GetMainViewport()->Pos = ImVec2(view.viewport.x, view.viewport.y);
-				ImGui::NewFrame();
-
-				ImGuiContext &g = *GImGui;
-
-				// Update main viewport with current platform position.
-				// FIXME-VIEWPORT: Size is driven by backend/user code for backward-compatibility but we should aim to make this more consistent.
-				ImGuiViewportP *main_viewport = g.Viewports[0];
-				main_viewport->Flags = ImGuiViewportFlags_IsPlatformWindow | ImGuiViewportFlags_OwnedByApp;
-				main_viewport->Pos = ImVec2(view.viewport.x, view.viewport.y);
-				main_viewport->Size = ImVec2(view.viewport.width, view.viewport.height);
-
-				for (int n = 0; n < g.Viewports.Size; n++)
-				{
-					ImGuiViewportP *viewport = g.Viewports[n];
-
-					// Lock down space taken by menu bars and status bars, reset the offset for fucntions like BeginMainMenuBar() to alter them again.
-					viewport->WorkOffsetMin = ImVec2(0.f, 0.f);
-					viewport->WorkOffsetMax = ImVec2(0.f, 0.f);
-					viewport->BuildWorkOffsetMin = viewport->BuildWorkOffsetMax = ImVec2(0.0f, 0.0f);
-					viewport->UpdateWorkRect();
-				}
-
-				g.ActiveIdNoClearOnFocusLoss = true;
-				ImGuizmo::BeginFrame();
-				{
-					char win_name[32] = {};
-					sprintf(win_name, "Edit: %d", i);
-
-					// ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
-					// ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
-
-					ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
-					ImGui::SetNextWindowPos(ImVec2(view.viewport.x, view.viewport.y), ImGuiCond_Always);
-					ImGui::SetNextWindowSize(ImVec2(view.viewport.width, view.viewport.height), ImGuiCond_Always);
-					ImGui::Begin(win_name, nullptr, ImGuiWindowFlags_NoDecoration);
-					{
-						ImVec2 win_size = ImVec2(230.f, 580.f);
-						// ImGui::SetCursorPosX(view.viewport.x + (view.viewport.width - win_size.x) / 2.f);
-						ImGui::Text("fdgdfgfd");
-						ImGui::SameLine();
-						ImGui::BeginChild("info", win_size);
-						{
-							// ImGui::Dummy(ImVec2(view.viewport.x + 50.f, 50.f));
-							// ImGui::SameLine();
-							static float FPS[100] = {};
-
-							float fps = GetFPS();
-
-							float average_fps = 0.f;
-							for (uint32_t i = 1; i < 100; i++)
-							{
-								FPS[i - 1] = FPS[i];
-								FPS[99] = fps;
-								average_fps += FPS[i] / 100.f;
-							}
-
-							if (average_fps > 50.f)
-							{
-								ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.7f, 0.f, 0.5f));
-							}
-							else if (average_fps > 20.f)
-							{
-								ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.7f, 0.f, 0.5f));
-							}
-							else
-							{
-								ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.f, 0.f, 0.5f));
-							}
-
-							char text[128] = {};
-
-							sprintf(text, "FPS: %.3f", average_fps);
-							ImGui::Text("%-64s", text);
-
-							ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 30.f);
-							ImGui::PlotLines("##Frame Times", &FPS[0], 100);
-							ImGui::PopStyleColor();
-
-							const WebXRRigidTransform &headPose = WebXR::GetHeadPose();
-
-							ImGui::Text("%s", "head");
-							sprintf(text, "pos:[ %.3f, %.3f, %.3f]", headPose.position.x, headPose.position.y, headPose.position.z);
-							ImGui::Text("%-64s", text);
-							sprintf(text, "ori:[ %.3f, %.3f, %.3f, %.3f]", headPose.orientation.x, headPose.orientation.y, headPose.orientation.z, headPose.orientation.w);
-							ImGui::Text("%-64s", text);
-							for (uint32_t i = 0; i < 4; i++)
-							{
-								for (uint32_t j = 0; j < 4; j++)
-								{
-									if (j == 3)
-										sprintf(text + (j + i * 4) * 7, " %5.2f\n", headPose.matrix[i][j]);
-									else
-										sprintf(text + (j + i * 4) * 7, " %5.2f ", headPose.matrix[i][j]);
-								}
-							}
-							ImGui::Text("%-128s", text);
-
-							WebXRView *viewArray;
-							uint32_t viewCount;
-							WebXR::GetViews(&viewArray, &viewCount);
-
-							memset(text, NULL, 128);
-							sprintf(text, "view Count: %d", viewCount);
-							ImGui::Text("%-128s", text);
-
-							for (uint32_t i = 0; i < viewCount; i++)
-							{
-								WebXRView &view = viewArray[i];
-
-								if (view.eye == XREye::LEFT)
-									ImGui::Text("%s", "left view");
-								else if (view.eye == XREye::RIGHT)
-									ImGui::Text("%s", "right view");
-
-								sprintf(text, "port:[ %.3d, %.3d, %.3d, %.3d]", view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height);
-								ImGui::Text("%-64s", text);
-								sprintf(text, "pos:[ %.3f, %.3f, %.3f]", view.viewPose.position.x, view.viewPose.position.y, view.viewPose.position.z);
-								ImGui::Text("%-64s", text);
-								sprintf(text, "ori:[ %.3f, %.3f, %.3f, %.3f]", view.viewPose.orientation.x, view.viewPose.orientation.y, view.viewPose.orientation.z, view.viewPose.orientation.w);
-								ImGui::Text("%-64s", text);
-
-								for (uint32_t i = 0; i < 4; i++)
-								{
-									for (uint32_t j = 0; j < 4; j++)
-									{
-										if (j == 3)
-											sprintf(text + (j + i * 4) * 7, " %5.2f\n", view.viewPose.matrix[i][j]);
-										else
-											sprintf(text + (j + i * 4) * 7, " %5.2f ", view.viewPose.matrix[i][j]);
-									}
-								}
-								ImGui::Text("%-128s", text);
-							}
-						}
-						ImGui::EndChild();
-
-						ImGuizmo::SetDrawlist();
-						float windowWidth = (float)ImGui::GetWindowWidth();
-						float windowHeight = (float)ImGui::GetWindowHeight();
-						ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
-
-						util::ResourceManager::GetModel1()->DrawEditor(view.viewPose.matrix, view.projectionMatrix);
-						ImGuizmo::DrawGrid(glm::value_ptr(view.viewPose.matrix), glm::value_ptr(view.projectionMatrix), glm::value_ptr(glm::mat4(1.f)), 10.f);
-					}
-					ImGui::End();
-					ImGui::PopStyleVar(3);
-				}
-				ImGui::Render();
-				ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+				util::ResourceManager::GetController()->Draw(transform.position, transform.orientation);
 			}
 		}
-		/*{
-			printf("Width: %d, Height: %d\n", GetWidth(), GetHeight());
-			ImGui_Impl_2d_to_3d_NewFrame(ImVec2(GetWidth(), GetHeight()), ImVec2(-1.f, -1.f));
-			ImGui::NewFrame();
-
-			ImGui::SetNextWindowPos(ImVec2(GetWidth() - 250.f, 0.f), ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(250.f, 550.f), ImGuiCond_Always);
-			ImGuiContext &g = *GImGui;
-			g.ActiveIdNoClearOnFocusLoss = true;
-			ImGui::Begin("Other Context", nullptr, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoDecoration);
-			{
-
-			}
-			ImGui::End();
-
-			ImGui::Render();
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-		}*/
-		GL(Flush());
-
 #endif
 		return true;
 	};
+
+	virtual bool OnGUI(int x, int y, int width, int height, const glm::mat4 &view, const glm::mat4 &proj)
+	{
+		ImGui::BeginChild("info", ImVec2(width, height));
+		{
+			ImVec2 size = ImVec2(280.f, 550.f);
+
+			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 130.f));
+			ImGui::SameLine();
+
+			// ImGui::SetCursorPos(ImVec2((width - size.x) / 2.f, 0.f));
+			//  ImGui::Text("ghgfhg");
+
+			static float FPS[100] = {};
+
+			float fps = GetFPS();
+
+			float average_fps = 0.f;
+			for (uint32_t i = 1; i < 100; i++)
+			{
+				FPS[i - 1] = FPS[i];
+				FPS[99] = fps;
+				average_fps += FPS[i] / 100.f;
+			}
+
+			if (average_fps > 50.f)
+			{
+				ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.f, 0.7f, 0.f, 0.5f));
+			}
+			else if (average_fps > 20.f)
+			{
+				ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.7f, 0.f, 0.5f));
+			}
+			else
+			{
+				ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.7f, 0.f, 0.f, 0.5f));
+			}
+
+			char text[128] = {};
+
+			sprintf(text, "FPS: %.3f", average_fps);
+
+			ImGui::Text("%-64s", text);
+
+			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 10.f));
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 30.f);
+			ImGui::PlotLines("##Frame Times", &FPS[0], 100);
+			ImGui::PopStyleColor();
+
+			const WebXRRigidTransform &headPose = WebXR::GetHeadPose();
+
+			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+			ImGui::SameLine();
+			ImGui::Text("%s", "head");
+
+			sprintf(text, "pos:[ %.3f, %.3f, %.3f]", headPose.position.x, headPose.position.y, headPose.position.z);
+			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+			ImGui::SameLine();
+			ImGui::Text("%-64s", text);
+
+			sprintf(text, "ori:[ %.3f, %.3f, %.3f, %.3f]", headPose.orientation.x, headPose.orientation.y, headPose.orientation.z, headPose.orientation.w);
+			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+			ImGui::SameLine();
+			ImGui::Text("%-64s", text);
+
+			for (uint32_t i = 0; i < 4; i++)
+			{
+				for (uint32_t j = 0; j < 4; j++)
+				{
+					if (j == 3)
+						sprintf(text + (j + i * 4) * 7, " %5.2f\n", headPose.matrix[i][j]);
+					else
+						sprintf(text + (j + i * 4) * 7, " %5.2f ", headPose.matrix[i][j]);
+				}
+			}
+			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+			ImGui::SameLine();
+			ImGui::Text("%-128s", text);
+
+			WebXRView *viewArray;
+			uint32_t viewCount;
+			WebXR::GetViews(&viewArray, &viewCount);
+
+			memset(text, NULL, 128);
+			sprintf(text, "view Count: %d", viewCount);
+			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+			ImGui::SameLine();
+			ImGui::Text("%-128s", text);
+
+			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+			ImGui::SameLine();
+			sprintf(text, "shaders IsReady: %d", util::ResourceManager::GetShaders()->IsReady());
+			ImGui::Text("%-128s", text);
+
+			for (uint32_t i = 0; i < viewCount; i++)
+			{
+				WebXRView &view = viewArray[i];
+				ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+				ImGui::SameLine();
+				if (view.eye == XREye::LEFT)
+					ImGui::Text("%s", "left view");
+				else if (view.eye == XREye::RIGHT)
+					ImGui::Text("%s", "right view");
+
+				sprintf(text, "port:[ %.3d, %.3d, %.3d, %.3d]", view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height);
+				ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+				ImGui::SameLine();
+				ImGui::Text("%-64s", text);
+				sprintf(text, "pos:[ %.3f, %.3f, %.3f]", view.viewPose.position.x, view.viewPose.position.y, view.viewPose.position.z);
+				ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+				ImGui::SameLine();
+				ImGui::Text("%-64s", text);
+				sprintf(text, "ori:[ %.3f, %.3f, %.3f, %.3f]", view.viewPose.orientation.x, view.viewPose.orientation.y, view.viewPose.orientation.z, view.viewPose.orientation.w);
+				ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+				ImGui::SameLine();
+				ImGui::Text("%-64s", text);
+
+				for (uint32_t i = 0; i < 4; i++)
+				{
+					for (uint32_t j = 0; j < 4; j++)
+					{
+						if (j == 3)
+							sprintf(text + (j + i * 4) * 7, " %5.2f\n", view.viewPose.matrix[i][j]);
+						else
+							sprintf(text + (j + i * 4) * 7, " %5.2f ", view.viewPose.matrix[i][j]);
+					}
+				}
+				ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
+				ImGui::SameLine();
+				ImGui::Text("%-128s", text);
+			}
+		}
+		ImGui::EndChild();
+
+		ImGuizmo::SetDrawlist();
+		float windowWidth = (float)ImGui::GetWindowWidth();
+		float windowHeight = (float)ImGui::GetWindowHeight();
+		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+		util::ResourceManager::GetModel1()->DrawEditor(view, proj);
+		ImGuizmo::DrawGrid(glm::value_ptr(view), glm::value_ptr(proj), glm::value_ptr(glm::mat4(1.f)), 10.f);
+
+		return true;
+	}
 	virtual bool OnFinalize()
 	{
 		printf("MyApp::OnFinalize\n");

@@ -29,7 +29,7 @@ emscripten::val WebXR::mRenderContext = emscripten::val::undefined();
 emscripten::val WebXR::mRefSpace = emscripten::val::undefined();
 emscripten::val WebXR::mXRInputSources = emscripten::val::undefined();
 emscripten::val WebXR::mXRViews = emscripten::val::undefined();
-emscripten::val WebXR::XRGLLayer = emscripten::val::undefined();
+emscripten::val WebXR::mXRGLLayer = emscripten::val::undefined();
 
 core::Application *WebXR::mApplication = nullptr;
 constexpr uint32_t WebXR::MAX_SOURCE_COUNT;
@@ -105,6 +105,21 @@ WebXR::WebXR(/* args */)
 
 WebXR::~WebXR()
 {
+}
+
+emscripten::val &WebXR::GetGLLayer()
+{
+    return mXRGLLayer;
+}
+
+emscripten::val WebXR::GetGLRenderContext()
+{
+    return mRenderContext;
+}
+
+emscripten::val WebXR::GetSession()
+{
+    return mXRSession;
 }
 
 bool WebXR::IsWebXRSupported()
@@ -328,10 +343,10 @@ void convertJSDOMPointToQuat(const emscripten::val &domPoint, glm::quat &quat)
 
 void WebXR::GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode)
 {
-    //emscripten::val::global("console").call<void>("log", mXRInputSources);
+    // emscripten::val::global("console").call<void>("log", mXRInputSources);
 
     uint32_t inputSourcesCount = mXRInputSources["length"].as<uint32_t>();
-    
+
     assert(inputSourcesCount <= MAX_SOURCE_COUNT);
 
     for (uint32_t i = 0; i < inputSourcesCount; i++)
@@ -400,7 +415,7 @@ void WebXR::GetViews(WebXRView **sourceArray, uint32_t *arraySize)
         const emscripten::val xrView = mXRViews[i];
         const emscripten::val transform = xrView["transform"];
         const emscripten::val projectionMatrix = xrView["projectionMatrix"];
-        const emscripten::val viewport = XRGLLayer.call<emscripten::val>("getViewport", xrView);
+        const emscripten::val viewport = mXRGLLayer.call<emscripten::val>("getViewport", xrView);
 
         const emscripten::val position = transform["position"];
         const emscripten::val orientation = transform["orientation"];
@@ -448,19 +463,8 @@ void WebXR::OnFrame(emscripten::val time, emscripten::val frame)
 
     emscripten::val renderState = session["renderState"];
 
-    XRGLLayer = renderState["baseLayer"];
+    mXRGLLayer = renderState["baseLayer"];
 
-    emscripten::val framebuffer = XRGLLayer["framebuffer"];
-
-    // emscripten::val::global("console").call<void>("log", XRGLLayer);
-    if (!(framebuffer.isNull() || framebuffer.isUndefined()))
-    {
-        // emscripten::val gl = emscripten::val::global("gl");
-        // gl.call<void>("bindFramebuffer", gl["FRAMEBUFFER"], framebuffer);
-        mRenderContext.call<void>("bindFramebuffer", mRenderContext["FRAMEBUFFER"], framebuffer);
-    }
-
-    // emscripten::val::global("console").call<void>("log", viewPose);
     mXRViews = viewPose["views"];
     mXRInputSources = session["inputSources"];
 

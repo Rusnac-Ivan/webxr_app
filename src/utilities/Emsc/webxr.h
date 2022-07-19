@@ -144,7 +144,7 @@ private:
     static emscripten::val mXRFrame;
     static emscripten::val mXRInputSources;
     static emscripten::val mXRViews;
-    static emscripten::val XRGLLayer;
+    static emscripten::val mXRGLLayer;
     static emscripten::val mCanvas;
     static emscripten::val mRenderContext;
 
@@ -177,6 +177,9 @@ public:
 
     static void GetViews(WebXRView **sourceArray, uint32_t *arraySize);
     static void GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode = WEBXR_INPUT_POSE_GRIP);
+    static emscripten::val &GetGLLayer();
+    static emscripten::val GetGLRenderContext();
+    static emscripten::val GetSession();
 
     static void OnRequestSession(emscripten::val event);
 
@@ -197,6 +200,6 @@ public:
 #endif
 #else //__EMSCRIPTEN__
 #ifndef __EMSCRIPTEN__
-typedef void* WebXRInputSource;
+typedef void *WebXRInputSource;
 #endif
 #endif
