@@ -143,7 +143,7 @@ namespace w3d
 
     void Video3D::Draw()
     {
-
+        return;
 #ifdef __EMSCRIPTEN__
         if (mIsReady)
         {

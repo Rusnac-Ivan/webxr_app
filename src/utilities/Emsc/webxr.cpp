@@ -17,7 +17,7 @@ EMSCRIPTEN_BINDINGS(WebXR)
     emscripten::function("WXROnGotLocalFloorSpace", &WebXR::OnGotLocalFloorSpace);
     emscripten::function("WXROnFailedLocalFloorSpace", &WebXR::OnFailedLocalFloorSpace);
     emscripten::function("WXROnGotViewerSpace", &WebXR::OnGotViewerSpace);
-    emscripten::function("WXROnRequestSession", &WebXR::OnRequestSession);
+    emscripten::function("WXROnMakeXRCompatible", &WebXR::OnMakeXRCompatible);
 };
 
 emscripten::val WebXR::mNavigator = emscripten::val::global("navigator");
@@ -135,16 +135,14 @@ bool WebXR::IsWebXRSupported()
         return false;
 }
 
-void WebXR::OnRequestSession(emscripten::val event)
+void WebXR::OnMakeXRCompatible(emscripten::val session)
 {
-    if (WebXR::IsSessionSupported(XRSessionMode::IMMERSIVE_VR))
-    {
-        RequestSession(XRSessionMode::IMMERSIVE_VR, XRSessionFeatures::LOCAL_FLOOR);
-    }
-    else
-    {
-        RequestSession(XRSessionMode::INLINE);
-    }
+    mXRSession = session;
+
+    emscripten::val makeXRCompatiblePromise = mRenderContext.call<emscripten::val>("makeXRCompatible");
+    makeXRCompatiblePromise.call<void>("then", emscripten::val::module_property("WXROnSessionStarted"), emscripten::val::module_property("WXROnError"));
+
+    printf("WebXR::OnMakeXRCompatible\n");
 }
 
 void WebXR::Start(core::Application *application)
@@ -158,13 +156,20 @@ void WebXR::Start(core::Application *application)
     if (mRenderContext.isNull() || mRenderContext.isUndefined())
         mRenderContext = mCanvas.call<emscripten::val>("getContext", std::string("webgl"));
 
-    emscripten::val makeXRCompatiblePromise = mRenderContext.call<emscripten::val>("makeXRCompatible");
-    makeXRCompatiblePromise.call<void>("then", emscripten::val::module_property("WXROnRequestSession"), emscripten::val::module_property("WXROnError"));
+    printf("WebXR::Start\n");
+
+    if (WebXR::IsSessionSupported(XRSessionMode::IMMERSIVE_VR))
+    {
+        RequestSession(XRSessionMode::IMMERSIVE_VR, XRSessionFeatures::LOCAL_FLOOR);
+    }
+    else
+    {
+        RequestSession(XRSessionMode::INLINE);
+    }
 }
 
-void WebXR::OnSessionStarted(emscripten::val session)
+void WebXR::OnSessionStarted(emscripten::val event)
 {
-    mXRSession = session;
     mXRSession.call<void>("addEventListener", std::string("end"), emscripten::val::module_property("WXROnSessionEnd"));
     mXRSession.call<void>("addEventListener", std::string("select"), emscripten::val::module_property("WXROnSelect"));
     mXRSession.call<void>("addEventListener", std::string("selectstart"), emscripten::val::module_property("WXROnSelectStart"));
@@ -528,7 +533,9 @@ bool WebXR::IsSessionSupported(XRSessionMode mode)
 void WebXR::RequestSession(XRSessionMode mode)
 {
     emscripten::val promise = mXR.call<emscripten::val>("requestSession", _XRSessionMode[mode]);
-    promise.call<void>("then", emscripten::val::module_property("WXROnSessionStarted"), emscripten::val::module_property("WXROnError"));
+    promise.call<void>("then", emscripten::val::module_property("WXROnMakeXRCompatible"), emscripten::val::module_property("WXROnError"));
+
+    printf("WebXR::RequestSession\n");
 }
 
 void WebXR::RequestSession(XRSessionMode mode, XRSessionFeatures required)
@@ -542,7 +549,9 @@ void WebXR::RequestSession(XRSessionMode mode, XRSessionFeatures required)
     option.set("requiredFeatures", reqFeatArray);
     // option.set("requiredFeatures", "viewer");
     emscripten::val promise = mXR.call<emscripten::val>("requestSession", _XRSessionMode[mode], option);
-    promise.call<void>("then", emscripten::val::module_property("WXROnSessionStarted"), emscripten::val::module_property("WXROnError"));
+    promise.call<void>("then", emscripten::val::module_property("WXROnMakeXRCompatible"), emscripten::val::module_property("WXROnError"));
+
+    printf("WebXR::RequestSession\n");
 }
 
 void WebXR::RequestSession(XRSessionMode mode, XRSessionFeatures required, XRSessionFeatures optional)
@@ -551,7 +560,9 @@ void WebXR::RequestSession(XRSessionMode mode, XRSessionFeatures required, XRSes
     option.set("requiredFeatures", _XRSessionFeatures[required]);
     option.set("optionalFeatures", _XRSessionFeatures[optional]);
     emscripten::val promise = mXR.call<emscripten::val>("requestSession", _XRSessionMode[mode], option);
-    promise.call<void>("then", emscripten::val::module_property("WXROnSessionStarted"), emscripten::val::module_property("WXROnError"));
+    promise.call<void>("then", emscripten::val::module_property("WXROnMakeXRCompatible"), emscripten::val::module_property("WXROnError"));
+
+    printf("WebXR::RequestSession\n");
 }
 
 #endif

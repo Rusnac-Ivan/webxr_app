@@ -10,7 +10,7 @@ namespace rsrc
 						   mMetallicFactor(0.1f),
 						   mRoughnessFactor(0.5f),
 						   mAlphaCutoff(0.5f),
-						   mBaseColorFactor(0.5),
+						   mBaseColorFactor(0.7),
 						   mEmissiveFactor(0.f)
 	{
 		for (uint32_t i = 0; i < MapType::COUNT; i++)

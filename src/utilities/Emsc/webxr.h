@@ -181,7 +181,7 @@ public:
     static emscripten::val GetGLRenderContext();
     static emscripten::val GetSession();
 
-    static void OnRequestSession(emscripten::val event);
+    static void OnMakeXRCompatible(emscripten::val event);
 
     static void OnSessionStarted(emscripten::val session);
     static void OnFrame(emscripten::val time, emscripten::val frame);

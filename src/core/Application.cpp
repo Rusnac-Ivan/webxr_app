@@ -332,7 +332,7 @@ namespace core
 		}
 #endif
 
-		{ // compose gui menus
+		/*{ // compose gui menus
 
 			// Setup time step
 			ImGuiIO &io = ImGui::GetIO();
@@ -341,7 +341,7 @@ namespace core
 			app->Time = current_time;
 
 			app->OnGUICompose();
-		}
+		}*/
 
 		{ // prepare webxr frame buffer
 			emscripten::val &xr_gl_layer = WebXR::GetGLLayer();
@@ -366,11 +366,10 @@ namespace core
 				// even if it is null (for inline sessions)
 				emscripten::val framebuffer = xr_gl_layer["framebuffer"];
 
-				// if (!(framebuffer.isNull() || framebuffer.isUndefined()))
+				if (!(framebuffer.isNull() || framebuffer.isUndefined()))
 				{
 					gl_render_context.call<void>("bindFramebuffer", gl_render_context["FRAMEBUFFER"], framebuffer);
 				}
-				printf("gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);\n");
 			}
 
 			if (!(xr_gl_layer["colorTexture"].isNull() || xr_gl_layer["colorTexture"].isUndefined()))
@@ -410,7 +409,7 @@ namespace core
 					// app->OnRender(view_ports[i].x, view_ports[i].y, view_ports[i].z, view_ports[i].w, glm::mat4(1.f), proj_mats[i]);
 				}
 
-				{ // render surface gui
+				/*{ // render surface gui
 					ImGui_Impl_2d_to_3d_NewFrame(ImVec2(width, height), ImVec2(-1.f, -1.f));
 					ImGui::NewFrame();
 
@@ -454,7 +453,7 @@ namespace core
 
 					ImGui::Render();
 					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-				}
+				}*/
 
 				gl::Render::Flush();
 			}

@@ -49,6 +49,8 @@ namespace rsrc
 		glm::mat4 mTransform;
 		glm::mat4 mModel;
 
+		glm::vec3 mCenter;
+
 		bool mIsBinary;
 
 		float mProgress;
@@ -69,6 +71,7 @@ namespace rsrc
 		void DrawEditor(const glm::mat4 &view, const glm::mat4 &proj);
 		void CalculateBoundingBox(Node *node, Node *parent);
 		void GetSceneDimensions();
+		glm::vec3 GetCenter() { return mCenter; }
 
 	private:
 		void DrawNode(Node *node);

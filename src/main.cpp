@@ -453,7 +453,9 @@ public:
 			{
 				util::ResourceManager::GetCubeMap()->Draw(shaders->GetCubeMapProg(), view, proj);
 
-				util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(0.f, -1.f, -3.f)));
+				glm::vec3 scene_center = util::ResourceManager::GetModel()->GetCenter();
+				util::ResourceManager::GetModel()->Draw(glm::translate(glm::mat4(1.f), glm::vec3(-scene_center.x + 5.f, -0.25f, -scene_center.z)));
+
 				util::ResourceManager::GetModel1()->Draw(mMenuModel);
 				if (!util::ResourceManager::GetModel1()->IsReady())
 					util::ResourceManager::GetW3DMenu()->Draw();

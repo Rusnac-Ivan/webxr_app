@@ -46,6 +46,7 @@ namespace rsrc
 	Model::Model() : mProgress(0.f), mIsReady(false), mIsBinary(false), mIsEditable(false)
 	{
 		mTransform = glm::mat4(1.f);
+		mCenter = glm::vec3(0.f);
 	}
 
 	Model::~Model()
@@ -245,6 +246,14 @@ namespace rsrc
 		mAABBScale[3][0] = dimensions.min[0];
 		mAABBScale[3][1] = dimensions.min[1];
 		mAABBScale[3][2] = dimensions.min[2];
+
+		mCenter = (dimensions.min + dimensions.max) / 2.f;
+
+		printf("model min: [%.3f, %.3f, %.3f]\n", dimensions.min.x, dimensions.min.y, dimensions.min.z);
+		printf("model max: [%.3f, %.3f, %.3f]\n", dimensions.max.x, dimensions.max.y, dimensions.max.z);
+		printf("model_center: [%.3f, %.3f, %.3f]\n", mCenter.x, mCenter.y, mCenter.z);
+
+		// mTransform = glm::translate(glm::mat4(1.f), glm::vec3(-model_center.x, 0.f, -model_center.z));
 	}
 
 	void Model::DrawNode(Node *node)

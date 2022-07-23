@@ -83,35 +83,33 @@ namespace gl
 		static CompareFunc	mStencilCompFun;
 		static GLint		mRefValue;
 		static GLuint		m;*/
-		
-
 
 		Pipeline() = delete;
 		~Pipeline() = delete;
 		Pipeline(Pipeline &) = delete;
 
 	public:
-		//work with Depth buffer
+		// work with Depth buffer
 		static void EnableDepthTest();
 		static void DisableDepthTest();
 		static void SetDepthMask(const bool &flag);
 		static void SetDepthFunc(const CompareFunc &depthFun);
 
-		//work with Stencil buffer
+		// work with Stencil buffer
 		static void EnableStencilTest();
 		static void DisableStencilTest();
 		static void SetStencilMask(const int &mask);
 		static void SetStencilFunc(const CompareFunc &stencilFun, const int &refVal, const int &mask);
 		static void SetStencilOperations(const Action &stencilFail, const Action &depthFail, const Action &depthPass);
 
-		//work with Blending
+		// work with Blending
 		static void EnableBlending();
 		static void DisableBlending();
 		static void SetBlendFunc(const ComputOption &sourceFactor, const ComputOption &destinationFactor);
 		static void SetBlendFuncSeparate(const ComputOption &sourceFactorRGB, const ComputOption &destinationFactorRGB, const ComputOption &sourceFactorAlpha, const ComputOption &destinationFactorAlpha);
 		static void SetBlendEquation(const CombineMode &mode);
 
-		//work with CullFace
+		// work with CullFace
 		static void EnableCullFace();
 		static void DisableCullFace();
 		static void SetCullFace(const Face &faceForCulling);

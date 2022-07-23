@@ -131,6 +131,7 @@ namespace w3d
 
     void Menu::Draw()
     {
+        return;
         gl::Program *menu_prog = util::ResourceManager::GetShaders()->GetMenuProg();
         menu_prog->Use();
         if (mProgram != menu_prog)

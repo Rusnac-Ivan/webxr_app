@@ -47,11 +47,11 @@ namespace util
         mShaders->Load(std::string(path + "/shaders/").c_str());
         // load cube map
         mCubeMap = std::make_unique<rsrc::CubeMap>();
-        mCubeMap->Load(std::string(path + "/cube_maps/yokohama/").c_str());
+        mCubeMap->Load(std::string(path + "/cube_maps/lawn/").c_str());
 
         // loads models
         mModel = std::make_unique<rsrc::Model>();
-        mModel->Load(std::string(path + "/models/xr_vr_space.glb").c_str());
+        mModel->Load(std::string(path + "/models/galerie.glb").c_str());
 
         mController = std::make_unique<util::Controller>();
         mController->Create(path.c_str(), 1.5f, 0.01f);

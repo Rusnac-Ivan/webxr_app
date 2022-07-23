@@ -211,6 +211,7 @@ namespace w3d
 
     void Video2D::Draw()
     {
+        return;
         if (mIsReady)
         {
             {
