@@ -247,7 +247,7 @@ static void convertJSArrayToVec2(const emscripten::val &v, glm::vec2 &vec2)
     emscripten::val memoryView{emscripten::typed_memory_view(l, glm::value_ptr(vec2))};
     memoryView.call<void>("set", v);
 }
-static void convertJSArrayToVec3(const emscripten::val &v, glm::vec3 &vec3)
+/*static void convertJSArrayToVec3(const emscripten::val &v, glm::vec3 &vec3)
 {
     const size_t l = v["length"].as<size_t>();
 
@@ -261,7 +261,7 @@ static void convertJSArrayToVec3(const emscripten::val &v, glm::vec3 &vec3)
     // and https://www.ecma-international.org/ecma-262/6.0/#sec-tonumber
     // emscripten::val memoryView{emscripten::typed_memory_view(l, glm::value_ptr(vec3))};
     // memoryView.call<void>("set", v);
-}
+}*/
 static void convertJSArrayToVec4(const emscripten::val &v, glm::vec4 &vec4)
 {
     const size_t l = v["length"].as<size_t>();
