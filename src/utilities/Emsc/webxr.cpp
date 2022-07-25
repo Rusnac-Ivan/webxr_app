@@ -437,8 +437,8 @@ void WebXR::GetViews(WebXRView **sourceArray, uint32_t *arraySize)
         convertJSDOMPointToVec3(position, mViews[i].viewPose.position);
         convertJSDOMPointToQuat(orientation, mViews[i].viewPose.orientation);
         // convertJSArrayToMat4(matrix, mViews[i].viewPose.matrix);
-        mViews[i].viewPose.matrix = glm::transpose(glm::toMat4(mViews[i].viewPose.orientation)) * glm::translate(glm::mat4(1.f), -mViews[i].viewPose.position);
-
+        //  mViews[i].viewPose.matrix = glm::transpose(glm::toMat4(mViews[i].viewPose.orientation)) * glm::translate(glm::mat4(1.f), -mViews[i].viewPose.position);
+        mViews[i].viewPose.matrix = glm::inverse(glm::translate(glm::mat4(1.f), mViews[i].viewPose.position) * glm::toMat4(mViews[i].viewPose.orientation));
         convertJSArrayToMat4(projectionMatrix, mViews[i].projectionMatrix);
 
         mViews[i].viewport.x = viewport["x"].as<uint32_t>();
@@ -453,7 +453,7 @@ void WebXR::GetViews(WebXRView **sourceArray, uint32_t *arraySize)
 void WebXR::OnFrame(emscripten::val time, emscripten::val frame)
 {
     mXRFrame = frame;
-    emscripten::val session = frame["session"];
+    mXRSession = frame["session"];
 
     emscripten::val viewPose = frame.call<emscripten::val>("getViewerPose", mRefSpace);
     // read head pose
@@ -466,16 +466,51 @@ void WebXR::OnFrame(emscripten::val time, emscripten::val frame)
     convertJSDOMPointToQuat(viewOrientation, mHeadPose.orientation);
     convertJSArrayToMat4(viewMatrix, mHeadPose.matrix);
 
-    emscripten::val renderState = session["renderState"];
+    emscripten::val renderState = mXRSession["renderState"];
 
     mXRGLLayer = renderState["baseLayer"];
 
     mXRViews = viewPose["views"];
-    mXRInputSources = session["inputSources"];
+    mXRInputSources = mXRSession["inputSources"];
 
-    uint32_t id = session.call<uint32_t>("requestAnimationFrame", emscripten::val::module_property("WXROnFrame"));
+    uint32_t id = mXRSession.call<uint32_t>("requestAnimationFrame", emscripten::val::module_property("WXROnFrame"));
     if (id == 0)
         printf("failed requestAnimationFrame id: %d\n", id);
+
+    // emscripten::val &xr_gl_layer = WebXR::GetGLLayer();
+    // emscripten::val gl_render_context = WebXR::GetGLRenderContext();
+    // emscripten::val xr_session = WebXR::GetSession();
+
+    // Assumed to be a XRWebGLLayer for now.
+    if (mXRGLLayer.isNull() || mXRGLLayer.isUndefined())
+    {
+        if (renderState["__proto__"].hasOwnProperty("layers") || renderState.hasOwnProperty("layers"))
+        {
+            emscripten::val layers = renderState["layers"];
+            mXRGLLayer = layers[0];
+            printf("layer = session.renderState.layers[0];\n");
+        }
+    }
+    else
+    {
+        // only baseLayer has framebuffer and we need to bind it
+        // even if it is null (for inline sessions)
+        emscripten::val framebuffer = mXRGLLayer["framebuffer"];
+
+        // if (!(framebuffer.isNull() || framebuffer.isUndefined()))
+        {
+            mRenderContext.call<void>("bindFramebuffer", mRenderContext["FRAMEBUFFER"], framebuffer);
+        }
+    }
+
+    if (!(mXRGLLayer["colorTexture"].isNull() || mXRGLLayer["colorTexture"].isUndefined()))
+    {
+        mRenderContext.call<void>("framebufferTexture2D", mRenderContext["FRAMEBUFFER"], mRenderContext["COLOR_ATTACHMENT0"], mRenderContext["TEXTURE_2D"], mXRGLLayer["colorTexture"], 0);
+    }
+    if (!(mXRGLLayer["depthStencilTexture"].isNull() || mXRGLLayer["depthStencilTexture"].isUndefined()))
+    {
+        mRenderContext.call<void>("framebufferTexture2D", mRenderContext["FRAMEBUFFER"], mRenderContext["DEPTH_ATTACHMENT"], mRenderContext["TEXTURE_2D"], mXRGLLayer["depthStencilTexture"], 0);
+    }
 
     // Scene Update
     core::Application::OnUpdate(mApplication);

@@ -11,6 +11,7 @@
 #include <opengl/Render.h>
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
+#include <opengl/Program.h>
 //#include "roboto_medium.inl"
 
 namespace core
@@ -320,7 +321,7 @@ namespace core
 		if (emscripten_get_canvas_element_size(".emscripten", &width, &height) != EMSCRIPTEN_RESULT_SUCCESS)
 		{
 			fprintf(stderr, "unsupported emscripten_get_canvas_element_size!\n");
-			return;
+			// return;
 		}
 
 		if (width != app->mWidth || (height != app->mHeight && height != 0))
@@ -343,49 +344,10 @@ namespace core
 			app->OnGUICompose();
 		}*/
 
-		{ // prepare webxr frame buffer
-			emscripten::val &xr_gl_layer = WebXR::GetGLLayer();
-			emscripten::val gl_render_context = WebXR::GetGLRenderContext();
-			emscripten::val xr_session = WebXR::GetSession();
-
-			// Assumed to be a XRWebGLLayer for now.
-			if (xr_gl_layer.isNull() || xr_gl_layer.isUndefined())
-			{
-				emscripten::val renderState = xr_session["renderState"];
-
-				if (renderState["__proto__"].hasOwnProperty("layers") || renderState.hasOwnProperty("layers"))
-				{
-					emscripten::val layers = renderState["layers"];
-					xr_gl_layer = layers[0];
-					printf("layer = session.renderState.layers[0];\n");
-				}
-			}
-			else
-			{
-				// only baseLayer has framebuffer and we need to bind it
-				// even if it is null (for inline sessions)
-				emscripten::val framebuffer = xr_gl_layer["framebuffer"];
-
-				if (!(framebuffer.isNull() || framebuffer.isUndefined()))
-				{
-					gl_render_context.call<void>("bindFramebuffer", gl_render_context["FRAMEBUFFER"], framebuffer);
-				}
-			}
-
-			if (!(xr_gl_layer["colorTexture"].isNull() || xr_gl_layer["colorTexture"].isUndefined()))
-			{
-				gl_render_context.call<void>("framebufferTexture2D", gl_render_context["FRAMEBUFFER"], gl_render_context["COLOR_ATTACHMENT0"], gl_render_context["TEXTURE_2D"], xr_gl_layer["colorTexture"], 0);
-			}
-			if (!(xr_gl_layer["depthStencilTexture"].isNull() || xr_gl_layer["depthStencilTexture"].isUndefined()))
-			{
-				gl_render_context.call<void>("framebufferTexture2D", gl_render_context["FRAMEBUFFER"], gl_render_context["DEPTH_ATTACHMENT"], gl_render_context["TEXTURE_2D"], xr_gl_layer["depthStencilTexture"], 0);
-			}
-
+		{ // render webxr viewes
 			gl::Render::SetClearColor(0.f, 0.f, 0.4f, 1.f);
 			gl::Render::Clear(gl::BufferBit::COLOR, gl::BufferBit::DEPTH);
-		}
 
-		{ // render webxr viewes
 			// WebXRRigidTransform &headPose = WebXR::GetHeadPose();
 			WebXRView *viewArray;
 			uint32_t viewCount;
@@ -454,9 +416,9 @@ namespace core
 					ImGui::Render();
 					ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 				}*/
-
-				gl::Render::Flush();
 			}
+			gl::Program::StopUsing();
+			gl::Render::Flush();
 		}
 
 		glfwSwapBuffers(app->mGLFWWindow);

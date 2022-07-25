@@ -685,11 +685,11 @@ public:
 	}
 	virtual void OnResize(int width, int height)
 	{
-		if (height > 0)
+		/*if (height > 0)
 		{
 			gl::Render::SetViewport(width, height);
 			mCamera.SetState(0.01f, 100.f, (float)width / (float)height, 60.f);
-		}
+		}*/
 
 		printf("MyApp::OnResize\n");
 	}

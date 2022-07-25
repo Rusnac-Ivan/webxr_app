@@ -55,7 +55,7 @@ namespace gl
         return mID == static_cast<uint32_t>(programId);
     }
 
-    void Program::StopUsing() const
+    void Program::StopUsing()
     {
         GL(UseProgram(0));
     }
@@ -95,11 +95,11 @@ namespace gl
     {
         GL(Uniform2i(location, x, y));
     }
-    void Program::SetInt3(const int location, const glm::ivec3& value) const
+    void Program::SetInt3(const int location, const glm::ivec3 &value) const
     {
         GL(Uniform3iv(location, 1, glm::value_ptr(value)));
     }
-    void Program::SetInt4(const int location, const glm::ivec4& value) const
+    void Program::SetInt4(const int location, const glm::ivec4 &value) const
     {
         GL(Uniform4iv(location, 1, glm::value_ptr(value)));
     }
