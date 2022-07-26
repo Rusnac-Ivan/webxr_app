@@ -1,3 +1,4 @@
+#ifdef ___________
 #ifdef __EMSCRIPTEN__
 #include "webxr.h"
 #include <core/Application.h>
@@ -346,8 +347,10 @@ void convertJSDOMPointToQuat(const emscripten::val &domPoint, glm::quat &quat)
     quat.w = domPoint["w"].as<float>();
 }
 
-void WebXR::GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode)
+bool WebXR::GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode)
 {
+    if (mXRInputSources.isNull() || mXRInputSources.isUndefined())
+        return false;
     // emscripten::val::global("console").call<void>("log", mXRInputSources);
 
     uint32_t inputSourcesCount = mXRInputSources["length"].as<uint32_t>();
@@ -408,11 +411,15 @@ void WebXR::GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize,
 
     *sourceArray = mInputSources;
     *arraySize = inputSourcesCount;
+
+    return true;
 }
 
-void WebXR::GetViews(WebXRView **sourceArray, uint32_t *arraySize)
+bool WebXR::GetViews(WebXRView **sourceArray, uint32_t *arraySize)
 {
-    // emscripten::val::global("console").call<void>("log", mXRViews);
+    if (mXRViews.isNull() || mXRViews.isUndefined())
+        return false;
+
     uint32_t viewCount = mXRViews["length"].as<uint32_t>();
     assert(viewCount == MAX_VIEW_COUNT);
     for (uint32_t i = 0; i < viewCount; i++)
@@ -448,6 +455,8 @@ void WebXR::GetViews(WebXRView **sourceArray, uint32_t *arraySize)
     }
     *sourceArray = mViews;
     *arraySize = viewCount;
+
+    return true;
 }
 
 void WebXR::OnFrame(emscripten::val time, emscripten::val frame)
@@ -600,4 +609,5 @@ void WebXR::RequestSession(XRSessionMode mode, XRSessionFeatures required, XRSes
     printf("WebXR::RequestSession\n");
 }
 
+#endif
 #endif

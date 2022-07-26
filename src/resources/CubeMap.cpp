@@ -101,10 +101,11 @@ namespace rsrc
         if (mIsReady && prog)
         {
             gl::Pipeline::SetDepthFunc(gl::CompareFunc::LEQUAL);
-            mGLCubeMap.Activate(0);
+            mGLCubeMap.Bind();
             mVAO.Bind();
             gl::Render::DrawVertices(gl::Primitive::TRIANGLES, 36, 0);
             gl::Pipeline::SetDepthFunc(gl::CompareFunc::LESS);
+            gl::CubeMap::UnBind();
         }
     }
 

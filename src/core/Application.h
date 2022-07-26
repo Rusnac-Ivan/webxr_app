@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <string>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include "Platform.h"
 
 struct GLFWwindow;
 struct ImGuiContext;
@@ -31,6 +33,26 @@ namespace core
 		Application &operator=(Application &app) = delete;
 
 	protected:
+		bool mIsInitialized;
+
+		glm::vec3 _headPos;
+		glm::quat _headRot;
+		glm::mat4 _headMat;
+
+		int _controllerCount;
+
+		int _viewCount;
+
+		glm::vec4 _viewports[2];
+		glm::mat4 _viewMatrices[2];
+		glm::mat4 _projectionMatrices[2];
+
+		glm::vec3 _controllersPos[2];
+		glm::quat _controllersRot[2];
+
+		glm::vec3 _rightContPos;
+		glm::quat _rightContRot;
+
 		Application();
 		virtual ~Application();
 
@@ -68,6 +90,9 @@ namespace core
 		int ResizeGLFWWindow();
 #endif
 
+#ifdef __EMSCRIPTEN__
+		static EM_BOOL emscripten_window_resized_callback(int eventType, const void *reserved, void *userData);
+#endif
 	private:
 		static void KeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods);
 		static void MouseMoveCallback(GLFWwindow *window, double xpos, double ypos);

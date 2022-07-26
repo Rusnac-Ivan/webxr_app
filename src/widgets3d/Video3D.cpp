@@ -96,8 +96,9 @@ namespace w3d
 #endif
     }
 
-    void Video3D::Compose(WebXRInputSource *inputSource, const glm::mat4 &model)
+    void Video3D::Compose(const glm::vec3 &cont_pos, const glm::quat &cont_rot, const glm::mat4 &model)
     {
+        return;
         if (mIsReady)
         {
 #ifdef __EMSCRIPTEN__

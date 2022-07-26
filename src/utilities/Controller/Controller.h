@@ -7,6 +7,7 @@
 #include <opengl/VertexArray.h>
 #include <opengl/VertexBuffer.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 namespace util
 {
@@ -25,10 +26,15 @@ namespace util
 
         float mRayLength;
 
+        glm::vec3 mPos;
+        glm::quat mRot;
 
     public:
         Controller(/* args */);
         ~Controller();
+
+        const glm::vec3 &GetPos() { return mPos; }
+        const glm::quat &GetRot() { return mRot; }
 
         void Create(const char *path, float ray_length, float ray_width);
         float GetProgress() { return mModel.GetProgress(); }

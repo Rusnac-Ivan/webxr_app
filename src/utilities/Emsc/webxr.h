@@ -1,3 +1,4 @@
+#ifdef ___________
 #ifdef __EMSCRIPTEN__
 #ifndef _WEBXR_H_
 #define _WEBXR_H_
@@ -175,8 +176,8 @@ public:
 
     static const WebXRRigidTransform &GetHeadPose();
 
-    static void GetViews(WebXRView **sourceArray, uint32_t *arraySize);
-    static void GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode = WEBXR_INPUT_POSE_GRIP);
+    static bool GetViews(WebXRView **sourceArray, uint32_t *arraySize);
+    static bool GetInputSources(WebXRInputSource **sourceArray, uint32_t *arraySize, WebXRInputPoseMode mode = WEBXR_INPUT_POSE_GRIP);
     static emscripten::val &GetGLLayer();
     static emscripten::val GetGLRenderContext();
     static emscripten::val GetSession();
@@ -201,5 +202,6 @@ public:
 #else //__EMSCRIPTEN__
 #ifndef __EMSCRIPTEN__
 typedef void *WebXRInputSource;
+#endif
 #endif
 #endif

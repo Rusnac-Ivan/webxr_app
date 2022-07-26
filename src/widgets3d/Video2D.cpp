@@ -95,19 +95,20 @@ namespace w3d
 #endif
     }
 
-    void Video2D::Compose(WebXRInputSource *inputSource, const glm::mat4 &model)
+    void Video2D::Compose(const glm::vec3 &cont_pos, const glm::quat &cont_rot, const glm::mat4 &model)
     {
+        return;
         mModel = model;
         if (mIsReady)
         {
             bool is_hovered = false;
             ImVec2 mouse_pos = ImVec2(-1.f, -1.f);
-            if (inputSource)
+            // if (inputSource)
             {
                 float distance;
 #ifdef __EMSCRIPTEN__
-                glm::vec3 &input_pose = inputSource->rigidTransform.position;
-                glm::vec3 input_dir = glm::rotate(inputSource->rigidTransform.orientation, glm::vec3(0.f, 0.f, -1.f));
+                glm::vec3 input_pose = cont_pos;
+                glm::vec3 input_dir = glm::rotate(cont_rot, glm::vec3(0.f, 0.f, -1.f));
 #else
                 glm::vec3 &input_pose = glm::vec3(0.f, 0.f, 0.f);
                 glm::vec3 input_dir = glm::vec3(0.f, 0.f, -1.f);

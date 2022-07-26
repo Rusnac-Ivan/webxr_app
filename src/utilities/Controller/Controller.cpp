@@ -20,11 +20,13 @@ namespace util
 
         mRayLength = ray_length;
         mPrism.Generate(ray_width);
-
     }
 
     void Controller::Draw(const glm::vec3 &pos, const glm::quat &orient)
     {
+        mPos = pos;
+        mRot = orient;
+
         gl::Program *pbr_prog = util::ResourceManager::GetShaders()->GetPBRProg();
         pbr_prog->Use();
 

@@ -175,5 +175,15 @@ else()
     message(FATAL_ERROR TINYGLTF_PATH "TINYGLTF_PATH is not set!")
 endif()
 
+if(EMSCRIPTEN_WEBXR_PATH)
+    message(STATUS "EMSCRIPTEN_WEBXR_PATH: ${EMSCRIPTEN_WEBXR_PATH}")
+    add_subdirectory(${EMSCRIPTEN_WEBXR_PATH})
+
+    target_include_directories(${PROJECT_NAME} PRIVATE ${EMSCRIPTEN_WEBXR_PATH})
+    target_link_options(${PROJECT_NAME} PUBLIC "SHELL:--js-library \"${EMSCRIPTEN_WEBXR_PATH}/library_webxr.js\"")
+else()
+    message(STATUS "EMSCRIPTEN_WEBXR_PATH is not set!")
+endif()
+
 find_package(glm REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)

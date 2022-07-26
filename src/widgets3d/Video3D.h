@@ -53,12 +53,15 @@ namespace w3d
         void Play();
         void Pause();
 #ifdef __EMSCRIPTEN__
-        bool IsPlaying() { return mEMVideo.GetMediaState() == em::MediaState::PLAYING; }
+        bool IsPlaying()
+        {
+            return mEMVideo.GetMediaState() == em::MediaState::PLAYING;
+        }
 #endif
 
         void Create(const char *url);
 
-        void Compose(WebXRInputSource *inputSource, const glm::mat4 &model);
+        void Compose(const glm::vec3 &cont_pos, const glm::quat &cont_rot, const glm::mat4 &model);
 
         void Draw();
 

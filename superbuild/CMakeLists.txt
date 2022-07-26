@@ -43,6 +43,23 @@ if(NOT DEFINED EMSCRIPTEN)
         UPDATE_COMMAND ""
         BUILD_ALWAYS FALSE
     )
+else()
+    ExternalProject_Add(emscripten-webxr
+        PREFIX ${LIBRARIES_PREFIX}/emscripten-webxr
+        GIT_REPOSITORY https://github.com/WonderlandEngine/emscripten-webxr.git
+        UPDATE_DISCONNECTED TRUE
+        UPDATE_COMMAND ""
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+    )
+    ExternalProject_Add_Step(emscripten-webxr replace_webxr_js
+        DEPENDEES download
+        DEPENDERS configure
+        COMMAND ${CMAKE_COMMAND} -E copy "${PROJECT_SOURCE_DIR}/patches/webxrjs/library_webxr.js" "${LIBRARIES_PREFIX}/emscripten-webxr/src/emscripten-webxr/library_webxr.js"
+    )
+    ExternalProject_Get_property(emscripten-webxr SOURCE_DIR)
+    set(EMSCRIPTEN_WEBXR_DIR ${SOURCE_DIR})
 endif()
 
 ExternalProject_Add(imgui
@@ -131,6 +148,7 @@ ExternalProject_Add(gl_test
     -DCMAKE_PREFIX_PATH:STRING=${INSTALLATION_PREFIXES_LIST}
     -DTINYGLTF_PATH:PATH=${TINYGLTF_SOURCE_DIR}
     -DIMGUIZMO_PATH:PATH=${IMGUIZMO_SOURCE_DIR}
+    -DEMSCRIPTEN_WEBXR_PATH:PATH=${EMSCRIPTEN_WEBXR_DIR}
     BUILD_ALWAYS TRUE
     INSTALL_COMMAND ""
 )

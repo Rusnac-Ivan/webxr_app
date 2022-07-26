@@ -1,6 +1,5 @@
 #include "Application.h"
 
-#include "Platform.h"
 #include <utilities/Emsc/webxr.h>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -11,7 +10,11 @@
 #include <opengl/Render.h>
 #include <imgui_internal.h>
 #include <ImGuizmo.h>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <opengl/Program.h>
+#include <webxr.h>
 //#include "roboto_medium.inl"
 
 namespace core
@@ -87,9 +90,33 @@ namespace core
 		thiz->mWidth = width;
 		thiz->mHeight = height;
 		thiz->OnResize(width, height);
+
+#ifdef __EMSCRIPTEN__
+		webxr_request_session(WEBXR_SESSION_MODE_IMMERSIVE_VR, WEBXR_SESSION_FEATURE_LOCAL_FLOOR, WEBXR_SESSION_FEATURE_HIT_TEST);
+#endif
 	}
 
-	Application::Application() : mIsSync(false)
+	EM_BOOL Application::emscripten_window_resized_callback(int eventType, const void *reserved, void *userData)
+	{
+		int width, height;
+		if (emscripten_get_canvas_element_size(".emscripten", &width, &height) != EMSCRIPTEN_RESULT_SUCCESS)
+		{
+			fprintf(stderr, "unsupported emscripten_get_canvas_element_size!\n");
+		}
+
+		std::string msg("emscripten_window_resized_callback: " + std::to_string(width) + "x" + std::to_string(height));
+		emscripten::val::global("console").call<void>("log", msg);
+
+		// resize window
+		GLFWwindow *window = (GLFWwindow *)userData;
+		glfwSetWindowSize(window, width, height);
+
+		Application::WindowSizeCallback(window, width, height);
+
+		return true;
+	}
+
+	Application::Application() : mIsSync(false), mIsInitialized(false)
 	{
 		thiz = this;
 		mFPS = 0.f;
@@ -195,6 +222,111 @@ namespace core
 
 		glfwWindowHint(GLFW_RESIZABLE, 1);
 
+		webxr_init(
+			/* Frame callback */
+			[](void *userData, int time, WebXRRigidTransform *headPose, WebXRView views[2], int viewCount)
+			{
+				Application *thiz = reinterpret_cast<Application *>(userData);
+
+				if (headPose)
+				{
+					thiz->_headPos = glm::vec3(headPose->position[0], headPose->position[1], headPose->position[2]);
+					thiz->_headRot = glm::quat(headPose->orientation[3], headPose->orientation[0], headPose->orientation[1], headPose->orientation[2]);
+				}
+
+				thiz->_viewCount = viewCount;
+
+				int viewIndex = 0;
+				for (WebXRView view : {views[0], views[1]})
+				{
+					thiz->_viewports[viewIndex] = {view.viewport[0], view.viewport[1], view.viewport[2], view.viewport[3]};
+
+					glm::mat4 translate = glm::translate(glm::mat4(1.), glm::vec3(view.viewPose.position[0], view.viewPose.position[1], view.viewPose.position[2]));
+					glm::mat4 rotation = glm::toMat4(glm::quat(view.viewPose.orientation[3], view.viewPose.orientation[0], view.viewPose.orientation[1], view.viewPose.orientation[2]));
+
+					thiz->_viewMatrices[viewIndex] = glm::inverse(translate * rotation);
+
+					thiz->_projectionMatrices[viewIndex] = (glm::make_mat4(view.projectionMatrix));
+					++viewIndex;
+				}
+
+				constexpr int maxInputCount = 2;
+				WebXRInputSource sources[maxInputCount];
+				WebXRRigidTransform controllersPose[maxInputCount];
+
+				webxr_get_input_sources(sources, maxInputCount, &thiz->_controllerCount);
+
+				for (int i = 0; i < thiz->_controllerCount; ++i)
+				{
+					webxr_get_input_pose(sources + i, controllersPose + i, WEBXR_INPUT_POSE_GRIP);
+
+					switch (sources[i].targetRayMode)
+					{
+					case WEBXR_TARGET_RAY_MODE_GAZE:
+						printf("WEBXR_TARGET_RAY_MODE_GAZE\n");
+						break;
+					case WEBXR_TARGET_RAY_MODE_TRACKED_POINTER:
+						printf("WEBXR_TARGET_RAY_MODE_TRACKED_POINTER\n");
+						break;
+					case WEBXR_TARGET_RAY_MODE_SCREEN:
+						printf("WEBXR_TARGET_RAY_MODE_SCREEN\n");
+						break;
+					default:
+						break;
+					}
+
+					thiz->_controllersPos[i] = glm::vec3(controllersPose[i].position[0], controllersPose[i].position[1], controllersPose[i].position[2]);
+
+					thiz->_controllersRot[i] = glm::quat(controllersPose[i].orientation[3], controllersPose[i].orientation[0], controllersPose[i].orientation[1], controllersPose[i].orientation[2]);
+
+					if (sources[i].handedness == WEBXR_HANDEDNESS_RIGHT)
+					{
+						thiz->_rightContPos = thiz->_controllersPos[i];
+						thiz->_rightContRot = thiz->_controllersRot[i];
+					}
+				}
+
+				Application::OnUpdate(thiz);
+			},
+			/* Session start callback */
+			[](void *userData, int mode)
+			{
+				Application *thiz = reinterpret_cast<Application *>(userData);
+
+				webxr_set_projection_params(0.01f, 100.f);
+
+				// Scene Initialize
+				thiz->OnInitialize();
+
+				printf("webxr_init: Session start callback\n");
+
+				webxr_set_select_start_callback([](WebXRInputSource *inputSource, void *userData)
+												{ 
+								printf("select_start_callback\n"); 
+								ImGui_Impl_2d_to_3d_MouseButtonCallback(MOUSEBUTTON_LEFT, PRESS, 0); },
+												userData);
+
+				webxr_set_select_end_callback([](WebXRInputSource *inputSource, void *userData)
+											  { 
+								printf("select_end_callback\n");
+								ImGui_Impl_2d_to_3d_MouseButtonCallback(MOUSEBUTTON_LEFT, RELEASE, 0); },
+											  userData);
+			},
+			/* Session end callback */
+			[](void *userData, int mode)
+			{
+				Application *thiz = reinterpret_cast<Application *>(userData);
+				thiz->OnFinalize();
+				printf("webxr_init: Session end callback\n");
+			},
+			/* Error callback */
+			[](void *userData, int error)
+			{
+				printf("webxr_init: Errord callback\n");
+			},
+			/* userData */
+			this);
+
 #ifdef __EMSCRIPTEN__
 		int canv_width, canv_height;
 		if (emscripten_get_canvas_element_size(".emscripten", &canv_width, &canv_height) != EMSCRIPTEN_RESULT_SUCCESS)
@@ -204,10 +336,26 @@ namespace core
 		mHeight = canv_height;
 #endif // __EMSCRIPTEN__
 
+		webxr_is_session_supported(WEBXR_SESSION_MODE_IMMERSIVE_VR, [](int mode, int supported)
+								   {
+		printf("mode: %d, supported: %d\n", mode, supported);
+		if ((mode == WEBXR_SESSION_MODE_IMMERSIVE_VR) && (supported))
+		{
+			
+							// webxr_request_session(WEBXR_SESSION_MODE_IMMERSIVE_VR, WEBXR_SESSION_FEATURE_LOCAL, WEBXR_SESSION_FEATURE_LOCAL);
+		} });
+
 		// Create window with graphics context
 		mGLFWWindow = glfwCreateWindow(mWidth, mHeight, title, NULL, NULL);
 		if (mGLFWWindow == NULL)
 			return EXIT_FAILURE;
+
+		EmscriptenFullscreenStrategy strategy;
+		strategy.scaleMode = EMSCRIPTEN_FULLSCREEN_CANVAS_SCALE_STDDEF;
+		strategy.filteringMode = EMSCRIPTEN_FULLSCREEN_FILTERING_DEFAULT;
+		strategy.canvasResizedCallback = Application::emscripten_window_resized_callback;
+		strategy.canvasResizedCallbackUserData = mGLFWWindow; // pointer to user data
+		emscripten_enter_soft_fullscreen("canvas", &strategy);
 
 		glfwMakeContextCurrent(mGLFWWindow);
 
@@ -258,7 +406,8 @@ namespace core
 		ImGui_ImplOpenGL3_NewFrame();
 
 #ifdef __EMSCRIPTEN__
-		if (WebXR::IsWebXRSupported())
+		mIsSync = true;
+		/*if (WebXR::IsWebXRSupported())
 		{
 			printf("WebXR Supported\n");
 			mIsSync = true; // from webxr
@@ -280,7 +429,7 @@ namespace core
 			success = OnFinalize();
 			if (!success)
 				return EXIT_FAILURE;
-		}
+		}*/
 #else
 		// Initialize sample.
 		bool success = OnInitialize();
@@ -302,6 +451,11 @@ namespace core
 	{
 		Application *app = reinterpret_cast<Application *>(_arg);
 
+		if (!app->mIsInitialized)
+			return;
+
+		printf("Application::OnUpdate\n");
+
 		{ // calc FPS
 			static double curr = 0.f;
 			static double prev = curr;
@@ -317,7 +471,7 @@ namespace core
 		}
 
 #ifdef __EMSCRIPTEN__
-		int width, height;
+		/*int width, height;
 		if (emscripten_get_canvas_element_size(".emscripten", &width, &height) != EMSCRIPTEN_RESULT_SUCCESS)
 		{
 			fprintf(stderr, "unsupported emscripten_get_canvas_element_size!\n");
@@ -330,7 +484,7 @@ namespace core
 			app->mHeight = height;
 			glfwSetWindowSize(app->mGLFWWindow, width, height);
 			app->OnResize(width, height);
-		}
+		}*/
 #endif
 
 		/*{ // compose gui menus
@@ -349,25 +503,28 @@ namespace core
 			gl::Render::Clear(gl::BufferBit::COLOR, gl::BufferBit::DEPTH);
 
 			// WebXRRigidTransform &headPose = WebXR::GetHeadPose();
-			WebXRView *viewArray;
-			uint32_t viewCount;
-			WebXR::GetViews(&viewArray, &viewCount);
+
+			{ // new webxr not work on oculus
+			  //  WebXRView *viewArray;
+			  //  uint32_t viewCount;
+			  //  if (!WebXR::GetViews(&viewArray, &viewCount))
+			  //  return;
+			}
 
 			/*static glm::vec4 view_ports[2];
 			view_ports[0] = glm::vec4(0.f, 0.f, app->GetWidth() / 2.f, app->GetHeight());
 			view_ports[1] = glm::vec4(app->GetWidth() / 2.f, 0.f, app->GetWidth() / 2.f, app->GetHeight());
 			static glm::mat4 proj_mats[2];
 			proj_mats[0] = glm::perspective(glm::radians(60.f), view_ports[0].z / view_ports[0].w, 0.01f, 100.f);
-			proj_mats[1] = glm::perspective(glm::radians(60.f), view_ports[1].z / view_ports[1].w, 0.01f, 100.f);
+			proj_mats[1] = glm::perspective(glm::radians(60.f), view_ports[1].z / view_ports[1].w, 0.01f, 100.f);*/
 
-			viewCount = 2;*/
-
-			for (uint32_t i = 0; i < viewCount; i++)
+			for (uint32_t i = 0; i < app->_viewCount; i++)
 			{
-				WebXRView &view = viewArray[i];
+				// WebXRView &view = viewArray[i];
 
 				{ // render scene
-					app->OnRender(view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height, view.viewPose.matrix, view.projectionMatrix);
+					// app->OnRender(view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height, view.viewPose.matrix, view.projectionMatrix);
+					app->OnRender(app->_viewports[i].x, app->_viewports[i].y, app->_viewports[i].z, app->_viewports[i].w, app->_viewMatrices[i], app->_projectionMatrices[i]);
 					// app->OnRender(view_ports[i].x, view_ports[i].y, view_ports[i].z, view_ports[i].w, glm::mat4(1.f), proj_mats[i]);
 				}
 

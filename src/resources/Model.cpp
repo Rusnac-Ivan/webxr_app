@@ -262,6 +262,7 @@ namespace rsrc
 
 	void Model::Draw(const glm::mat4 &model)
 	{
+		return;
 		mModel = model;
 		if (mIsReady)
 		{
@@ -278,6 +279,7 @@ namespace rsrc
 
 	void Model::DrawEditor(const glm::mat4 &view, const glm::mat4 &proj)
 	{
+		return;
 		if (mIsReady && mIsEditable)
 		{
 			{

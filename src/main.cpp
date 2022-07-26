@@ -37,12 +37,11 @@ private:
 
 	glm::mat4 mMenuModel;
 
-	WebXRInputSource *mInputSource;
 	util::Camera<util::ProjectionType::PERSPECTIVE> mCamera;
 	std::vector<float> mFPS;
 	MyApp(MyApp &app) = delete;
 	MyApp &operator=(MyApp &app) = delete;
-	MyApp() : mInputSource(nullptr), Application() {}
+	MyApp() : Application() {}
 	~MyApp() {}
 
 public:
@@ -63,14 +62,14 @@ public:
 
 		gl::Pipeline::EnableDepthTest();
 		gl::Render::SetClearColor(0.5f, 0.4f, 0.0f, 1.f);
-
+		mIsInitialized = true;
 		return true;
 	};
 	virtual bool OnGUICompose()
 	{
 
-		util::ResourceManager::GetW3DVideo2D()->Compose(mInputSource, glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.1f, -4.f)));
-		util::ResourceManager::GetW3DVideo3D()->Compose(mInputSource, glm::mat4(1.f));
+		util::ResourceManager::GetW3DVideo2D()->Compose(_rightContPos, _rightContRot, glm::translate(glm::mat4(1.f), glm::vec3(0.f, 1.1f, -4.f)));
+		util::ResourceManager::GetW3DVideo3D()->Compose(_rightContPos, _rightContRot, glm::mat4(1.f));
 
 		mMenuModel = glm::translate(glm::mat4(1.f), glm::vec3(1.f, 1.6f, 0.f));
 		mMenuModel = glm::rotate(mMenuModel, glm::radians(-90.f), glm::vec3(0.f, 1.f, 0.f));
@@ -78,7 +77,7 @@ public:
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
 		util::ResourceManager::GetW3DMenu()->Compose(
-			mInputSource, mMenuModel, "3DMenu",
+			_rightContPos, _rightContRot, mMenuModel, "3DMenu",
 			[]()
 			{
 				float s = 2.f;
@@ -117,7 +116,7 @@ public:
 		ImGui::PopStyleVar(3);
 		glm::mat4 model = glm::translate(glm::mat4(1.f), glm::vec3(-1.f, 1.7f, 0.f));
 		model = glm::rotate(model, glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
-		util::ResourceManager::GetW3DMenu1()->Compose(mInputSource, model, "Second 3DMenu",
+		util::ResourceManager::GetW3DMenu1()->Compose(_rightContPos, _rightContRot, model, "Second 3DMenu",
 													  []()
 													  {
 														  if (ImGui::Button("Run 3D Video", ImVec2(120.f, 30.f)))
@@ -442,12 +441,13 @@ public:
 		// util::ResourceManager::GetW3DVideo2D()->Draw();
 		// gl::Render::SetViewport(GetWidth(), GetHeight());
 #else
-		const WebXRRigidTransform &headPose = WebXR::GetHeadPose();
+		// const WebXRRigidTransform &headPose = WebXR::GetHeadPose();
 
 		gl::Render::SetViewport(x, y, width, height);
 		if (shaders->IsReady())
 		{
-			InitPrograms(headPose.position, headPose.position, proj * view);
+			// InitPrograms(headPose.position, headPose.position, proj * view);
+			InitPrograms(_headPos, _headPos, proj * view);
 
 			if (!util::ResourceManager::GetW3DVideo3D()->IsPlaying())
 			{
@@ -468,18 +468,20 @@ public:
 
 			util::ResourceManager::GetW3DMenu1()->Draw();
 
-			WebXRInputSource *inputSourceArray = nullptr;
-			uint32_t inputCount = 0;
-			WebXR::GetInputSources(&inputSourceArray, &inputCount);
-			for (uint32_t j = 0; j < inputCount; j++)
+			// WebXRInputSource *inputSourceArray = nullptr;
+			// uint32_t inputCount = 0;
+			// if (!WebXR::GetInputSources(&inputSourceArray, &inputCount))
+			// return false;
+			for (uint32_t j = 0; j < _controllerCount; j++)
 			{
-				WebXRInputSource &inputSource = inputSourceArray[j];
-				WebXRRigidTransform &transform = inputSource.rigidTransform;
+				// WebXRInputSource &inputSource = inputSourceArray[j];
+				// WebXRRigidTransform &transform = inputSource.rigidTransform;
 
-				if (inputSource.handedness == XRHandedness::RIGHT)
-					mInputSource = &inputSource;
+				// if (inputSource.handedness == XRHandedness::RIGHT)
 
-				util::ResourceManager::GetController()->Draw(transform.position, transform.orientation);
+				// mInputSource = &inputSource;
+
+				util::ResourceManager::GetController()->Draw(_controllersPos[j], _controllersRot[j]);
 			}
 		}
 #endif
@@ -534,89 +536,6 @@ public:
 			ImGui::SetNextItemWidth(ImGui::GetWindowWidth() - 30.f);
 			ImGui::PlotLines("##Frame Times", &FPS[0], 100);
 			ImGui::PopStyleColor();
-
-			const WebXRRigidTransform &headPose = WebXR::GetHeadPose();
-
-			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-			ImGui::SameLine();
-			ImGui::Text("%s", "head");
-
-			sprintf(text, "pos:[ %.3f, %.3f, %.3f]", headPose.position.x, headPose.position.y, headPose.position.z);
-			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-			ImGui::SameLine();
-			ImGui::Text("%-64s", text);
-
-			sprintf(text, "ori:[ %.3f, %.3f, %.3f, %.3f]", headPose.orientation.x, headPose.orientation.y, headPose.orientation.z, headPose.orientation.w);
-			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-			ImGui::SameLine();
-			ImGui::Text("%-64s", text);
-
-			for (uint32_t i = 0; i < 4; i++)
-			{
-				for (uint32_t j = 0; j < 4; j++)
-				{
-					if (j == 3)
-						sprintf(text + (j + i * 4) * 7, " %5.2f\n", headPose.matrix[i][j]);
-					else
-						sprintf(text + (j + i * 4) * 7, " %5.2f ", headPose.matrix[i][j]);
-				}
-			}
-			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-			ImGui::SameLine();
-			ImGui::Text("%-128s", text);
-
-			WebXRView *viewArray;
-			uint32_t viewCount;
-			WebXR::GetViews(&viewArray, &viewCount);
-
-			memset(text, NULL, 128);
-			sprintf(text, "view Count: %d", viewCount);
-			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-			ImGui::SameLine();
-			ImGui::Text("%-128s", text);
-
-			ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-			ImGui::SameLine();
-			sprintf(text, "shaders IsReady: %d", util::ResourceManager::GetShaders()->IsReady());
-			ImGui::Text("%-128s", text);
-
-			for (uint32_t i = 0; i < viewCount; i++)
-			{
-				WebXRView &view = viewArray[i];
-				ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-				ImGui::SameLine();
-				if (view.eye == XREye::LEFT)
-					ImGui::Text("%s", "left view");
-				else if (view.eye == XREye::RIGHT)
-					ImGui::Text("%s", "right view");
-
-				sprintf(text, "port:[ %.3d, %.3d, %.3d, %.3d]", view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height);
-				ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-				ImGui::SameLine();
-				ImGui::Text("%-64s", text);
-				sprintf(text, "pos:[ %.3f, %.3f, %.3f]", view.viewPose.position.x, view.viewPose.position.y, view.viewPose.position.z);
-				ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-				ImGui::SameLine();
-				ImGui::Text("%-64s", text);
-				sprintf(text, "ori:[ %.3f, %.3f, %.3f, %.3f]", view.viewPose.orientation.x, view.viewPose.orientation.y, view.viewPose.orientation.z, view.viewPose.orientation.w);
-				ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-				ImGui::SameLine();
-				ImGui::Text("%-64s", text);
-
-				for (uint32_t i = 0; i < 4; i++)
-				{
-					for (uint32_t j = 0; j < 4; j++)
-					{
-						if (j == 3)
-							sprintf(text + (j + i * 4) * 7, " %5.2f\n", view.viewPose.matrix[i][j]);
-						else
-							sprintf(text + (j + i * 4) * 7, " %5.2f ", view.viewPose.matrix[i][j]);
-					}
-				}
-				ImGui::Dummy(ImVec2((width - size.x) / 2.f, 5.f));
-				ImGui::SameLine();
-				ImGui::Text("%-128s", text);
-			}
 		}
 		ImGui::EndChild();
 

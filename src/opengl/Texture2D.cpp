@@ -2,33 +2,32 @@
 
 namespace gl
 {
-	Texture2D::Texture2D() :
-		mWidth(0),
-		mHeight(0),
-		mFormat(Format::UNKNOWN),
-		mMipLevel(0),
-		mWrapModeS(WrapMode::CLAMP_TO_EDGE),
-		mWrapModeT(WrapMode::CLAMP_TO_EDGE),
-		mMinFilterMode(FilterMode::LINEAR),
-		mMagFilterMode(FilterMode::LINEAR)
-	{}
-
-	Texture2D::~Texture2D() {}
-
-	Texture2D::Texture2D(Texture2D&& other) noexcept :
-		mWidth(other.mWidth),
-		mHeight(other.mHeight),
-		mFormat(other.mFormat),
-		mDataType(other.mDataType),
-		mMipLevel(other.mMipLevel),
-		mWrapModeS(other.mWrapModeS),
-		mWrapModeT(other.mWrapModeT),
-		mMinFilterMode(other.mMinFilterMode),
-		mMagFilterMode(other.mMagFilterMode)
+	Texture2D::Texture2D() : mWidth(0),
+							 mHeight(0),
+							 mFormat(Format::UNKNOWN),
+							 mMipLevel(0),
+							 mWrapModeS(WrapMode::CLAMP_TO_EDGE),
+							 mWrapModeT(WrapMode::CLAMP_TO_EDGE),
+							 mMinFilterMode(FilterMode::LINEAR),
+							 mMagFilterMode(FilterMode::LINEAR)
 	{
 	}
 
-	Texture2D& Texture2D::operator=(Texture2D&& other) noexcept
+	Texture2D::~Texture2D() {}
+
+	Texture2D::Texture2D(Texture2D &&other) noexcept : mWidth(other.mWidth),
+													   mHeight(other.mHeight),
+													   mFormat(other.mFormat),
+													   mDataType(other.mDataType),
+													   mMipLevel(other.mMipLevel),
+													   mWrapModeS(other.mWrapModeS),
+													   mWrapModeT(other.mWrapModeT),
+													   mMinFilterMode(other.mMinFilterMode),
+													   mMagFilterMode(other.mMagFilterMode)
+	{
+	}
+
+	Texture2D &Texture2D::operator=(Texture2D &&other) noexcept
 	{
 		mWidth = other.mWidth;
 		mHeight = other.mHeight;
@@ -47,7 +46,7 @@ namespace gl
 	{
 		Texture::Bind(mTarget);
 	}
-	void Texture2D::UnBind() const
+	void Texture2D::UnBind()
 	{
 		Texture::UnBind(mTarget);
 	}
@@ -61,7 +60,7 @@ namespace gl
 		Texture::Deactivate(mTarget, unit);
 	}
 
-	void Texture2D::LoadData(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType data_type, const void* pixels)
+	void Texture2D::LoadData(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType data_type, const void *pixels)
 	{
 		mMipLevel = mipLevel;
 		mWidth = width;
@@ -78,12 +77,11 @@ namespace gl
 			border,
 			static_cast<GLenum>(format),
 			static_cast<GLenum>(mDataType),
-			pixels
-		));
+			pixels));
 		UnBind();
 	}
 
-	void Texture2D::UpdateData(uint32_t x, uint32_t y, uint32_t width, uint32_t height, void* pixels)
+	void Texture2D::UpdateData(uint32_t x, uint32_t y, uint32_t width, uint32_t height, void *pixels)
 	{
 		Bind();
 		GL(TexSubImage2D(
@@ -93,8 +91,7 @@ namespace gl
 			width, height,
 			static_cast<GLenum>(mFormat),
 			static_cast<GLenum>(mDataType),
-			pixels
-		));
+			pixels));
 		UnBind();
 	}
 
@@ -110,7 +107,7 @@ namespace gl
 		UnBind();
 	}
 
-	void Texture2D::SetSampler(const Sampler& sampler)
+	void Texture2D::SetSampler(const Sampler &sampler)
 	{
 		mWrapModeS = sampler.wrapS;
 		mWrapModeT = sampler.wrapT;

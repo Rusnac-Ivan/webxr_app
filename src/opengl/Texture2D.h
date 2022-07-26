@@ -7,62 +7,64 @@ namespace gl
 {
 	class Texture2D : public Texture
 	{
-		public:
-			struct Sampler
-			{
-				gl::Texture::FilterMode magFilter;
-				gl::Texture::FilterMode minFilter;
-				gl::Texture::WrapMode wrapS;
-				gl::Texture::WrapMode wrapT;
-			};
-		private:
-			static constexpr Type mTarget = Type::TARGET_2D;
+	public:
+		struct Sampler
+		{
+			gl::Texture::FilterMode magFilter;
+			gl::Texture::FilterMode minFilter;
+			gl::Texture::WrapMode wrapS;
+			gl::Texture::WrapMode wrapT;
+		};
 
-			uint32_t	mWidth;
-			uint32_t	mHeight;
-			Format		mFormat;
-			uint32_t	mMipLevel;
-			DataType	mDataType;
+	private:
+		static constexpr Type mTarget = Type::TARGET_2D;
 
-			WrapMode	mWrapModeS;
-			WrapMode	mWrapModeT;
-			FilterMode	mMinFilterMode;
-			FilterMode	mMagFilterMode;
-		public:
-			Texture2D();
-			~Texture2D();
+		uint32_t mWidth;
+		uint32_t mHeight;
+		Format mFormat;
+		uint32_t mMipLevel;
+		DataType mDataType;
 
-			Texture2D(const Texture2D&) = delete;
-			Texture2D& operator=(const Texture2D&) = delete;
-			Texture2D(Texture2D&&) noexcept;
-			Texture2D& operator=(Texture2D&&) noexcept;
+		WrapMode mWrapModeS;
+		WrapMode mWrapModeT;
+		FilterMode mMinFilterMode;
+		FilterMode mMagFilterMode;
 
-			//void SetWrapModeS(WrapMode mode);
-			//void SetWrapModeT(WrapMode mode);
-			//void SetMinFilterMode(FilterMode mode);
-			//void SetMagFilterMode(FilterMode mode);
+	public:
+		Texture2D();
+		~Texture2D();
 
-			void SetSampler(const Sampler& sampler);
+		Texture2D(const Texture2D &) = delete;
+		Texture2D &operator=(const Texture2D &) = delete;
+		Texture2D(Texture2D &&) noexcept;
+		Texture2D &operator=(Texture2D &&) noexcept;
 
-			WrapMode GetWrapModeS() const { return mWrapModeS; }
-			WrapMode GetWrapModeT() const { return mWrapModeT; }
-			FilterMode GetMinFilterMode() const { return mMinFilterMode; }
-			FilterMode GetMagFilterMode() const { return mMagFilterMode; }
+		// void SetWrapModeS(WrapMode mode);
+		// void SetWrapModeT(WrapMode mode);
+		// void SetMinFilterMode(FilterMode mode);
+		// void SetMagFilterMode(FilterMode mode);
 
-			DataType GetPixelDataType() { return mDataType; }
-			Format GetFormat() { return mFormat; }
-			Type GetTarget() const { return mTarget; }
+		void SetSampler(const Sampler &sampler);
 
-			void Bind() const;
-			void UnBind() const;
+		WrapMode GetWrapModeS() const { return mWrapModeS; }
+		WrapMode GetWrapModeT() const { return mWrapModeT; }
+		FilterMode GetMinFilterMode() const { return mMinFilterMode; }
+		FilterMode GetMagFilterMode() const { return mMagFilterMode; }
 
-			void Activate(const unsigned short unit) const;
-			void Deactivate(const unsigned short unit) const;
+		DataType GetPixelDataType() { return mDataType; }
+		Format GetFormat() { return mFormat; }
+		Type GetTarget() const { return mTarget; }
 
-			void LoadData(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void* pixels);
-			void UpdateData(uint32_t x, uint32_t y, uint32_t width, uint32_t height, void* pixels);
+		void Bind() const;
+		static void UnBind();
 
-			void GenerateMipmaps();
+		void Activate(const unsigned short unit) const;
+		void Deactivate(const unsigned short unit) const;
+
+		void LoadData(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void *pixels);
+		void UpdateData(uint32_t x, uint32_t y, uint32_t width, uint32_t height, void *pixels);
+
+		void GenerateMipmaps();
 	};
 }
 

@@ -10,10 +10,9 @@
 #include <opengl/Texture2D.h>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <glm/gtc/quaternion.hpp>
 #include <utilities/Shape/Plane.h>
 #include <utilities/Emsc/webxr.h>
-
-
 
 namespace w3d
 {
@@ -36,7 +35,7 @@ namespace w3d
         gl::FrameBuffer mFBO;
         gl::Texture2D mBaseColor;
 
-        //ImGuiContext* mImGuiContext;
+        // ImGuiContext* mImGuiContext;
 
         float mWidth;
         float mHeight;
@@ -53,7 +52,7 @@ namespace w3d
 
         void Create(float widthPX, float heightPX, float mm_per_px);
 
-        void Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun, ImGuiWindowFlags window_flags = 0);
+        void Compose(const glm::vec3 &cont_pos, const glm::quat &cont_rot, const glm::mat4 &model, const char *name, ComposeFun gui_fun, ImGuiWindowFlags window_flags = 0);
         void Draw();
     };
 

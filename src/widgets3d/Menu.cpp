@@ -56,17 +56,18 @@ namespace w3d
         mPlane.Generate(plane_w, plane_h, 1.f, 1.f, util::Plane<OPTIONS>::Direction::OZ_POS);
     }
 
-    void Menu::Compose(WebXRInputSource *inputSource, const glm::mat4 &model, const char *name, ComposeFun gui_fun, ImGuiWindowFlags window_flags)
+    void Menu::Compose(const glm::vec3 &cont_pos, const glm::quat &cont_rot, const glm::mat4 &model, const char *name, ComposeFun gui_fun, ImGuiWindowFlags window_flags)
     {
+        return;
         mModel = model;
         bool is_hovered = false;
         ImVec2 mouse_pos = ImVec2(-1.f, -1.f);
-        if (inputSource)
+        // if (inputSource)
         {
             float distance;
 #ifdef __EMSCRIPTEN__
-            glm::vec3 &input_pose = inputSource->rigidTransform.position;
-            glm::vec3 input_dir = glm::rotate(inputSource->rigidTransform.orientation, glm::vec3(0.f, 0.f, -1.f));
+            glm::vec3 input_pose = cont_pos;
+            glm::vec3 input_dir = glm::rotate(cont_rot, glm::vec3(0.f, 0.f, -1.f));
 #else
             glm::vec3 &input_pose = glm::vec3(0.f, 0.f, 0.f);
             glm::vec3 input_dir = glm::vec3(0.f, 0.f, -1.f);

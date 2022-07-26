@@ -12,12 +12,11 @@ namespace gl
 		Destroy();
 	}
 
-	Texture::Texture(Texture&& other) noexcept
+	Texture::Texture(Texture &&other) noexcept
 	{
 		this->mID = other.mID;
-
 	}
-	Texture& Texture::operator=(Texture&& other) noexcept
+	Texture &Texture::operator=(Texture &&other) noexcept
 	{
 		this->mID = other.mID;
 
@@ -36,7 +35,6 @@ namespace gl
 			GL(DeleteTextures(1, &mID));
 			mID = 0;
 		}
-		
 	}
 
 	void Texture::Bind(Type type) const
@@ -44,7 +42,7 @@ namespace gl
 		GL(BindTexture(static_cast<GLenum>(type), mID));
 	}
 
-	void Texture::UnBind(Type type) const
+	void Texture::UnBind(Type type)
 	{
 		GLenum target = static_cast<GLenum>(type);
 		GL(BindTexture(target, NULL));
@@ -74,7 +72,7 @@ namespace gl
 		GL(TexParameterf(static_cast<GLenum>(type), static_cast<GLenum>(param), val));
 		UnBind(type);
 	}
-	void Texture::SetFloatArrayParameter(Type type, Parameter param, float* values)
+	void Texture::SetFloatArrayParameter(Type type, Parameter param, float *values)
 	{
 		Bind(type);
 		GL(TexParameterfv(static_cast<GLenum>(type), static_cast<GLenum>(param), values));

@@ -2,21 +2,21 @@
 
 namespace gl
 {
-	CubeMap::CubeMap() :
-		mWidth(0),
-		mHeight(0),
-		mFormat(Format::UNKNOWN),
-		mMipLevel(0),
-		mMinFilterMode(FilterMode::LINEAR),
-		mMagFilterMode(FilterMode::LINEAR),
-		mWrapModeS(WrapMode::CLAMP_TO_EDGE),
-		mWrapModeT(WrapMode::CLAMP_TO_EDGE),
-		mWrapModeR(WrapMode::CLAMP_TO_EDGE)
-	{}
+	CubeMap::CubeMap() : mWidth(0),
+						 mHeight(0),
+						 mFormat(Format::UNKNOWN),
+						 mMipLevel(0),
+						 mMinFilterMode(FilterMode::LINEAR),
+						 mMagFilterMode(FilterMode::LINEAR),
+						 mWrapModeS(WrapMode::CLAMP_TO_EDGE),
+						 mWrapModeT(WrapMode::CLAMP_TO_EDGE),
+						 mWrapModeR(WrapMode::CLAMP_TO_EDGE)
+	{
+	}
 
 	CubeMap::~CubeMap() {}
 
-	CubeMap::CubeMap(CubeMap&& other) noexcept
+	CubeMap::CubeMap(CubeMap &&other) noexcept
 	{
 		this->mWidth = other.mWidth;
 		this->mHeight = other.mHeight;
@@ -40,7 +40,7 @@ namespace gl
 
 		other.Destroy();
 	}
-	CubeMap& CubeMap::operator=(CubeMap&& other) noexcept
+	CubeMap &CubeMap::operator=(CubeMap &&other) noexcept
 	{
 		this->mWidth = other.mWidth;
 		this->mHeight = other.mHeight;
@@ -82,7 +82,7 @@ namespace gl
 	{
 		Texture::Bind(mTarget);
 	}
-	void CubeMap::UnBind() const
+	void CubeMap::UnBind()
 	{
 		Texture::UnBind(mTarget);
 	}
@@ -131,18 +131,16 @@ namespace gl
 		GL(TexParameteri(
 			static_cast<GLenum>(mTarget),
 			static_cast<GLenum>(Parameter::MIN_FILTER),
-			static_cast<GLint>(mMinFilterMode)
-		));
+			static_cast<GLint>(mMinFilterMode)));
 		GL(TexParameteri(
 			static_cast<GLenum>(mTarget),
 			static_cast<GLenum>(Parameter::MAG_FILTER),
-			static_cast<GLenum>(mMagFilterMode)
-		));
+			static_cast<GLenum>(mMagFilterMode)));
 		GL(GenerateMipmap(static_cast<GLenum>(mTarget)));
 		UnBind();
 	}
 
-	void CubeMap::SetTarget(Target target, int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void* pixels)
+	void CubeMap::SetTarget(Target target, int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void *pixels)
 	{
 		mMipLevel = mipLevel;
 		mWidth = width;
@@ -159,8 +157,7 @@ namespace gl
 			border,
 			static_cast<GLenum>(format),
 			static_cast<GLenum>(mDataType),
-			pixels
-		));
+			pixels));
 		UnBind();
 	}
 
@@ -180,37 +177,33 @@ namespace gl
 		for (size_t i = 0; i < 6; i++)
 		{
 			GL(TexImage2D(
-				static_cast<GLenum>(Target::POSITIVE_X) + (GLenum)i, 
+				static_cast<GLenum>(Target::POSITIVE_X) + (GLenum)i,
 				mMipLevel,
 				static_cast<GLenum>(mFormat),
 				mWidth, mHeight, 0,
 				static_cast<GLenum>(format),
 				static_cast<GLenum>(mDataType),
-				nullptr
-			));
+				nullptr));
 		}
 
 		GL(TexParameteri(
 			static_cast<GLenum>(mTarget),
 			static_cast<GLenum>(Parameter::WRAP_S),
-			static_cast<GLint>(mWrapModeS)
-		));
+			static_cast<GLint>(mWrapModeS)));
 		GL(TexParameteri(
 			static_cast<GLenum>(mTarget),
 			static_cast<GLenum>(Parameter::WRAP_T),
-			static_cast<GLint>(mWrapModeR)
-		));
+			static_cast<GLint>(mWrapModeR)));
 		GL(TexParameteri(
 			static_cast<GLenum>(mTarget),
 			static_cast<GLenum>(Parameter::WRAP_R),
-			static_cast<GLint>(mWrapModeT)
-		));
+			static_cast<GLint>(mWrapModeT)));
 
-		float border_color[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+		float border_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
 		GL(TexParameterfv(static_cast<GLenum>(mTarget), static_cast<GLenum>(Parameter::BORDER_COLOR), border_color));
 		UnBind();
 
-		if(genMipMap)
+		if (genMipMap)
 			GenerateMipmaps();
 		else
 		{
@@ -221,13 +214,11 @@ namespace gl
 			GL(TexParameteri(
 				static_cast<GLenum>(mTarget),
 				static_cast<GLenum>(Parameter::MIN_FILTER),
-				static_cast<GLint>(mMinFilterMode)
-			));
+				static_cast<GLint>(mMinFilterMode)));
 			GL(TexParameteri(
 				static_cast<GLenum>(mTarget),
 				static_cast<GLenum>(Parameter::MAG_FILTER),
-				static_cast<GLenum>(mMagFilterMode)
-			));
+				static_cast<GLenum>(mMagFilterMode)));
 			UnBind();
 		}
 	}
@@ -280,30 +271,29 @@ namespace gl
 		GenerateMipmaps();
 	}*/
 
-	void CubeMap::SetPositiveX(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void* pixels)
+	void CubeMap::SetPositiveX(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void *pixels)
 	{
 		SetTarget(Target::POSITIVE_X, mipLevel, internFormat, width, height, border, format, type, pixels);
 	}
-	void CubeMap::SetNegativeX(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void* pixels)
+	void CubeMap::SetNegativeX(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void *pixels)
 	{
 		SetTarget(Target::NEGATIVE_X, mipLevel, internFormat, width, height, border, format, type, pixels);
 	}
-	void CubeMap::SetPositiveY(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void* pixels)
+	void CubeMap::SetPositiveY(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void *pixels)
 	{
 		SetTarget(Target::POSITIVE_Y, mipLevel, internFormat, width, height, border, format, type, pixels);
 	}
-	void CubeMap::SetNegativeY(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void* pixels)
+	void CubeMap::SetNegativeY(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void *pixels)
 	{
 		SetTarget(Target::NEGATIVE_Y, mipLevel, internFormat, width, height, border, format, type, pixels);
 	}
-	void CubeMap::SetPositiveZ(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void* pixels)
+	void CubeMap::SetPositiveZ(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void *pixels)
 	{
 		SetTarget(Target::POSITIVE_Z, mipLevel, internFormat, width, height, border, format, type, pixels);
 	}
-	void CubeMap::SetNegativeZ(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void* pixels)
+	void CubeMap::SetNegativeZ(int32_t mipLevel, Format internFormat, uint32_t width, uint32_t height, uint32_t border, Format format, DataType type, const void *pixels)
 	{
 		SetTarget(Target::NEGATIVE_Z, mipLevel, internFormat, width, height, border, format, type, pixels);
 	}
 
-	
 }
